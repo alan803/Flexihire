@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create an Account</title>
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <a href="../homepage/homepage.html" class="back-to-website"><span class="arrow-circle">←</span> Back to website</a>
+        </div>
+        <div class="right-section">
+            <h2>Create an account</h2>
+            <p>Already have an account? <a href="../Login/login.html" style="color: #665efc; text-decoration: none;">Log in</a></p>
+            
+            <form method="post" action="signup.php">
+                <!-- Name Field -->
+                <input type="text" placeholder="Name" name="name" value="<?php echo isset($_GET['name']) ? htmlspecialchars($_GET['name']) : ''; ?>">
+                <?php if (isset($_GET['error_name'])): ?>
+                    <span class="error" style="color: red;"><?php echo $_GET['error_name']; ?></span>
+                <?php endif; ?>
+
+                <!-- Email Field -->
+                <input type="email" placeholder="E-mail" name="email" value="<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>">
+                <?php if (isset($_GET['error_email'])): ?>
+                    <span class="error" style="color: red;"><?php echo $_GET['error_email']; ?></span>
+                <?php endif; ?>
+
+                <!-- Password Field -->
+                <input type="password" placeholder="Enter your password" name="password" value="<?php echo isset($_GET['password']) ? htmlspecialchars($_GET['password']) : ''; ?>">
+                <?php if (isset($_GET['error_password'])): ?>
+                    <span class="error" style="color: red;"><?php echo $_GET['error_password']; ?></span>
+                <?php endif; ?>
+
+                <!-- Confirm Password Field -->
+                <input type="password" placeholder="Confirm your password" name="confirmpassword" value="<?php echo isset($_GET['confirmpassword']) ? htmlspecialchars($_GET['confirmpassword']) : ''; ?>">
+                <?php if (isset($_GET['error_confirmpassword'])): ?>
+                    <span class="error" style="color: red;"><?php echo $_GET['error_confirmpassword']; ?></span>
+                <?php endif; ?>
+
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

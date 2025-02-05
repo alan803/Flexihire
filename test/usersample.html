@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Dashboard - FlexiHire</title>
+    <link rel="stylesheet" href="styleuser.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>FlexiHire</h2>
+            <ul>
+                <li><a href="index.html" class="active">Dashboard</a></li>
+                <li><a href="jobs.html">Manage Jobs</a></li>
+                <li><a href="applications.html">View Applications</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="#">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Welcome, Employer!</h1>
+
+            <!-- Dashboard Overview -->
+            <div class="overview">
+                <div class="card">
+                    <h3>Job Listings</h3>
+                    <p>10</p>
+                </div>
+                <div class="card">
+                    <h3>Applications Received</h3>
+                    <p>25</p>
+                </div>
+            </div>
+
+            <!-- Job Listings -->
+            <section class="job-listings">
+                <h2>Your Job Postings</h2>
+                <div class="job">
+                    <h3>Frontend Developer</h3>
+                    <p>Applicants: 8</p>
+                    <button class="edit">Edit</button>
+                    <button class="delete">Delete</button>
+                </div>
+                <div class="job">
+                    <h3>Marketing Intern</h3>
+                    <p>Applicants: 5</p>
+                    <button class="edit">Edit</button>
+                    <button class="delete">Delete</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>

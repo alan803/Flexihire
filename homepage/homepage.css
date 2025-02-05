@@ -1,0 +1,289 @@
+body 
+{
+  background-image: url('background8.jpg');
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+/*.belownav
+{
+  background-color: rgb(26, 26, 26);
+  color:white;
+  position: relative;
+  top:490px;
+  height:230px;
+  width:1530px;
+  box-sizing: border-box;
+}*/
+.subs
+{
+  background-color:rgb(245, 245, 245);
+  width:400px;
+  height:170px;
+  border-radius: 20px;
+  position:relative;
+  top:650px;
+}
+#logo 
+{
+  border-radius: 2px;
+  width: 20%;
+}
+@keyframes slideUp 
+{
+  from {
+      transform: translateY(100%);
+      opacity: 0;
+  }
+  to {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+#logo, .nav 
+{
+  position: relative;
+  z-index: 1; /* Ensure they stay on top */
+}
+
+#para 
+{
+  font-size: 55px;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  margin-bottom: 0;
+  animation: slideUp 1s ease-out forwards;
+}
+
+#para1
+{
+  font-size: 35px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  position: relative;
+  top:-50px;
+  color:white;
+  animation: slideUp 1s ease-out forwards;
+}
+#quote
+{
+  font-size: 20px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  margin-top: 0;
+  position: absolute;
+  top:180px;
+  color: white;/*background8.6 color #2D3436 */
+  animation: slideUp 1s ease-out forwards;
+}
+.highlight 
+{
+  color: gold;
+  font-weight: bold;
+  font-size: 55px;
+  animation: slideUp 1s ease-out forwards;
+}
+
+.quote 
+{
+  position: absolute;
+  top: 230px;
+  left: 30px;
+  animation: slideUp 1s ease-out forwards;
+}
+
+a 
+{
+  text-decoration: none;
+  color:white; /* Default text color for the link */
+  transition: color 0.3s ease; /* Smooth transition for text color */
+  animation: slideUp 1s ease-out forwards;
+  overflow: hidden; /* To hide the background fill */
+}
+
+#signup 
+{
+  border: none;
+  display: flex;
+  align-items: center; /* Vertically center the text and arrow */
+  justify-content: center; /* Center content horizontally */
+  gap: 8px; /* Space between text and arrow */
+  font-size: 1.125rem; /* Text size: 18px */
+  background-color: white; /* Initial button  for background8.6 color background-color: #707678;*/
+  backdrop-filter: blur(10px);
+  font-weight: 600; /* lg:font-semibold */
+  position: relative;
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  overflow: hidden;
+  border-radius: 9999px; /* rounded-full */
+  cursor: pointer;
+  position: absolute;
+  top: 505px;
+  left: 25px;
+  width: 138px;
+  animation: slideUp 1s ease-out forwards;
+}
+
+#signup::before 
+{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: black; /* Background color on hover */
+  border-radius: 9999px;
+  z-index: -10;
+  transition: all 0.7s;
+  transform: scale(1);
+}
+#sign
+{
+  color:black;
+}
+#signup:hover::before 
+{
+  left: 0;
+  transform: scale(1.5); /* Scale effect on hover */
+}
+
+#signup:hover 
+{
+  color: white; /* Text color on hover */
+}
+
+#signup:hover a 
+{
+  color: white; /* Link text color on hover */
+}
+
+/* Styles for the arrow inside a circle */
+.arrow-circle 
+{
+  display: inline-flex; /* Ensure the circle stays inline with the text */
+  justify-content: center;
+  align-items: center;
+  width: 24px; /* Circle size */
+  height: 24px; /* Circle size */
+  background-color: black; /* Circle background color */
+  border-radius: 50%; /* Make it a circle */
+  color: white; /* Arrow color */
+  font-size: 16px; /* Arrow size */
+  margin-left: 8px; /* Space between text and circle */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+}
+#signup:hover .arrow-circle 
+{
+  background-color: white; /* Circle background color on hover */
+  color: black; /* Arrow color on hover */
+  transform: rotate(-50deg); /* Rotate arrow on hover */
+}
+li
+{
+  list-style-type: none;
+}   
+.navbar 
+{
+  list-style-type: none;
+  display: flex; /* Use flexbox to make items horizontal */
+  gap: 20px;/*space between list elements*/
+  padding: 20px; /* Optional: Add padding */
+  animation: none;
+}
+.nav
+{
+  position: absolute;
+  right:30px;
+  top:10px;
+  justify-content: center;
+}
+#login
+{
+  border-radius: 30px;
+  border:none;
+  background-color:white;
+  justify-content: center;
+  width:100px;
+  height:28px;
+  top:50px;
+}
+#loginlink
+{
+  font-size: 16px;
+  color:black;
+}
+#list
+{
+  font-size: 20px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+/*
+.img {
+  width: 120px;
+  height: 120px;
+  background-color: black; /* Hexagon background color 
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+.img1
+{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+}
+
+.search
+{
+  width: 35px;
+  height: 35px;
+}
+
+.figure1
+{
+  position: relative;
+  top:30px;
+  left:1280px;
+}*/
+.animated-content
+{
+  position: relative;
+  top:-90px;
+}
+.signup-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 4px;
+  margin-top: 5px;  /* Space between button and dropdown */
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+.show {
+  display: block;
+}

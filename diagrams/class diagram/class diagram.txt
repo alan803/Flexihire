@@ -1,0 +1,142 @@
+
+@startuml
+class tbl_users {
+    id int
+    varchar name
+    varchar email
+    varchar password
+    timestamp created_at
+    timestamp updated_at
+    +regisetr()
+    +browsejobs()
+    +applyjobs()
+    +canceljobs()
+}
+
+class tbl_employer{
+id int
+varchar name
+varhcar email
+varchar company_name
+varhcar distirct
+varchar password
+timestamp created_at
+timestamp updated_at
+int user_id 
++postjobs()
++selectcnadiate()
+}
+
+class tbl_login{
+    int login_id
+    varchar username
+    varchar password
+    varchar role
+    int user_id
+    int employer_id
+    timestamp created_at
+    timestamp updated_at
+    +userauthentication()
+    +passwordmanagement()
+    +rolemanagement()
+}
+
+class tbl_job_posting{
+    int job_id
+    int employer_id
+    varchar job_title
+    text job_description
+    varchar location
+    decimal salary
+    varchar district
+    timestamp created_at
+    timestamp updated_at
+    +postJobOpening()
+    +manageJobPostings()
+    +reviewApplications()
+}
+
+class tbl_job_interaction{
+    int interaction_id
+    int user_id
+    int job_id
+    timestamp created_at
+    timestamp updated_at
+    +submitjob()
+    +viewapplication()
+    +updateapplication()
+}
+
+class tbl_application{
+    int application_id
+    int user_id
+    int job_id
+    timestamp application_date
+    enum status
+    text coverletter
+    timestamp created_at
+    timestamp updated_at
+    +approveapplication()
+    +cancelapplication()
+    +viewapplication()
+}
+
+class tbl_admin{
+int admin_id
+varchar username
+varchar password
+varchar email
+enum status
+timestamp created_at
+    timestamp updated_at
+}
+
+class tbl_notification {
+int notification_id
+int user_id
+text messgae
+enum status
+timestamp created_at
++sendnotification()
++marknotification()
+}
+
+class tbl_job_category{
+int category_id
+varchar category_name
+text description
+int job_id
++categizejobs()
++filterjobs()
+}
+
+class tbl_skills_table{
+int skill_id
+varchar skill_name
+int user_id
++addnewskill()
++viewskill()
+}
+tbl_employer --> tbl_users
+tbl_login -->tbl_employer
+tbl_login -->tbl_users
+tbl_job_posting -->tbl_employer
+tbl_job_interaction -->tbl_users
+tbl_job_interaction -->job_posting
+tbl_application -->tbl_users
+tbl_apllication -->tbl_job_posting
+tbl_admin-->tbl_login
+tbl_admin -->tbl_users
+tbl_admin-->employers
+tbl_admin-->tbl_job_posting
+tbl_admin-->tbl_job_interaction
+tbl_admin -->tbl_application
+tbl_admin-->tbl_notification
+tbl_admin-->tbl_job_category
+tbl_admin-->tbl_skills_table
+tbl_notification -->tbl_users
+tbl_job_category-->tbl_job_posting
+tbl_skills_table-->tbl_users
+
+@enduml
+

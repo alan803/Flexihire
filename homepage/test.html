@@ -1,0 +1,221 @@
+<!-- Add this to your HTML file where the signup button is -->
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+.signup-container {
+    position: relative;
+    display: inline-block;
+}
+
+.signup-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.arrow {
+    font-size: 20px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    /* Position the dropdown on top of the button */
+    top: 0;
+    left: 0;
+    width: 100%;  /* Match button width */
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+/* First link rounded top corners */
+.dropdown-content a:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+/* Last link rounded bottom corners */
+.dropdown-content a:last-child {
+    border-radius: 0 0 12px 12px;
+}
+
+.show {
+    display: block;
+}
+.dropdown-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+.dropdown-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+    .arrow-circle 
+{
+  display: inline-flex; /* Ensure the circle stays inline with the text */
+  justify-content: center;
+  align-items: center;
+  width: 24px; /* Circle size */
+  height: 24px; /* Circle size */
+  background-color: black; /* Circle background color */
+  border-radius: 50%; /* Make it a circle */
+  color: white; /* Arrow color */
+  font-size: 16px; /* Arrow size */
+  margin-left: 8px; /* Space between text and circle */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+}
+#dropdownBtn:hover .arrow-circle 
+{
+  background-color: white; /* Circle background color on hover */
+  color: black; /* Arrow color on hover */
+  transform: rotate(-50deg); /* Rotate arrow on hover */
+}   
+#dropdownBtn
+{
+  border: none;
+  display: flex;
+  align-items: center; /* Vertically center the text and arrow */
+  justify-content: center; /* Center content horizontally */
+  gap: 8px; /* Space between text and arrow */
+  font-size: 1.125rem; /* Text size: 18px */
+  background-color: white; /* Initial button  for background8.6 color background-color: #707678;*/
+  backdrop-filter: blur(10px);
+  font-weight: 600; /* lg:font-semibold */
+  position: relative;
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  overflow: hidden;
+  border-radius: 9999px; /* rounded-full */
+  cursor: pointer;
+  position: absolute;
+  top: 505px;
+  left: 25px;
+  width: 138px;
+  animation: slideUp 1s ease-out forwards;
+}
+
+#dropdownBtn::before 
+{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: black; /* Background color on hover */
+  border-radius: 9999px;
+  z-index: -10;
+  transition: all 0.7s;
+  transform: scale(1);
+}
+#dropdownBtn
+{
+  color:black;
+}
+#dropdownBtn:hover::before 
+{
+  left: 0;
+  transform: scale(1.5); /* Scale effect on hover */
+}
+
+#dropdownBtn:hover 
+{
+  color: white; /* Text color on hover */
+}
+
+#dropdownBtn:hover a 
+{
+  color: white; /* Link text color on hover */
+}
+
+
+</style>
+    <Script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const dropdownBtn = document.getElementById('dropdownBtn');
+    const dropdownList = document.getElementById('dropdownList');
+
+    // Toggle dropdown when button is clicked
+    dropdownBtn.addEventListener('click', function(event) {
+        event.stopPropagation();
+        dropdownList.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking anywhere else on the page
+    document.addEventListener('click', function(event) {
+        if (!dropdownList.contains(event.target) && !dropdownBtn.contains(event.target)) {
+            dropdownList.classList.remove('show');
+        }
+    });
+});
+
+function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+// Close the dropdown if the user clicks outside of it
+window.onclick = function(event) {
+    if (!event.target.matches('.signup-button')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+}
+
+    </Script>
+ </head>
+ <body>
+    <div class="signup-container">
+        <button onclick="myFunction()" class="signup-button">
+            SignUp
+            <span class="arrow">→</span>
+        </button>
+        <div id="myDropdown" class="dropdown-content">
+            <a href="user-signup.php">User</a>
+            <a href="employer-signup.php">Employer</a>
+        </div>
+    </div>
+ </body>
+ </html>

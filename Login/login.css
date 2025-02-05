@@ -1,0 +1,159 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #610291 0%, #D8BFD8 100%) !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    width: 1050px;
+    height: 550px;
+}
+
+.form-container {
+    padding: 50px;
+    flex: 1;
+}
+
+.form-container h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+#log
+{
+    margin-bottom: 20px;
+    color: #333;
+    position: relative;
+    top:-30px;
+    left:150px;
+}
+#wel
+{
+    position: relative;
+    margin-bottom: 20px;
+    color: #333;
+    top:-30px;
+    left:90px;
+}
+.back-to-website 
+{
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 0.9rem;
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.arrow-circle 
+{
+  display: inline-flex; /* Ensure the circle stays inline with the text */
+  justify-content: center;
+  align-items: center;
+  width: 24px; /* Circle size */
+  height: 24px; /* Circle size */
+  background-color:#1e1e2f; /* Circle background color */
+  border-radius: 50%; /* Make it a circle */
+  color: white; /* Arrow color */
+  font-size: 16px; /* Arrow size */
+  margin-left: 8px; /* Space between text and circle */
+  position: relative;
+}
+.form-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container input[type="email"],
+.form-container input[type="password"] {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-container input[type="submit"] {
+    background: #6c63ff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width:320px;
+    position: relative;
+    left:40px;
+}
+#form
+{
+    position: relative;
+    top:40px;
+}
+.form-container input[type="submit"]:hover {
+    background: #5948d6;
+}
+
+.image-container {
+    background: url('new4.jpg') no-repeat center center/cover;
+    position:relative;
+    width:550px;
+    height:550px;
+}
+
+.form-container p {
+    margin-top: 10px;
+    font-size: 14px;
+    position: relative;
+    top:60px;
+    left:100px;
+}
+
+.form-container p a {
+    text-decoration: none;
+    color: #6c63ff;
+}
+
+.form-container p a:hover {
+    text-decoration: underline;
+}
+.error-message 
+{
+    text-align: center;
+    position: relative;
+    top:70px;
+    left:-10px;
+    font-size: 18px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+/* #forgot 
+{
+    position: relative;
+    top:100px;
+    left:10px;
+}
+#register
+{
+    position: relative;
+    top:70px;
+    left:200px;
+}*/
+
