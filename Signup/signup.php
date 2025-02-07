@@ -42,7 +42,7 @@
 
                 if (mysqli_stmt_execute($stmt_login)) 
                 {
-                    header("Location: ../userdashboard/userdashboard.html");
+                    header("Location: ../userdashboard/userdashboard.php");
                     exit();
                 } 
                 else 
@@ -75,9 +75,9 @@
                 error.textContent = "Name is required."; //textcontent is used to get content from html element
                 return false;
             } 
-            else if (!/^[a-zA-Z\s]*$/.test(name)) 
+            else if (!/^[a-zA-Z]*$/.test(name)) 
             {
-                error.textContent = "Name should not contain digits or special characters.";
+                error.textContent = "Name should not contain digits or special characters or spaces.";
                 return false;
             } 
             else if (name.length < 4) 

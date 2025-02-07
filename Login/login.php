@@ -20,11 +20,12 @@
                 $_SESSION['email']=$email;
                 $_SESSION['user_id']=$userdata['id'];
                 $_SESSION['role']=$userdata['role'];
+                $_SESSION['username']=$userdata['username'];
 
                 // redirecting to the user dashboard according to there role
                 if($userdata['role']==1)
                 {
-                    header("Location:../userdashboard/userdashboard.html");
+                    header("Location:../userdashboard/userdashboard.php");
                 exit();
                 }
                 else if($userdata['role']==2)
@@ -77,15 +78,18 @@
         </div>
         <div class="form-container">
         <?php if(!empty($error)): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-            <?php endif; ?>
+            <div class="error-message"><?php echo $error; ?></div><?php endif; ?>
             <h1><span id="wel">Welcome back<br></span><span id="log">Log in</span></h1>
             <form method="POST" id="form">
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
+                <?php if(!empty($error) && $error === "Incorrect password"): ?>
+                    <div class="forgot-text">
+                        <p id="forgot">Forgot password?<a href="../forgotpassword/forgotpassword.php">Reset</a></p>
+                    </div>
+                <?php endif; ?>
                 <input type="submit" value="Log in">
             </form>
-            <p id="forgot">Forgot password?<a>reset</a></p>
             <p id="register">Don't have an account? <a href="../Signup/signup.php">Register</a></p>
         </div>
     </div>

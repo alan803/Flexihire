@@ -32,7 +32,7 @@ body
   top:10px;
   justify-content: center;
 }
-a
+.sidebar-item
 {
     text-decoration: none;
     color:white;
@@ -80,7 +80,7 @@ a
   display: none;
   position: absolute;
   left:-100px;
-  top: 100%;
+  top: 40px;
   background-color: white;
   border-radius: 5px;
   min-width: 160px;
@@ -93,12 +93,14 @@ a
   display: block;
 }
 
-.dropdown-menu ul 
+.dropdown-menu ul,a
 {
   list-style: none;
   padding: 0;
   margin: 0;
   text-align: center;
+  text-decoration: none;
+  color:black;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
@@ -294,4 +296,24 @@ ul
   height: 40px;
   border-radius: 4px;
   border: 1px solid #a5a5a5;
+}
+#username
+{
+  position:relative;
+  display:inline-block;
+  white-space: nowrap;    /* Prevents text wrapping */
+    padding: 5px 10px;      /* Add some padding */ /* Or any color you prefer */
+    border-radius: 5px;     /* Optional: rounded corners */
+    margin-left: 10px;      /* Space from profile pic */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 18px;
+    /* Remove any fixed width/height */
+    top: auto;              /* Remove fixed positioning */
+    left: auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;             /* Space between items */
 }

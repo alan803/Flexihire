@@ -1,6 +1,61 @@
+<?php
+    session_start();
+    
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ../login/login.php");
+        exit();
+    }
+
+    include '../database/connectdatabase.php';
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
+    
+    // Initialize variables with default values
+    $username = 'Guest';
+    $email = '';
+
+    // Get user data from database using user_id
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT * FROM tbl_login WHERE id='$user_id'"; // Changed from tbl_user to tbl_login
+
+    // Check if query was successful
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user_data = mysqli_fetch_assoc($result);
+        if ($user_data) {
+            $email = $user_data['email'];
+            $username = $user_data['username'];
+        }
+    } else {
+        // Handle database error or missing user
+        error_log("Database error or user not found for ID: $user_id");
+        session_destroy();
+        header("Location: ../login/login.php");
+        exit();
+    }
+
+    // Get email from database instead of session
+    // $email = $user_data['email'] ?? '';
+    
+
+    // Code for getting username
+    // if ($email) 
+    // {
+        
+
+    //     $user = mysqli_fetch_assoc($resultt);
+    //     $username = $user['username'] ?? 'Guest';
+    // } else {
+    //     $username = 'Guest';
+    // }
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
@@ -20,10 +75,11 @@
                         <img src="profile.png" id="profilePic" class="profile-pic" alt="Profile">
                         <div id="dropdownMenu" class="dropdown-menu">
                             <ul>
-                                <li>Profile</li>
-                                <li>Logout</li>
+                                <li id=dashb><a href="profiles/user/user.php">Profile</a></li>
+                                <li id="dashb"><a href="../login/logout.php">Logout</a></li>
                             </ul>
                         </div>
+                        <p id="username"><?php echo '<br>'.$username; ?></p>
                     </div>
                 </li>
             </ul>
@@ -39,7 +95,7 @@
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/jobdetails/jobdetails.html">Job Details</a></li>
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/jobcategory/jobcategory.html">Job Category</a></li>
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/appointment/appointment.html">Appointments</a></li>
-                <li><a id="sidebar-item" href="../userdashboard/sidebar/profile/profile.html">Profile</a></li>
+                <li><a id="sidebar-item" href="profiles/user/user.php">Profile</a></li>
             </ul>
         </div>
         <div class="searchbar" id="searchbar">
@@ -56,6 +112,8 @@
                 
             </div>
         </div>
+        
+
     <script>
         const profilePic = document.getElementById('profilePic');
         const dropdownMenu = document.getElementById('dropdownMenu');
