@@ -85,7 +85,7 @@
                 <input type="password" name="password" placeholder="Password" required>
                 <?php if(!empty($error) && $error === "Incorrect password"): ?>
                     <div class="forgot-text">
-                        <p id="forgot">Forgot password?<a href="../forgotpassword/forgotpassword.php">Reset</a></p>
+                        <p id="forgot">Forgot password?<a href="forgotpassword.php">Reset</a></p>
                     </div>
                 <?php endif; ?>
                 <input type="submit" value="Log in">

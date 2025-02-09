@@ -1,0 +1,158 @@
+body 
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f0d0f6;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.form-container 
+{
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeInUp 0.5s ease-in-out forwards;
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Updated shadow */
+    text-align: center;
+    width:350px;
+    height:380px;
+}
+@keyframes fadeInUp 
+{
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.otp-inputs 
+{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    position: relative;
+    left:-3px;
+    top:25px;
+}
+.otp-inputs input 
+{
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 20px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    transition: transform 0.2s;
+}
+.otp-inputs input:focus 
+{
+    transform: scale(1.1);
+    border-color: #007c19;
+    outline: none;
+}
+button 
+{
+    background: black;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width:220px;
+    position: relative;
+    top:20px;
+    font-size: 15px;
+}
+button:hover 
+{
+    background: #333;
+}
+.resend 
+{
+    display: block;
+    margin-top: 10px;
+    position: relative;
+    left:22px;
+    top:25px;
+}
+.back-link 
+{
+    display: block;
+    margin-top: 10px;
+    position: relative;
+    left:-55px;
+    top:25px;
+}
+#emaillogo img 
+{
+    position: relative;
+    left:-100px;
+    width: 20px;
+    height: auto;
+}
+.password-reset-form
+{
+    position: relative;
+    top:30px;
+    left:-18px;
+}
+#para1
+{
+    position: relative;
+    left:-20px;
+}
+#para-1 
+{
+    position: absolute;
+    left:55px;
+    margin-top: 10px;
+}
+
+#para2
+{
+    position: relative;
+    left:6px;
+}
+a
+{
+    text-decoration: none;
+    color:rgb(57, 159, 193);
+}
+.arrow-circle 
+{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    background-color: black;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    margin-left: 5px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.arrow-circle:hover 
+{
+    background-color: #333;
+    transform: scale(1.1);
+}
+.error-message 
+{
+    color: red;
+    font-size: 14px;
+    margin-top: 20px; /* Space after the button */
+    text-align: center;
+    position:relative;
+    top:20px;
+}

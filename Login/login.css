@@ -6,7 +6,10 @@
 
 body {
     font-family: Arial, sans-serif;
-    background: linear-gradient(180deg, #610291 0%, #D8BFD8 100%) !important;
+    /* background: linear-gradient(45deg, #BAA6E3 0%, #FF9CEE 50%, #FFC75F 100%); */
+    background: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
+
+
     display: flex;
     justify-content: center;
     align-items: center;
