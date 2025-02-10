@@ -75,11 +75,11 @@
                         <img src="profile.png" id="profilePic" class="profile-pic" alt="Profile">
                         <div id="dropdownMenu" class="dropdown-menu">
                             <ul>
-                                <li id=dashb><a href="profiles/user/user.php">Profile</a></li>
+                                <li><p id="username"><?php echo $username; ?></p></li>
+                                <li id=dashb><a href="sam.php">Profile</a></li>
                                 <li id="dashb"><a href="../login/logout.php">Logout</a></li>
                             </ul>
                         </div>
-                        <p id="username"><?php echo '<br>'.$username; ?></p>
                     </div>
                 </li>
             </ul>
