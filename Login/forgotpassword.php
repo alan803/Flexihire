@@ -93,7 +93,7 @@
                 <p class="error" id="emailError"><?php echo htmlspecialchars($error); ?></p>
                 <button type="submit">Reset password</button>
             </form>
-            <a href="login.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
+            <a href="loginvalidation.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
         </div>
     </div>
 </body>

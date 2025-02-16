@@ -1,0 +1,187 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    /* background: linear-gradient(45deg, #BAA6E3 0%, #FF9CEE 50%, #FFC75F 100%); */
+    background: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    width: 1050px;
+    height: 550px;
+}
+
+.form-container {
+    padding: 40px;
+    flex: 1;
+    width: 400px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-container h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+#log
+{
+    margin-bottom: 20px;
+    color: #333;
+    position: relative;
+    top:-10px;
+    left:150px;
+}
+#wel
+{
+    position: relative;
+    margin-bottom: 20px;
+    color: #333;
+    top:-10px;
+    left:90px;
+}
+.back-to-website 
+{
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 0.9rem;
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.arrow-circle 
+{
+  display: inline-flex; /* Ensure the circle stays inline with the text */
+  justify-content: center;
+  align-items: center;
+  width: 24px; /* Circle size */
+  height: 24px; /* Circle size */
+  background-color:#1e1e2f; /* Circle background color */
+  border-radius: 50%; /* Make it a circle */
+  color: white; /* Arrow color */
+  font-size: 16px; /* Arrow size */
+  margin-left: 8px; /* Space between text and circle */
+  position: relative;
+}
+.form-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container input[type="email"],
+.form-container input[type="password"] {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-container input[type="submit"] {
+    background: #6c63ff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width:320px;
+    position: relative;
+    left:40px;
+}
+#form
+{
+    position: relative;
+    top:40px;
+}
+.form-container input[type="submit"]:hover {
+    background: #5948d6;
+}
+
+.image-container {
+    background: url('new4.jpg') no-repeat center center/cover;
+    position:relative;
+    width:550px;
+    height:550px;
+}
+
+.form-container p {
+    margin-top: 10px;
+    font-size: 14px;
+    position: relative;
+    top:60px;
+    left:100px;
+}
+
+.form-container p a {
+    text-decoration: none;
+    color: #6c63ff;
+}
+
+.form-container p a:hover {
+    text-decoration: underline;
+}
+.error-message 
+{
+    color: #ff3333;
+    background-color: #ffe6e6;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+    position: relative;
+    top:0px;
+    animation: expandWidth 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#forgot-password {
+    position: relative;
+    top: -10px;
+    left: 0;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #6c63ff;
+}
+
+.forgot-password {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.forgot-password a {
+    color: #6c63ff;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}
+#forgot {
+    position: relative;
+    top: 300px;
+    left: 120px;
+    margin-bottom: 10px;
+}
+
+
+#email-error
+{
+    position: relative;
+    top:-20px;
+}

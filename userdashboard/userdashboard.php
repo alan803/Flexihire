@@ -3,7 +3,7 @@
     
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
-        header("Location: ../login/login.php");
+        header("Location: ../login/register.php");
         exit();
     }
 
@@ -12,27 +12,36 @@
     mysqli_select_db($conn, $dbname);
     
     // Initialize variables with default values
-    $username = 'Guest';
+    $username = '';
     $email = '';
 
     // Get user data from database using user_id
     $user_id = $_SESSION['user_id'];
-    $sql = "SELECT * FROM tbl_login WHERE id='$user_id'"; // Changed from tbl_user to tbl_login
+    $sql = "SELECT u.first_name, u.last_name, l.email,u.username 
+        FROM tbl_login l
+        JOIN tbl_user u ON l.user_id = u.user_id
+        WHERE l.login_id = '$user_id'";
+
 
     // Check if query was successful
     $result = mysqli_query($conn, $sql);
 
-    if ($result && mysqli_num_rows($result) > 0) {
+    if ($result && mysqli_num_rows($result) > 0) 
+    {
         $user_data = mysqli_fetch_assoc($result);
-        if ($user_data) {
+        if ($user_data) 
+        {
             $email = $user_data['email'];
-            $username = $user_data['username'];
+            $username = $user_data['first_name'] . " " . $user_data['last_name'];
+            $new_username=$user_data['username'];
         }
-    } else {
+    } 
+    else 
+    {
         // Handle database error or missing user
         error_log("Database error or user not found for ID: $user_id");
         session_destroy();
-        header("Location: ../login/login.php");
+        header("Location: ../login/loginvalidation.php");
         exit();
     }
 
@@ -75,8 +84,8 @@
                         <img src="profile.png" id="profilePic" class="profile-pic" alt="Profile">
                         <div id="dropdownMenu" class="dropdown-menu">
                             <ul>
-                                <li><p id="username"><?php echo $username; ?></p></li>
-                                <li id=dashb><a href="sam.php">Profile</a></li>
+                                <li><li><p id="username"><?php echo isset($new_username) && !empty($new_username) ? $new_username : $username; ?></p></li></li>
+                                <li id=dashb><a href="profiles/user/userprofile.php">Profile</a></li>
                                 <li id="dashb"><a href="../login/logout.php">Logout</a></li>
                             </ul>
                         </div>

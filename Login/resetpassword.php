@@ -15,7 +15,7 @@
             $sql = "UPDATE tbl_login SET password='$hashed_password' WHERE email='$email'";
             if (mysqli_query($conn, $sql)) 
             {
-                header("Location: login.php");
+                header("Location: loginvalidation.php");
             } else {
                 echo "Error updating password: " . mysqli_error($conn);
             }
@@ -94,7 +94,7 @@
                 <!-- <p class="error" id="emailError" ></p> -->
                 <button type="submit">Change password</button>
             </form>
-            <a href="login.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
+            <a href="loginvalidation.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
         </div>
     </div>
 </body>

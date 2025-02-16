@@ -19,19 +19,28 @@
         mysqli_select_db($conn, $dbname);
 
         // Check if the email is already registered
-        $check_email_query = "SELECT email FROM tbl_employer WHERE email=?
-                    UNION
-                    SELECT email FROM tbl_login WHERE email=?";
-        $stmt = mysqli_prepare($conn, $check_email_query);
-
-        mysqli_stmt_bind_param($stmt, "ss", $email, $email);
+        $check_query = "SELECT(SELECT COUNT(*) FROM tbl_login WHERE email = ?) AS email_exists,
+            (SELECT COUNT(*) FROM tbl_employer WHERE company_name = ? AND district = ?) AS employer_exists";
+    
+        $stmt = mysqli_prepare($conn, $check_query);
+        mysqli_stmt_bind_param($stmt, "sss", $email, $companyname, $district);
         mysqli_stmt_execute($stmt);
-        mysqli_stmt_store_result($stmt);
+        mysqli_stmt_bind_result($stmt, $email_exists, $employer_exists);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
 
-        if (mysqli_stmt_num_rows($stmt) > 0) 
+        if ($email_exists > 0) 
         {
             $_SESSION['email_error'] = "This email is already registered!";
-        } 
+            header("Location: employersignup.php");
+            exit();
+        }
+        if ($employer_exists > 0) 
+        {
+            $_SESSION['company_error'] = "An employer with this company name already exists in the selected district!";
+            header("Location: employersignup.php");
+            exit();
+        }
         else 
         {
             // Ensure passwords match
@@ -45,19 +54,21 @@
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
             // Insert new employer
-            $insert_query = "INSERT INTO tbl_employer (email, company_name, district, password) VALUES (?, ?, ?, ?)";
+            $insert_query = "INSERT INTO tbl_employer (company_name, district) VALUES (?, ?)";
             $stmt = mysqli_prepare($conn, $insert_query);
-            mysqli_stmt_bind_param($stmt, "ssss", $email, $companyname, $district, $hashed_password);
+            mysqli_stmt_bind_param($stmt, "ss",$companyname, $district);
 
             if (mysqli_stmt_execute($stmt)) 
             {
-                $sql_login = "INSERT INTO tbl_login (username, email, password, role) VALUES (?, ?, ?, ?)";
+                // fetches employer_id
+                $employer_id = mysqli_insert_id($conn);
+                $sql_login = "INSERT INTO tbl_login (email, password, role, employer_id) VALUES (?, ?, ?, ?)";
                 $stmt_login = mysqli_prepare($conn, $sql_login);
-                mysqli_stmt_bind_param($stmt_login, "sssi", $companyname, $email, $hashed_password, $role);
+                mysqli_stmt_bind_param($stmt_login, "ssii", $email, $hashed_password, $role, $employer_id);
                 // Redirect on successful registration
                 if (mysqli_stmt_execute($stmt_login))
                 {
-                    header("Location: ../userdashboard/employerdashboard.html");
+                    header("Location: ../Login/loginvalidation.php");
                     exit();
                 }
                 else

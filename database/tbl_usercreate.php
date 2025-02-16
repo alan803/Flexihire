@@ -4,15 +4,16 @@ $dbname = "project";
 
 mysqli_select_db($conn, $dbname);
 
-$sql = "CREATE TABLE IF NOT EXISTS tbl_employer (
-    employer_id INT AUTO_INCREMENT PRIMARY KEY,
-    company_name VARCHAR(255) NOT NULL,
-    district VARCHAR(50) NOT NULL,
+$sql = "CREATE TABLE IF NOT EXISTS tbl_user (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    dob DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )";
 
 if (mysqli_query($conn, $sql)) {
-    echo "Table 'tbl_employer' created successfully.";
+    echo "Table 'tbl_user' created successfully.";
 } else {
     die("Error creating table: " . mysqli_error($conn));
 }

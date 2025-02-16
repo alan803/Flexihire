@@ -18,14 +18,14 @@ body
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     width:1200px;
-    height:650px;
+    height:700px;
 }
 
 .left-section 
 {
     background: url('background.avif') center/cover no-repeat;
     width: 600px;
-    height:610px;
+    height:650px;
     display: flex;
     position: relative;
     left:20px;
@@ -242,4 +242,22 @@ a
     display: block;
     position: relative;
     top:25px;
+}
+#name, #lastname 
+{
+    width: 160px; /* Adjusted width to fit within 350px total */
+    display: inline-block;
+}
+#dob 
+{
+    width: 350px; /* Matches other fields */
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #3a3a4f;
+    color: grey;
+    font-size: 1rem;
+    margin-top: 8px;
+    position: relative;
+    left:40px;
 }

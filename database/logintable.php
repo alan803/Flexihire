@@ -1,20 +1,22 @@
 <?php
-    include 'connectdatabase.php';
-    $dbname="project";
+include 'connectdatabase.php';
+$dbname = "project";
 
-    mysqli_select_db($conn,$dbname);
+mysqli_select_db($conn, $dbname);
 
-    $sql="INSERT INTO tbl_login (username, email, password, role) 
-    VALUES ('flexihire', 'adminflexihire2025@gmail.com', 'adminflexhire2025@', 3);
-    ";
+// Hash the password for security
+$admin_email = "flexihire369@gmail.com";
+$admin_password = password_hash("flexihire2025@", PASSWORD_DEFAULT);
+$admin_role = 3; // Assuming role '3' represents admin
 
-    if(mysqli_query($conn,$sql))
-    {
-        // echo "table created";
-    }
-    else
-    {
-        // die("error".mysqli_error($conn));
-    }
-    mysqli_close($conn);
+$sql = "INSERT INTO tbl_login (email, password, role) 
+        VALUES ('$admin_email', '$admin_password', '$admin_role')";
+
+if (mysqli_query($conn, $sql)) {
+    echo "Admin account added successfully.";
+} else {
+    die("Error inserting admin data: " . mysqli_error($conn));
+}
+
+mysqli_close($conn);
 ?>

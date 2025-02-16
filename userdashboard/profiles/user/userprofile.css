@@ -1,0 +1,297 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+    background-color: #E6E7EE;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    width: 100%;
+    max-width: 1000px;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.settings-icon, .notification-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.profile-section {
+    padding: 20px 0;
+}
+
+.profile-title {
+    color: #4355FF;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.profile-content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+}
+
+.profile-image-section {
+    text-align: center;
+}
+
+.profile-image {
+    width: 100%;
+    max-width: 250px;
+    height: 300px;
+    background: #F8F9FE;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.camera-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.logo-btn, .docs-btn {
+    padding: 10px 20px;
+    border: 2px dashed #4355FF;
+    border-radius: 8px;
+    color: #4355FF;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+}
+
+.docs-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.detail-item {
+    margin-bottom: 15px;
+}
+
+.detail-label {
+    color: #666;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.detail-value {
+    color: #333;
+    font-size: 16px;
+}
+
+.edit-btn {
+    background: #4355FF;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+}
+
+.edit-btn:hover {
+    background: #3644cc;
+}
+a
+{
+    text-decoration: none;
+    color:white;
+}
+a
+{
+    text-decoration: none;
+    color:black;
+}
+.arrow-circle 
+{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    background-color: black;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    margin-left: 5px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.arrow-circle:hover 
+{
+    background-color: #333;
+    transform: scale(1.1);
+}
+.button-group {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.button-outline {
+    padding: 8px 16px;
+    border: 1px dashed #6366f1;
+    border-radius: 8px;
+    color: #6366f1;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #333;
+}
+
+input:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: none;
+    border: none;
+    color: #6b7280;
+}
+
+.btn-save {
+    background: #6366f1;
+    border: none;
+    color: white;
+}
+a
+{
+    text-decoration: none;
+    color:white;
+}
+#back
+{
+    color:black;
+}
+.phone-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.phone-input span {
+    background-color: #f0f0f0;
+    padding: 8px 12px;
+    font-size: 16px;
+    border-right: 1px solid #ccc;
+}
+
+.phone-input input {
+    border: none;
+    outline: none;
+    padding: 8px;
+    font-size: 16px;
+    width: 100%;
+}

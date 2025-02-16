@@ -1,68 +1,77 @@
 <?php
-    session_start();
-    include '../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
-    if($_SERVER['REQUEST_METHOD']=='POST')
+session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+include '../database/connectdatabase.php';
+$dbname = "project";
+mysqli_select_db($conn, $dbname);
+
+$error = "";
+if ($_SERVER['REQUEST_METHOD'] == 'POST') 
+{
+    $email =trim($_POST['email']);
+    $password = trim($_POST['password']);
+    
+    if (empty($email) || empty($password)) 
     {
-        $email=$_POST['email'];
-        $password=$_POST['password'];
-        $error="";
+        $error = "Please enter both email and password";
+    } 
+    else 
+    {
+        $query = "SELECT * FROM tbl_login WHERE email = '$email'";
+        $result = mysqli_query($conn, $query);
         
-        // checking whether the used had an account
-        $checkemail="SELECT * FROM tbl_login WHERE email='$email' ";
-        $checkemailresult=mysqli_query($conn,$checkemail);
-        if(mysqli_num_rows($checkemailresult)>0)
+        if (!$result) 
         {
-            $userdata=mysqli_fetch_assoc($checkemailresult);
-            if(password_verify($password,$userdata['password']))//password_verify() is a built-in PHP function used to verify a hashed password.
+            die("Database error: " . mysqli_error($conn));
+        } 
+        
+        if (mysqli_num_rows($result) > 0) 
+        {
+            $user = mysqli_fetch_assoc($result);
+            
+            if (password_verify($password, $user['password'])) 
             {
-                $_SESSION['email']=$email;
-                $_SESSION['user_id']=$userdata['id'];
-                $_SESSION['role']=$userdata['role'];
-                $_SESSION['username']=$userdata['username'];
+                $_SESSION['email'] = $email;
+                $_SESSION['login_id'] = $user['login_id'];
+                $_SESSION['role'] = $user['role'];
 
-                // redirecting to the user dashboard according to there role
-                if($userdata['role']==1)
+                
+
+                switch ($user['role']) 
                 {
-                    header("Location:../userdashboard/userdashboard.php");
+                    case 1:
+                        header("Location: ../userdashboard/userdashboard.php");
+                        exit();
+                    case 2:
+                        header("Location: ../userdashboard/employerdashboard.html");
+                        exit();
+                    case 3:
+                        header("Location: ../userdashboard/admindashboard.html");
+                        exit();
+                    default:
+                        $error = "Invalid user role.";
+                }
+
+                // JavaScript fallback for redirection
+                echo "<script>window.location.href = '$redirect_url';</script>";
                 exit();
-                }
-                else if($userdata['role']==2)
-                {
-                    header("Location:../userdashboard/employerdashboard.html");
-                    exit();
-                }
-                else if($userdata['role']==3)
-                {
-                    header("Location:../userdashboard/admindashboard.html");
-                    exit();
-                }
-            }
-            else
+            } 
+            else 
             {
-                $error="Incorrect password";
+                $error = "Incorrect password";
             }
-        }
-        else
+        } 
+        else 
         {
-            $error="User not found";
+            $error = "User not found";
         }
-
-        // checking in tbl_user
-        // $checkemail_tbl_user="SELECT * FROM tbl_login WHERE email='$email' ";//selecting the emaiL from the database according to the input by the user
-        // $checkemailresult_tbl_user=mysqli_query($conn,$checkemail_tbl_user);//converts the database result into php associative array.so that we can easily access the column values using column name
-        
-
-        // checking in tbl_employer
-        // $checkemail_tbl_employer="SELECT * FROM tbl_employer WHERE email='$email' ";//selecting the emaiL from the database according to the input by the user
-        // $checkemailresult_tbl_employer=mysqli_query($conn,$checkemail_tbl_employer);//converts the database result into php associative array.so that we can easily access the column values using column name
-
-
-        // chcek whether the user exist or not in tbl_user
-        
     }
+}
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,14 +83,15 @@
 <body>
     <div class="container">
         <div class="image-container">
-        <a href="../homepage/homepage.html" class="back-to-website"><span class="arrow-circle">←</span> Back to website</a>
+            <a href="../homepage/homepage.html" class="back-to-website"><span class="arrow-circle">←</span> Back to website</a>
         </div>
         <div class="form-container">
-        <?php if(!empty($error)): ?>
-            <div class="error-message"><?php echo $error; ?></div><?php endif; ?>
+            <?php if(!empty($error)): ?>
+                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
             <h1><span id="wel">Welcome back<br></span><span id="log">Log in</span></h1>
             <form method="POST" id="form">
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="email" name="email" placeholder="Email" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                 <input type="password" name="password" placeholder="Password" required>
                 <?php if(!empty($error) && $error === "Incorrect password"): ?>
                     <div class="forgot-text">

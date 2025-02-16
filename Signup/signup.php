@@ -1,48 +1,65 @@
 <?php
     $role=1;//user
     session_start();
-    $name = $email = $password = $confirmpassword = "";
+    $name = $email = $password = $confirmpassword = $lastname=$dob="";
     $error = [];
     include '../database/connectdatabase.php';
     if ($_SERVER['REQUEST_METHOD'] == 'POST') 
     {
         $name = $_POST['name'];
+        $lastname=$_POST['lastname'];
         $email = $_POST['email'];
+        $dob=$_POST['dob'];
         $password = $_POST['password'];
 
         $dbname = "project";
         mysqli_select_db($conn, $dbname);
 
         // Check if email is already linked with an account
-        $check_email = "SELECT * FROM tbl_user WHERE email='$email' OR email='$email'
-                    UNION
-                    SELECT * FROM tbl_login WHERE email='$email'";
-        $result = mysqli_query($conn, $check_email);
-            
+        $check_duplicate = "
+        SELECT 'email' AS type FROM tbl_login WHERE email = ? 
+        UNION 
+        SELECT 'user' AS type FROM tbl_user WHERE first_name = ? AND last_name = ? AND dob = ?";
 
-        if (mysqli_num_rows($result) > 0) 
+        $stmt_check = mysqli_prepare($conn, $check_duplicate);
+        mysqli_stmt_bind_param($stmt_check, "ssss", $email, $name, $lastname, $dob);
+        mysqli_stmt_execute($stmt_check);
+        mysqli_stmt_store_result($stmt_check);
+
+        if (mysqli_stmt_num_rows($stmt_check) > 0) 
         {
-            $_SESSION['email_error'] = "This email is already registered!";
-        } 
+            mysqli_stmt_bind_result($stmt_check, $duplicateType);
+            mysqli_stmt_fetch($stmt_check);
+            if ($duplicateType == 'email') 
+            {
+                $_SESSION['email_error'] = "This email is already registered!";
+            } else 
+            {
+                $_SESSION['email_error'] = "User with this name and date of birth already exists!";
+            }
+            header("Location: signup.php");
+            exit();
+        }
         else 
         {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
             // Insert into tbl_user
-            $sql_user = "INSERT INTO tbl_user (name, email, password) VALUES (?, ?, ?)";
+            $sql_user = "INSERT INTO tbl_user (first_name,last_name, dob) VALUES (?, ?, ?)";
             $stmt_user = mysqli_prepare($conn, $sql_user);
-            mysqli_stmt_bind_param($stmt_user, "sss", $name, $email, $hashed_password);
+            mysqli_stmt_bind_param($stmt_user, "sss", $name, $lastname, $dob);
         
             if (mysqli_stmt_execute($stmt_user)) 
             {
+                // fetches employer_id
+                $user_id = mysqli_insert_id($conn);
                 // Insert into tbl_login
-                $sql_login = "INSERT INTO tbl_login (username, email, password, role) VALUES (?, ?, ?, ?)";
+                $sql_login = "INSERT INTO tbl_login (email, password, role,user_id) VALUES (?, ?, ?,?)";
                 $stmt_login = mysqli_prepare($conn, $sql_login);
-                mysqli_stmt_bind_param($stmt_login, "sssi", $name, $email, $hashed_password, $role);
+                mysqli_stmt_bind_param($stmt_login, "ssii",$email, $hashed_password, $role,$user_id);
 
                 if (mysqli_stmt_execute($stmt_login)) 
                 {
-                    header("Location: ../userdashboard/userdashboard.php");
+                    header("Location: ../Login/loginvalidation.php");
                     exit();
                 } 
                 else 
@@ -66,7 +83,7 @@
     <title>Create an Account</title>
     <link rel="stylesheet" href="signup.css">
     <script>
-        function validateName() 
+        function validatename() 
         {
             const name = document.getElementById("name").value;
             const error = document.getElementById("nameError");
@@ -77,7 +94,7 @@
             } 
             else if (!/^[a-zA-Z]*$/.test(name)) 
             {
-                error.textContent = "Name should not contain digits or special characters or spaces.";
+                error.textContent = "Should not contain digits or special characters or spaces";
                 return false;
             } 
             else if (name.length < 4) 
@@ -85,6 +102,24 @@
                 error.textContent = "Name must be at least 5 characters.";
                 return false;
             }
+            error.textContent = "";//used to clear the error message that was previously displayed in the corresponding error <p> element
+            return true;
+        }
+
+        function validatelastname()
+        {
+            const name = document.getElementById("lastname").value;
+            const error = document.getElementById("lastnameerror");
+            if (!name) 
+            {
+                error.textContent = "Last Name is required."; //textcontent is used to get content from html element
+                return false;
+            } 
+            else if (!/^[a-zA-Z]*$/.test(name)) 
+            {
+                error.textContent = "Should not contain digits or special characters or spaces";
+                return false;
+            } 
             error.textContent = "";//used to clear the error message that was previously displayed in the corresponding error <p> element
             return true;
         }
@@ -110,26 +145,70 @@
 
             // Check if email has valid format and domain
             // const emailRegex = ;
-        if (!/^[a-zA-Z0-9][^\s@]*@(gmail\.com|yahoo\.com|hotmail\.com|amaljyothi\.ac\.in|mca\.ajce\.in)$/.test(email)) 
-        {
-            // Check if it's the domain that's invalid
-            if (email.includes('@')) 
+            if (!/^[a-zA-Z0-9][^\s@]*@(gmail\.com|yahoo\.com|hotmail\.com|amaljyothi\.ac\.in|mca\.ajce\.in)$/.test(email)) 
             {
-                const domain = email.split('@')[1];
-                if (domain !== 'gmail.com' && domain !== 'yahoo.com') 
+                // Check if it's the domain that's invalid
+                if (email.includes('@')) 
                 {
-                    error.textContent = "Invalid domain";
-                    return false;
+                    const domain = email.split('@')[1];
+                    if (domain !== 'gmail.com' && domain !== 'yahoo.com') 
+                    {
+                        error.textContent = "Invalid domain";
+                        return false;
+                    }
                 }
+                error.textContent = "Invalid email address.";
+                return false;
             }
-            error.textContent = "Invalid email address.";
-            return false;
-        }
 
-    // Clear error message if all validations pass
-        error.textContent = "";
-        return true;
-    }
+            // Clear error message if all validations pass
+                error.textContent = "";
+                return true;
+        }
+        function validatedob() 
+        {
+            const dobField = document.getElementById("dob");//dobField stores the entire input element (<input type="date">).
+            const error = document.getElementById("doberror");
+            const dob = dobField.value;//dob stores just the user’s entered value (which is a string).
+
+            error.textContent = ""; // Clear previous errors
+
+            if (!dob) 
+            {
+                error.textContent = "Date of Birth is required.";
+                return false;
+            }
+
+            const birthdate = new Date(dob);
+            const today = new Date();// stores the current date so we can compare the entered DOB against today's date
+            let age = today.getFullYear() - birthdate.getFullYear();//calculates actual age
+            const monthdiff = today.getMonth() - birthdate.getMonth();
+            const daydiff = today.getDate() - birthdate.getDate();
+
+            // Adjust age if birthday hasn't occurred this year
+            if (monthdiff < 0 || (monthdiff === 0 && daydiff < 0)) 
+            {
+                age--;
+            }
+
+            let isValid = true;
+
+            // Future Date Check
+            if (birthdate > today)
+             {
+                error.textContent += "Date of Birth cannot be in the future.";
+                isValid = false;
+            }
+
+            // Age Check (Must be 18+)
+            if (age < 18) 
+            {
+                error.textContent += "Must be at least 18 years old.";
+                isValid = false;
+            }
+
+            return isValid; 
+        }
 
 
         function validatePassword() 
@@ -176,11 +255,13 @@
 
         function validateForm() // It ensures that all fields in the form meet their respective validation criteria before allowing the form to be submitted.
         {
-            const validName = validateName();
+            const validname = validatename();
+            const lastname=validatelastname();
             const validEmail = validateEmail();
+            const dob=validatedob();
             const validPassword = validatePassword();
             const validConfirmPassword = validateConfirmPassword();
-            return validName && validEmail && validPassword && validConfirmPassword;//The && operator combines the results of all the validations. If any of the individual validations return false, the overall result will also be false.
+            return validname && lastname && validEmail && dob && validPassword && validConfirmPassword;//The && operator combines the results of all the validations. If any of the individual validations return false, the overall result will also be false.
         }
     </script>
 </head>
@@ -193,11 +274,17 @@
             <h2>Create an account</h2>
             <button id="user1"><a href="../Signup/signup.php" id="user">User</a></button>
             <button id="employer1"><a href="../Signup/employersignup.php" id="employer">Employer</a></button>
-            <p>Already have an account? <a href="../Login/login.php" style="color: #665efc; text-decoration: none;">Log in</a></p>
+            <p>Already have an account? <a href="../Login/loginvalidation.php" style="color: #665efc; text-decoration: none;">Log in</a></p>
             <form method="post" onsubmit="return validateForm()">
-                <div>
-                    <input type="text" id="name" name="name" placeholder="Name"  onkeyup="validateName()"><!-- The onkeyup event is a JavaScript event that triggers when the user releases a key on the keyboard while typing into an input field.  -->
-                    <p class="error" id="nameError"></p>
+                <div style="display: flex; gap: 10px;">
+                    <div>
+                        <input type="text" id="name" name="name" placeholder="First Name" onkeyup="validatename()">
+                        <p class="error" id="nameError"></p>
+                    </div>
+                    <div>
+                        <input type="text" id="lastname" name="lastname" placeholder="Last Name" onkeyup="validatelastname()">
+                        <p class="error" id="lastnameerror"></p>
+                    </div>
                 </div>
                 <div>
                     <input type="email" id="email" name="email" placeholder="E-mail"  onkeyup="validateEmail()">
@@ -210,6 +297,10 @@
                             }
                         ?>
                     </p>
+                </div>
+                <div>
+                    <input type="date" id="dob" name="dob" placeholder="Date of Birth" onkeyup="validatedob()">
+                    <p class="error" id="doberror"></p>
                 </div>
                 <div>
                     <input type="password" id="password" name="password" placeholder="Enter your password"  onkeyup="validatePassword()">

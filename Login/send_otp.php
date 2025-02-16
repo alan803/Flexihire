@@ -46,10 +46,10 @@
     if (isset($_GET['email']) && filter_var($_GET['email'], FILTER_VALIDATE_EMAIL)) 
     {
         $email = urldecode($_GET['email']); // Decode the email from the URL
-        $sql="SELECT username FROM tbl_login where email='$email'";
-        $result=mysqli_query($conn,$sql);
-        $row=mysqli_fetch_assoc($result);
-        $username=$row['username'];
+        // $sql="SELECT username FROM tbl_login where email='$email'";
+        // $result=mysqli_query($conn,$sql);
+        // $row=mysqli_fetch_assoc($result);
+        // $username=$row['username'];
         $mail = new PHPMailer(true);
         try 
         {
@@ -73,7 +73,7 @@
 
             //Content
             $mail->isHTML(true);                                  //Set email format to HTML
-            $mail->Subject = 'Password reset for your account '.$username;
+            $mail->Subject = 'Password reset for your account ';//.$username;
             $mail->Body    = 'Verification code for password reset  '.$otp;
             $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
 
@@ -157,7 +157,7 @@
                 <p class="error-message"><?php echo $error; ?></p>
             <?php } ?>
             <p class="resend">Didn't receive the code?<a href="#"> Resend OTP</a></p>
-            <a href="login.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
+            <a href="loginvalidation.php" class="back-link"><span class="arrow-circle">←</span> Back to log in</a>
         </form>
     </div>
 </body>
