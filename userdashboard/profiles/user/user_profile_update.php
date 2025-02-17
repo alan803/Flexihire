@@ -11,7 +11,7 @@
     mysqli_select_db($conn, $dbname);
     $user_id = $_SESSION['user_id'];//getting user id from session
 
-    $sql = "SELECT u.first_name, u.last_name, l.email, u.profile_image, u.address, u.phone_number 
+    $sql = "SELECT u.first_name, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.user_id 
             FROM tbl_login l
             JOIN tbl_user u ON l.user_id = u.user_id
             WHERE l.login_id = '$user_id'";
@@ -34,93 +34,126 @@
     $profile_image = $user_data['profile_image'];
     $phone = $user_data['phone_number'];
     $address = $user_data['address'];
+    $actual_user_id = $user_data['user_id'];
 
-    // Handle profile picture upload
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES["profile_image"])) {
-        $upload_dir = "../../../database/profile_picture/";
-
-        // Create directory if it doesn't exist
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $file_name = $_FILES["profile_image"]["name"];
-        $file_tmp = $_FILES["profile_image"]["tmp_name"];
-        $file_error = $_FILES["profile_image"]["error"];
-
-        if ($file_error === 0) 
-        {
-            // Rename the file to prevent overwriting
-            $new_file_name = "user_" . $user_id . "_" . time() . "." . pathinfo($file_name, PATHINFO_EXTENSION);
-            $upload_path = $upload_dir . $new_file_name;
-
-            // Move the file to the upload directory
-            if (move_uploaded_file($file_tmp, $upload_path)) 
-            {
-                // Update the database with the new profile picture
-                $update_sql = "UPDATE tbl_user SET profile_image = '$new_file_name' WHERE user_id = '$user_id'";
-                mysqli_query($conn, $update_sql);
-
-                // Optionally, update session with new profile image
-                $_SESSION['profile_image'] = $new_file_name;
-
-                // Refresh the page to reflect changes
-                header("Location: userprofile.php");
-                exit();
-            }
-        }
-    }
-
-    // Handle profile data updates (username, phone number, address, email)
+    // Handle form submission
     if ($_SERVER['REQUEST_METHOD'] == 'POST') 
     {
+        $isUpdated = false;
+
+        // Handle profile picture upload if a file was selected
+        if (isset($_FILES["profile_image"]) && $_FILES["profile_image"]["error"] === 0) {
+            $upload_dir = "../../../database/profile_picture/";
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $file_name = $_FILES["profile_image"]["name"];
+            $file_tmp = $_FILES["profile_image"]["tmp_name"];
+            $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            
+            // Check if file is an actual image
+            $check = getimagesize($file_tmp);
+            if($check !== false) {
+                // Only allow certain file formats
+                $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
+                if(in_array($file_extension, $allowed_types)) {
+                    // Delete old profile picture if it exists
+                    if(!empty($profile_image)) {
+                        $old_file = $upload_dir . $profile_image;
+                        if(file_exists($old_file)) {
+                            unlink($old_file);
+                        }
+                    }
+
+                    // Generate new filename
+                    $new_file_name = "user_" . $actual_user_id . "_" . time() . "." . $file_extension;
+                    $upload_path = $upload_dir . $new_file_name;
+
+                    // Move the file to the upload directory
+                    if (move_uploaded_file($file_tmp, $upload_path)) 
+                    {
+                        // Update the database with the new profile picture
+                        $update_sql = "UPDATE tbl_user SET profile_image = ? WHERE user_id = ?";
+                        $stmt = mysqli_prepare($conn, $update_sql);
+                        mysqli_stmt_bind_param($stmt, "si", $new_file_name, $actual_user_id);
+                        
+                        if(mysqli_stmt_execute($stmt)) {
+                            $_SESSION['profile_image'] = $new_file_name;
+                            $isUpdated = true;
+                        }
+                        mysqli_stmt_close($stmt);
+                    }
+                }
+            }
+        }
+
+        // Handle profile data updates
         $new_username = trim($_POST['name']);
         $new_phone = trim($_POST['phone']);
         $new_address = trim($_POST['address']);
         $new_email = trim($_POST['email']);
 
-        $isUpdated = false;
-
         if (!empty($new_username) && $new_username !== $username) 
         {
-            $update_sql = "UPDATE tbl_user SET username = '$new_username' WHERE user_id = '$user_id'";
-            mysqli_query($conn, $update_sql);
-            $_SESSION['username'] = $new_username;
-            $isUpdated = true; // Set the flag to true
+            $update_sql = "UPDATE tbl_user SET username = ? WHERE user_id = ?";
+            $stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($stmt, "si", $new_username, $actual_user_id);
+            if(mysqli_stmt_execute($stmt)) {
+                $_SESSION['username'] = $new_username;
+                $isUpdated = true;
+            }
+            mysqli_stmt_close($stmt);
         }
 
         if (!empty($new_phone) && $new_phone !== $phone) 
         {
-            $update_sql = "UPDATE tbl_user SET phone_number = '$new_phone' WHERE user_id = '$user_id'";
-            mysqli_query($conn, $update_sql);
-            $isUpdated = true; // Set the flag to true
+            $update_sql = "UPDATE tbl_user SET phone_number = ? WHERE user_id = ?";
+            $stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($stmt, "si", $new_phone, $actual_user_id);
+            if(mysqli_stmt_execute($stmt)) {
+                $isUpdated = true;
+            }
+            mysqli_stmt_close($stmt);
         }
 
         if (!empty($new_address) && $new_address !== $address) 
         {
-            $update_sql = "UPDATE tbl_user SET address = '$new_address' WHERE user_id = '$user_id'";
-            mysqli_query($conn, $update_sql);
-            $isUpdated = true; // Set the flag to true
+            $update_sql = "UPDATE tbl_user SET address = ? WHERE user_id = ?";
+            $stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($stmt, "si", $new_address, $actual_user_id);
+            if(mysqli_stmt_execute($stmt)) {
+                $isUpdated = true;
+            }
+            mysqli_stmt_close($stmt);
         }
 
         if (!empty($new_email) && $new_email !== $email) 
         {
             // Check if the new email already exists in the database
-            $check_email_sql = "SELECT COUNT(*) FROM tbl_login WHERE email = '$new_email' AND user_id != '$user_id'";
-            $email_result = mysqli_query($conn, $check_email_sql);
-            $email_exists = mysqli_fetch_row($email_result)[0];
+            $check_email_sql = "SELECT COUNT(*) FROM tbl_login WHERE email = ? AND user_id != ?";
+            $stmt = mysqli_prepare($conn, $check_email_sql);
+            mysqli_stmt_bind_param($stmt, "si", $new_email, $actual_user_id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_bind_result($stmt, $email_count);
+            mysqli_stmt_fetch($stmt);
+            mysqli_stmt_close($stmt);
 
-            if ($email_exists > 0) 
+            if ($email_count > 0) 
             {
-                // If the email already exists, show an error and stop further processing
                 echo "<script>alert('Email already in use by another user.');</script>";
             } 
             else 
             {
-                // Update the email in the database
-                $update_email_sql = "UPDATE tbl_login SET email = '$new_email' WHERE user_id = '$user_id'";
-                mysqli_query($conn, $update_email_sql);
-                $isUpdated = true; // Set the flag to true
+                $update_email_sql = "UPDATE tbl_login SET email = ? WHERE user_id = ?";
+                $stmt = mysqli_prepare($conn, $update_email_sql);
+                mysqli_stmt_bind_param($stmt, "si", $new_email, $actual_user_id);
+                if(mysqli_stmt_execute($stmt)) {
+                    $isUpdated = true;
+                }
+                mysqli_stmt_close($stmt);
             }
         }
 
@@ -150,27 +183,25 @@
         <h1 class="title">Edit Profile</h1>
 
         <div class="profile-section">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="profile-image">
-                    <!-- Dynamically load user's profile picture -->
-                    <img id="previewImage" 
-                    src="<?php echo !empty($user_data['profile_image']) ? 'database/profile_picture/' . $user_data['profile_image'] : '/api/placeholder/250/250'; ?>" 
-                    alt="Profile">
+            <div class="profile-image">
+                <!-- Dynamically load user's profile picture -->
+                <img id="previewImage" 
+                src="<?php echo !empty($user_data['profile_image']) ? '../../../database/profile_picture/' . $user_data['profile_image'] : '/api/placeholder/250/250'; ?>" 
+                alt="Profile" style="width: 150px; height: 150px; object-fit: cover;">
 
-                    <div class="upload-buttons">
-                        <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;">
-                        <button type="button" class="upload-btn" onclick="document.getElementById('profile_image').click();">
-                            CHANGE PROFILE
-                        </button>
-                    </div>
-                    <p id="imageError"></p>
+                <div class="upload-buttons">
+                    <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="previewProfileImage(this)">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('profile_image').click();">
+                        CHANGE PROFILE
+                    </button>
                 </div>
+                <p id="imageError"></p>
+            </div>
 
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary">SAVE</button>
-                </div>
-            </form>
             <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
+                <!-- Hidden file input to store the selected file -->
+                <input type="file" id="hidden_profile_image" name="profile_image" style="display: none;">
+                
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Username</label>
@@ -242,6 +273,23 @@
             }
         });
     });
+
+    function previewProfileImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+                // Transfer the file to the hidden input in the form
+                const hiddenInput = document.getElementById('hidden_profile_image');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(input.files[0]);
+                hiddenInput.files = dataTransfer.files;
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
     function validateUsername() 
     {

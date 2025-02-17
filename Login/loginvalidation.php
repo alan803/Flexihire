@@ -26,8 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
         {
             $_SESSION['email'] = $email;
             $_SESSION['user_id'] = $userdata['login_id']; // Ensure 'login_id' exists in DB
+            $_SESSION['employer_id']=$userdata['login_id'];
             $_SESSION['role'] = $userdata['role'];
-
+            //admin needs to be set $_SESSION[''] = $userdata[''];
             session_write_close(); // Ensure session is saved before redirecting
 
             // Redirect based on role

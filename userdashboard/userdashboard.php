@@ -3,7 +3,7 @@
     
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
-        header("Location: ../login/register.php");
+        header("Location: ../login/loginvalidation.php");
         exit();
     }
 
