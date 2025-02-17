@@ -17,7 +17,7 @@
 
     // Get user data from database using user_id
     $user_id = $_SESSION['user_id'];
-    $sql = "SELECT u.first_name, u.last_name, l.email,u.username 
+    $sql = "SELECT u.first_name, u.last_name, l.email, u.username, u.profile_image 
         FROM tbl_login l
         JOIN tbl_user u ON l.user_id = u.user_id
         WHERE l.login_id = '$user_id'";
@@ -34,6 +34,7 @@
             $email = $user_data['email'];
             $username = $user_data['first_name'] . " " . $user_data['last_name'];
             $new_username=$user_data['username'];
+            $profile_image = $user_data['profile_image'];
         }
     } 
     else 
@@ -81,7 +82,11 @@
                 <li id="list"><b><a href="">Contact</a></b></li>-->
                 <li>
                     <div class="profile-container">
-                        <img src="profile.png" id="profilePic" class="profile-pic" alt="Profile">
+                        <?php if (!empty($profile_image)): ?>
+                            <img src="/mini project/database/profile_picture/<?php echo $profile_image; ?>" id="profilePic" class="profile-pic" alt="Profile">
+                        <?php else: ?>
+                            <img src="profile.png" id="profilePic" class="profile-pic" alt="Profile">
+                        <?php endif; ?>
                         <div id="dropdownMenu" class="dropdown-menu">
                             <ul>
                                 <li><li><p id="username"><?php echo isset($new_username) && !empty($new_username) ? $new_username : $username; ?></p></li></li>
