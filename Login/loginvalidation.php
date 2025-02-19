@@ -25,12 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
         if (password_verify($password, $userdata['password'])) 
         {
             $_SESSION['email'] = $email;
-            $_SESSION['user_id'] = $userdata['login_id']; // Ensure 'login_id' exists in DB
-            $_SESSION['employer_id']=$userdata['login_id'];
+            $_SESSION['user_id'] = $userdata['login_id'];
             $_SESSION['role'] = $userdata['role'];
-            //admin needs to be set $_SESSION[''] = $userdata[''];
-            session_write_close(); // Ensure session is saved before redirecting
-
+            $val=$_SESSION['user_id'];
+            $_SESSION['employer_id']=$userdata['employer_id'];
+            echo $_SESSION['employer_id']."<br>";
+            echo $_SESSION['role'];
+            // if (!isset($_SESSION['user_id'])) {
+            // echo "User ID not set in session.";
+            // } // Ensure 'login_id' exists in DB
             // Redirect based on role
             switch ($userdata['role']) 
             {

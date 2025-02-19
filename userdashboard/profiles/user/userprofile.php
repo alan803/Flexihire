@@ -32,6 +32,20 @@
     <link rel="stylesheet" href="userprofile.css">
 </head>
 <body>
+    <div class="grid-container">
+            <img src="grid.png" id="grid" class="grid">
+    </div>
+    <div class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li><a id="sidebar-item" href="../../userdashboard.php">Job List</a></li>
+            <li><a id="sidebar-item" href="../../sidebar/jobgrid/jobgrid.html">Job Grid</a></li>
+            <li><a id="sidebar-item" href="../../sidebar/applyjob/applyjob.html">Apply job</a></li>
+            <li><a id="sidebar-item" href="../../sidebar/jobdetails/jobdetails.html">Job Details</a></li>
+            <li><a id="sidebar-item" href="../../sidebar/jobcategory/jobcategory.html">Job Category</a></li>
+            <li><a id="sidebar-item" href="../../sidebar/appointment/appointment.html">Appointments</a></li>
+            <li><a id="sidebar-item" href="userprofile.php">Profile</a></li>
+        </ul>
+    </div>
     <div class="container">
         <header class="header">
             <a href="../../userdashboard.php" id="back"><span class="arrow-circle">←</span>&nbsp;&nbsp;Back</a>
@@ -104,5 +118,39 @@
             </div>
         </section>
     </div>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const gridicon = document.getElementById("grid");
+    const sidebar = document.getElementById("sidebar");
+
+    // Disable transition temporarily to prevent animation on page reload
+    sidebar.style.transition = "none";
+
+    // Retrieve sidebar state from localStorage
+    let isOpen = localStorage.getItem("sidebarOpen") === "true";
+
+    // Apply the saved state without triggering animation
+    if (isOpen) {
+        sidebar.classList.add("show");
+    } else {
+        sidebar.classList.remove("show");
+    }
+
+    // Re-enable transition after a short delay
+    setTimeout(() => {
+        sidebar.style.transition = "width 0.3s ease-in-out";
+    }, 50); // Small delay ensures transition is only applied on user interaction
+
+    // Toggle sidebar when grid icon is clicked
+    gridicon.addEventListener("click", function () {
+        isOpen = !isOpen;
+        sidebar.classList.toggle("show", isOpen);
+
+        // Save the state in localStorage
+        localStorage.setItem("sidebarOpen", isOpen);
+    });
+});
+
+    </script>
 </body>
 </html>

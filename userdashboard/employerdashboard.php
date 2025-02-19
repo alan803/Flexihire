@@ -14,12 +14,13 @@
     // Initializing variables
     $username = '';
     $email = '';
-    $employer_id = $_SESSION['employer_id'];
 
+    $employer_id = $_SESSION['employer_id'];
+    
     $sql = "SELECT u.company_name, l.email 
-            FROM tbl_login AS l
-            JOIN tbl_employer AS u ON l.employer_id = u.employer_id
-            WHERE l.login_id = ?";
+        FROM tbl_login AS l
+        JOIN tbl_employer AS u ON l.employer_id = u.employer_id
+        WHERE u.employer_id = ?";
 
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $employer_id);
@@ -65,7 +66,7 @@
                     <div class="applicant-info">
                         <div class="applicant-avatar">MZ</div>
                         <div>
-                            <div class="applicant-name">Muhammad Zahid</div>
+                            <div class="applicant-name"><?php echo $employer_id;?></div>
                             <div class="applicant-position">React Developer</div>
                         </div>
                     </div>
@@ -127,7 +128,7 @@
                 </div>
                 <div class="nav-item">
                     <i class="fas fa-briefcase"></i>
-                    My Jobs
+                    <a href="myjoblist.php">My Jobs</a>
                 </div>
                 <div class="nav-item">
                     <i class="fas fa-calendar-check"></i>

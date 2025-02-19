@@ -109,7 +109,7 @@
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/jobdetails/jobdetails.html">Job Details</a></li>
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/jobcategory/jobcategory.html">Job Category</a></li>
                 <li><a id="sidebar-item" href="../userdashboard/sidebar/appointment/appointment.html">Appointments</a></li>
-                <li><a id="sidebar-item" href="profiles/user/user.php">Profile</a></li>
+                <li><a id="sidebar-item" href="profiles/user/userprofile.php">Profile</a></li>
             </ul>
         </div>
         <div class="searchbar" id="searchbar">
