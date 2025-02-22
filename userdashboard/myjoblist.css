@@ -93,21 +93,25 @@ a
     color:white;
 }
 .job_list {
-    max-width: 800px; /* Adjust as needed */
-    margin: 20px auto; /* Centers the div */
+    width: 70%; /* Adjusted width for job list */
+    margin: 50px auto; /* Centers the div */
     padding: 20px;
     border: 1px solid #ccc; /* Optional: adds a border */
     border-radius: 8px; /* Optional: rounds the corners */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
+    margin-right: 100px; /* Align job items to the left */
 }
 
 .job-item {
-    margin: 20px 0; /* Space between job items */
+    width: 95%; /* Adjusted width for card */
+    margin: 10px 0; /* Margin for spacing between items */
+    text-align: left; /* Align text to the left */
     padding: 15px; /* Padding inside each job item */
     border: 1px solid #ddd; /* Border around each job item */
     border-radius: 8px; /* Rounded corners */
     background-color: #f9f9f9; /* Background color */
+    margin-left: 0px; /* Align job items to the left */
 }
 
 .button-container {
@@ -118,17 +122,32 @@ a
 }
 
 .vacancy-button {
-    background-color: white; /* Initial button color */
-    color: black; /* Text color */
-    border: 2px solid black; /* Remove border */
+    background-color: #645bff; /* Initial button color */
+    color: white; /* Text color */
+    /*border: 2px solid rgb(255, 242, 0);  Remove border */
     padding: 10px 15px; /* Padding */
     border-radius: 5px; /* Rounded corners */
     cursor: pointer; /* Pointer cursor on hover */
     transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+    border:none;
 }
 
 .vacancy-button:hover {
-    background-color: rgb(255, 242, 0); /* Change background on hover */
-    color: rgb(0, 0, 0); /* Change text color on hover */
+    background-color: black; /* Change background on hover */
+    color: white; /* Change text color on hover */
     border:none;
+}
+#delete
+{
+    color:white;
+}
+.alert {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    margin: 15px 0;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
 }

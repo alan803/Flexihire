@@ -41,6 +41,13 @@
         header("Location: ../login/loginvalidation.php");
         exit();
     }
+    // fetching data from tbl_jobs
+    $sql_fetch="SELECT * FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
+    $stmt_fetch=mysqli_prepare($conn,$sql_fetch);
+    mysqli_stmt_bind_param($stmt_fetch,"i",$employer_id);
+    mysqli_stmt_execute($stmt_fetch);
+    $result_fetch=mysqli_stmt_get_result($stmt_fetch);
+    mysqli_stmt_close($stmt_fetch);
 ?>
 
 <!DOCTYPE html>
@@ -134,6 +141,10 @@
                     <i class="fas fa-calendar-check"></i>
                     Interviews
                 </div>
+                <!-- /<div class="nav-item"> 
+                    <i class="fas fa-recycle"></i>
+                    Job Bin
+                </div>-->
             </nav>
             <div class="settings-section">
                 <div class="nav-item">
@@ -151,7 +162,7 @@
         <div class="main-content">
             <div class="header">
                 <h1>Dashboard</h1>
-                <button class="post-job-btn">Post a Job</button>
+                <button class="post-job-btn"><a href="postjob.php">Post a Job</a></button>
             </div>
 
             <!-- Overview Stats -->
@@ -187,44 +198,49 @@
             </div>
 
             <!-- Recent Jobs Section -->
-            <div class="recent-jobs">
-                <h2 class="recent-jobs-header">Recently Posted Jobs</h2>
-                <div class="job-card">
-                    <h3 class="job-title">Workshop Manager</h3>
-                    <div class="job-meta">
-                        <span>Mehsana, Gujarat</span>
-                        <span>Created on: 20 July 2020</span>
-                        <span>Expires: 20 July 2020</span>
-                    </div>
-                    <div class="job-stats">
-                        <span class="stat">Applicants: 20</span>
-                        <span class="stat">New: 20</span>
-                        <span class="stat">Reviewed: 5</span>
-                        <span class="stat">Rejected: 15</span>
-                        <span class="stat">Hired: 5</span>
-                        <a href="#" class="view-applicants">View Applicants</a>
+            <div class="main-contentt">
+                <!-- searchbar -->
+                <div class="search-container">
+                    <div class="search-bar">
+                        <select>
+                            <option value="salary">Salary</option>
+                            <option value="location">Location</option>
+                            <option value="title">Job Title</option>
+                        </select>
+                        <input type="text" placeholder="Enter your search query..." onfocus="showSearchBar()">
                     </div>
                 </div>
+                <!-- job listing -->
+                <div class="job-card-container" style="gap:20px;">
+                <?php while ($job_data = mysqli_fetch_array($result_fetch)): ?>
                 <div class="job-card">
-                    <h3 class="job-title">Customer Care Executive Service</h3>
-                    <div class="job-meta">
-                        <span>Mehsana, Gujarat</span>
-                        <span>Created on: 20 July 2020</span>
-                        <span>Expires: 20 July 2020</span>
-                    </div>
-                    <div class="job-stats">
-                        <span class="stat">Applicants: 20</span>
-                        <span class="stat">New: 20</span>
-                        <span class="stat">Reviewed: 5</span>
-                        <span class="stat">Rejected: 15</span>
-                        <span class="stat">Hired: 5</span>
-                        <a href="#" class="view-applicants">View Applicants</a>
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="display: flex;">
+                            <div class="company-logo" style="background: #000;"></div>
+                            <div>
+                                <h3><?php echo $job_data['job_title']; ?></h3>
+                                <div style="color: #666;">
+                                    <?php echo $job_data['location']; ?> • <?php echo $job_data['vacancy_date']; ?> • <?php echo $job_data['salary'] . "₹"; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="apply-btn"><a href="myjoblist.php">Details</a></button>
                     </div>
                 </div>
+                <?php endwhile; ?>
+            </div>
             </div>
         </div>
     </div>
-
     <!-- Font Awesome -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js">
+        document.addEventListener("DOMContentLoaded", function () 
+        {
+            const bookmarkIcon = document.querySelector(".bookmark-icon");
+            
+            bookmarkIcon.addEventListener("click", function () {
+                this.classList.toggle("bookmarked");
+            });
+        });
+    </script>
 </body>

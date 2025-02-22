@@ -86,7 +86,7 @@ body {
     padding: 12px;
     border: 1px solid #eee;
     border-radius: var(--border-radius);
-    margin-bottom: 12px;
+    margin-bottom: 40px;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
@@ -304,12 +304,18 @@ body {
 .recent-jobs-header {
     margin-bottom: 16px;
 }
-
+/* styling job  */
+.job-card-container {
+    /* background: #e8e5ff; */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
 .job-card {
     border: 1px solid #eee;
     border-radius: var(--border-radius);
     padding: 16px;
-    margin-bottom: 16px;
+    margin-top: 16px;
 }
 
 .job-title {
@@ -347,4 +353,126 @@ a
 {
     text-decoration: none;
     color:white;
+}
+/* job div setting */
+.main-content 
+{
+    margin-top:20px;
+    margin-left: 20px;
+    width: calc(100% -0px);
+    padding: 30px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    overflow-y: auto;
+}
+
+/* Search bar styling */
+.search-bar 
+{
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 25px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    width: calc(100% -0px);/*Adjust search bar size*/
+    transition: all 0.3s ease-in-out;
+    margin-bottom: 20px;
+    margin-top:20px;
+}
+
+/* Increase Search Bar Width */
+.search-bar select, .search-bar input 
+{
+    padding: 10px;
+    border: none;
+    font-size: 16px;
+    border-radius: 20px;
+}
+
+.search-bar select 
+{
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.search-bar input 
+{
+    flex-grow: 1;
+    width: 100%;
+    outline: none;
+}
+
+/* Add focus effect */
+.search-bar input:focus 
+{
+    background: #f8f8f8;
+}
+/* .bookmark-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.3s ease, fill 0.3s ease;
+    color: gray;
+}
+
+.bookmark-icon.bookmarked path {
+    fill: #ffcc00;
+} */
+
+
+/* 🔹 Apply Button */
+.apply-btn {
+    background: #7f00ff;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(127, 0, 255, 0.2);
+}
+
+.apply-btn:hover {
+    transform: scale(1.05);
+    background: #6a00d6;
+    box-shadow: 0 6px 15px rgba(127, 0, 255, 0.3);
+}
+
+.apply-btn:active {
+    transform: scale(0.98);
+    background: #5a00b4;
+    box-shadow: 0 2px 5px rgba(127, 0, 255, 0.2);
+}
+/* Bookmark Icon */
+.bookmark-icon {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: transform 0.3s ease, fill 0.3s ease;
+    fill: gray;
+    position: relative;
+    left:190px;
+}
+
+/* Hover Effect */
+.bookmark-icon:hover {
+    transform: scale(1.1);
+    fill: var(--accent-color);
+}
+
+/* Clicked (Bookmarked) Effect */
+.bookmark-icon.bookmarked {
+    fill: #ffcc00;
+    transform: scale(1.2);
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
 }

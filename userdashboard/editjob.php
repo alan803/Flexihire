@@ -11,7 +11,21 @@
         header("Location: ../login/loginvalidation.php");
         exit();
     }
+    // for displaying the already inputed value
+    $sqlprint="SELECT * FROM tbl_jobs WHERE employer_id='$employer_id'";
+    $resultprint=mysqli_query($conn,$sqlprint);
+    $print=mysqli_fetch_assoc($resultprint);
+    $title=$print['job_title'];
+    $loc=$print['location'];
+    $description=$print['job_description'];
+    $wrk_hour=$print['working_hour'];
+    $vac_date=$print['vacancy_date'];
+    $vac=$print['vacancy'];
+    $sal=$print['salary'];
+    $app_deadline=$print['application_deadline'];
+    $itrview=$print['interview'];
 
+    // for inserting value
     $sql = "SELECT u.company_name, l.email 
     FROM tbl_login AS l
     JOIN tbl_employer AS u ON l.employer_id = u.employer_id
@@ -39,14 +53,16 @@
         $application_deadline = $_POST['last_date'];
         $interview = isset($_POST['interview']) ? $_POST['interview'] : null;
     
-        $stmt = $conn->prepare("INSERT INTO tbl_jobs (job_title, location, job_description, working_hour, vacancy_date, vacancy, salary, application_deadline, interview, employer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssi", $job_title, $location, $job_description, $working_hour, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id);
+        $stmt = $conn->prepare("UPDATE tbl_jobs SET job_title=?, location=?, job_description=?, working_hour=?, vacancy_date=?, vacancy=?, salary=?, application_deadline=?, interview=? WHERE employer_id=?");
+        $stmt->bind_param("sssssssssi", $job_title, $location, $job_description, $working_hour, $vacancy_date, $vacancy, $salary, $application_deadline, $interview,$employer_id);
         
         if ($stmt->execute()) {
             // Redirect to the same page with a success message
-            header("Location: postjob.php?message=Job added successfully!");
+            header("Location: myjoblist.php");
             exit();
-        } else {
+        } 
+        else 
+        {
             // Redirect with an error message if something goes wrong
             header("Location: postjob.php?message=Error posting job.");
             exit();
@@ -111,45 +127,46 @@
 
     <div class="form-container">
         <form method="post" id="add_job" onsubmit="return validateForm()">
-            <input type="text" name="job_title" id="job_title" placeholder="Job title" onkeyup="validateJobTitle()">
+            <input type="text" name="job_title" id="job_title" placeholder="Job title" value="<?php echo $title;?>" onkeyup="validateJobTitle()">
             <p id="titleerror" class="error"></p>
 
-            <input type="text" name="location" id="location" placeholder="Location" onkeyup="validateLocation()">
+            <input type="text" name="location" id="location" placeholder="Location" value="<?php echo $loc;?>" onkeyup="validateLocation()">
             <p id="locationerror" class="error"></p>
 
-            <input type="text" name="job_description" id="job_description" placeholder="Job Description" onkeyup="validateJobDescription()">
+            <input type="text" name="job_description" id="job_description" placeholder="Job Description" value="<?php echo $description;?>" onkeyup="validateJobDescription()">
             <p id="descriptionerror" class="error"></p>
 
-            <input type="text" name="working_hour" id="working_hour" placeholder="Time limit of the job" onkeyup="validateWorkingHour()">
+            <input type="text" name="working_hour" id="working_hour" placeholder="Time limit of the job" value="<?php echo $wrk_hour;?>" onkeyup="validateWorkingHour()">
             <p id="workinghourerror" class="error"></p>
 
             <label>Vacancy date:</label>
-            <input type="date" name="date" id="date" onchange="validateDate()">
+            <input type="date" name="date" id="date" onchange="validateDate()" value="<?php echo $vac_date;?>" >
             <p id="dateerror" class="error"></p>
 
-            <input type="text" name="vacancy" id="vacancy" placeholder="No of vacancy" onkeyup="validateVacancy()">
+            <input type="text" name="vacancy" id="vacancy" placeholder="No of vacancy" value="<?php echo $vac;?>" onkeyup="validateVacancy()">
             <p id="vacancyerror" class="error"></p>
 
-            <input type="text" name="salary" id="salary" placeholder="Salary" onkeyup="validateSalary()">
+            <input type="text" name="salary" id="salary" placeholder="Salary" value="<?php echo floor($sal);?>" onkeyup="validateSalary()">
             <p id="salaryerror" class="error"></p>
 
             <label>Application time limit:</label>
-            <input type="date" name="last_date" id="last_date" onchange="validateLastDate()">
+            <input type="date" name="last_date" id="last_date" value="<?php echo $app_deadline;?>" onchange="validateLastDate()">
             <p id="lastdateerror" class="error"></p>
 
             <div class="form-group">
                 <label for="interview">Interview?</label>
                 <div class="radio-group">
-                    <input type="radio" id="yes" name="interview" value="yes">
+                    <input type="radio" id="yes" name="interview" value="yes" <?php if ($itrview == "yes") echo "checked"; ?> >
                     <label id="yess">Yes</label>
 
-                    <input type="radio" id="no" name="interview" value="no">
+                    <input type="radio" id="no" name="interview" value="no" <?php if ($itrview == "no") echo "checked"; ?> >
                     <label id="noo">No</label>
+
                 </div>
                 <p id="interviewerror" class="error"></p>
             </div>
 
-            <input type="submit" value="Add Job">
+            <input type="submit" value="Update">
         </form>
     </div>
 
