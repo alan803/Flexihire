@@ -48,7 +48,21 @@
     mysqli_stmt_execute($stmt_fetch);
     $result_fetch=mysqli_stmt_get_result($stmt_fetch);
     mysqli_stmt_close($stmt_fetch);
-?>
+
+    // count fo active_jobs
+    $sql_count = "SELECT COUNT(*) AS active_jobs FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
+    $stmt_count = mysqli_prepare($conn, $sql_count);
+    mysqli_stmt_bind_param($stmt_count, "i", $employer_id);
+    mysqli_stmt_execute($stmt_count);
+    $result_count = mysqli_stmt_get_result($stmt_count);
+    $active_jobs = 0;
+
+    if ($row = mysqli_fetch_assoc($result_count)) {
+        $active_jobs = $row['active_jobs'];
+    }
+
+    mysqli_stmt_close($stmt_count);
+    ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -122,7 +136,10 @@
                 <img src="logo.png" alt="AutoRecruits.in">
             </div>
             <div class="company-info">
-                <span><?php echo $username;?></span>
+                <span><?php echo $username."<br>";
+                            echo $email;
+                        ?>
+                </span>
             </div>
             <nav class="nav-menu">
                 <div class="nav-item active">
@@ -170,7 +187,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">🔵</div>
                     <div>
-                        <div class="stat-number">50</div>
+                        <div class="stat-number"><?php echo $active_jobs; ?></div>
                         <div class="stat-label">Active Jobs</div>
                     </div>
                 </div>

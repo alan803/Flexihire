@@ -15,8 +15,9 @@
     transition: all 0.3s ease;
 }
 
-body {
-    background-color: #f5f6f8;
+body 
+{
+    background: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
     min-height: 100vh;
 }
 
@@ -157,7 +158,11 @@ body {
     min-width: 200px;
     height: 100vh;
     min-height: 100vh;
-    background-color: var(--primary-color);
+    background-color: #333a44;/*
+    Deep Navy Blue (#1E2A38) – Provides a professional and modern look.
+    Muted Grayish Blue (#475569) – Offers a subtle, calming effect.
+    Soft Lavender (#C3A2FA) – Keeps a friendly, modern feel.
+    Classic Black (#121212).#8a41ff*/
     padding: 20px;
     color: var(--text-light);
     position: fixed;
@@ -190,7 +195,7 @@ body {
     display: flex;
     align-items: center;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.1);
+    background: #333a44;
     border-radius: var(--border-radius);
     margin-bottom: 24px;
 }
@@ -248,8 +253,8 @@ body {
 }
 
 .post-job-btn {
-    background: var(--accent-color);
-    color: var(--text-dark);
+    background: #6c63ff;
+    color: white;
     padding: 12px 24px;
     border-radius: var(--border-radius);
     border: none;
@@ -262,7 +267,7 @@ body {
 .post-job-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    background: #ffcd39;
+    background: #5948d6;
 }
 
 /* Stats Section */
@@ -423,7 +428,7 @@ a
 
 /* 🔹 Apply Button */
 .apply-btn {
-    background: #7f00ff;
+    background: #5948d6;
     color: white;
     border: none;
     padding: 10px 18px;
