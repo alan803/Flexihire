@@ -1,10 +1,10 @@
 <?php
     session_start();
-    $employer_id=$_SESSION['employer_id'];
+    $employer_id = $_SESSION['employer_id'];
     include '../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
-    $error="";
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
+    $error = "";
 
     if (!isset($_SESSION['employer_id'])) 
     {
@@ -13,9 +13,9 @@
     }
 
     $sql = "SELECT u.company_name, l.email 
-    FROM tbl_login AS l
-    JOIN tbl_employer AS u ON l.employer_id = u.employer_id
-    WHERE u.employer_id = ?";
+        FROM tbl_login AS l
+        JOIN tbl_employer AS u ON l.employer_id = u.employer_id
+        WHERE u.employer_id = ?";
 
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $employer_id);
@@ -27,35 +27,45 @@
         $employer_data = mysqli_fetch_array($result);
         $email = $employer_data['email'];
         $username = $employer_data['company_name'];
-    } 
-    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST") 
+    {
+        $category = $_POST['category'];
+        $license=$_POST['license_required'];
+        $badge=$_POST['badge_required'];
         $job_title = $_POST['job_title'];
-        $location = $_POST['location'];
         $job_description = $_POST['job_description'];
-        $working_hour = $_POST['working_hour'];
+        $location = $_POST['location'];
+        $town=$_POST['town'];
         $vacancy_date = $_POST['date'];
+        $start_time = $_POST['start_time'];
+        $end_time = $_POST['end_time'];
+        $working_days=$_POST['working_days'];
         $vacancy = $_POST['vacancy'];
         $salary = $_POST['salary'];
         $application_deadline = $_POST['last_date'];
+        $contact=$_POST['phone'];
         $interview = isset($_POST['interview']) ? $_POST['interview'] : null;
-    
-        $stmt = $conn->prepare("INSERT INTO tbl_jobs (job_title, location, job_description, working_hour, vacancy_date, vacancy, salary, application_deadline, interview, employer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssi", $job_title, $location, $job_description, $working_hour, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id);
+        $stmt = $conn->prepare("INSERT INTO tbl_jobs (category, job_title, location, job_description, vacancy_date, vacancy, salary, application_deadline, interview, employer_id, town, start_time, end_time, working_days, contact_no, license_required, badge_required) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssssssssssss", $category, $job_title, $location, $job_description, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id, $town, $start_time, $end_time, $working_days, $contact, $license, $badge);
         
-        if ($stmt->execute()) {
-            // Redirect to the same page with a success message
+        if ($stmt->execute()) 
+        {
             header("Location: postjob.php?message=Job added successfully!");
             exit();
-        } else {
-            // Redirect with an error message if something goes wrong
+        } 
+        else 
+        {
             header("Location: postjob.php?message=Error posting job.");
             exit();
         }
+
         if (isset($stmt) && $stmt !== false) 
         {
             $stmt->close();
         }
-    }    
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,11 +75,12 @@
     <title>Post Job</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="postjob.css">
+    <script src="postjob.js"></script>
 </head>
 <body>
     <div class="sidebar">
         <div class="logo-container">
-            <img src="logo.png" alt="AutoRecruits.in">
+            <img src="logo.png">
         </div>
         <div class="company-info">
             <span><?php echo $username;?></span>
@@ -95,7 +106,7 @@
         <div class="settings-section">
             <div class="nav-item">
                 <i class="fas fa-user"></i>
-                <a>My Profile</a>
+                <a href="employer_profile.php">My Profile</a>
             </div>
             <div class="nav-item">
                 <i class="fas fa-sign-out-alt"></i>
@@ -103,39 +114,123 @@
             </div>
         </div>
     </div>
-    <?php if (isset($_GET['message'])): ?>
-        <div class="alert">
-            <?php echo htmlspecialchars($_GET['message']); ?>
-        </div>
-    <?php endif; ?>
-
     <div class="form-container">
         <form method="post" id="add_job" onsubmit="return validateForm()">
+            <select name="category" id="category" onchange="validatecategory()">
+                <option value="">Select Category</option>
+                <option value="Delivery and logistics">Delivery & Logistics</option>
+                <option value="Hospitality and catering">Hospitality & Catering</option>
+                <option value="Housekeeping and cleaning">Housekeeping & Cleaning</option>
+                <option value="Retail and store jobs">Retail & Store Jobs</option>
+                <option value="Warehouse and factory jobs">Warehouse & Factory Jobs</option>
+                <option value="Maintenance">Maintenance</option>
+            </select>
+            <p id="categoryerror" class="error"></p>
+
+            <!-- Add this after the category select -->
+            <div id="delivery-docs" style="display: none;">
+                <div class="upload-container">
+                    <label>Driving License Required:</label>
+                    <select name="license_required" id="license_required" class="doc-select">
+                        <option value="">Select License Type</option>
+                        <option value="two_wheeler">Two Wheeler License</option>
+                        <option value="four_wheeler">Four Wheeler License</option>
+                        <option value="both">Both Required</option>
+                        <option value="not_required">Not Required</option>
+                    </select>
+                    <p id="licenseerror" class="error"></p>
+                </div>
+
+                <div class="upload-container">
+                    <label>Badge Required:</label>
+                    <select name="badge_required" id="badge_required" class="doc-select">
+                        <option value="">Select Badge Requirement</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <p id="badgeerror" class="error"></p>
+                </div>
+            </div>
+            <label>Job title</label>
             <input type="text" name="job_title" id="job_title" placeholder="Job title" onkeyup="validateJobTitle()">
             <p id="titleerror" class="error"></p>
 
-            <input type="text" name="location" id="location" placeholder="Location" onkeyup="validateLocation()">
-            <p id="locationerror" class="error"></p>
-
+            <label>Job Description</label>
             <input type="text" name="job_description" id="job_description" placeholder="Job Description" onkeyup="validateJobDescription()">
             <p id="descriptionerror" class="error"></p>
 
-            <input type="text" name="working_hour" id="working_hour" placeholder="Time limit of the job" onkeyup="validateWorkingHour()">
-            <p id="workinghourerror" class="error"></p>
+            <!-- Location selection -->
+            <label>Location</label>
+            <select name="location" id="location" onchange="showTowns()">
+                <option value="">Select District</option>
+                <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                <option value="Kollam">Kollam</option>
+                <option value="Pathanamthitta">Pathanamthitta</option>
+                <option value="Alappuzha">Alappuzha</option>
+                <option value="Kottayam">Kottayam</option>
+                <option value="Idukki">Idukki</option>
+                <option value="Ernakulam">Ernakulam</option>
+                <option value="Thrissur">Thrissur</option>
+                <option value="Palakkad">Palakkad</option>
+                <option value="Malappuram">Malappuram</option>
+                <option value="Kozhikode">Kozhikode</option>
+                <option value="Wayanad">Wayanad</option>
+                <option value="Kannur">Kannur</option>
+                <option value="Kasaragod">Kasaragod</option>
+            </select>
+            <p id="locationerror" class="error"></p>
+
+            <!-- Town selection -->
+            <label id="townLabel" style="display:none;">Select Town</label>
+            <select name="town" id="tvm_towns" style="display:none;">
+                <option value="">Select Town</option>
+            </select>
+            <p id="townerror" class="error"></p>
 
             <label>Vacancy date:</label>
             <input type="date" name="date" id="date" onchange="validateDate()">
             <p id="dateerror" class="error"></p>
 
+            <label>Working hours</label>
+            <div class="time-container">
+                <div class="time-selects">
+                    <select id="start-time" name="start_time" class="time-select">
+                        <option value="">Select Start Time</option>
+                    </select>
+
+                    <span class="separator">to</span>
+
+                    <select id="end-time" name="end_time" class="time-select">
+                        <option value="">Select End Time</option>
+                    </select>
+                </div>
+                <p id="timeerror" class="error"></p>
+            </div>
+
+            <label>Working days</label>
+            <select name="working_days" id="working_days" onchange="validateWorkingDays()">
+                <option value="">Select Working Days</option>
+                <option value="part_time">Part Time</option>
+                <option value="full_day">Full day</option>
+                <option value="shift">Shift-based</option>
+            </select>
+            <p id="workingdayserror" class="error"></p>
+
+            <label>vacancy</label>
             <input type="text" name="vacancy" id="vacancy" placeholder="No of vacancy" onkeyup="validateVacancy()">
             <p id="vacancyerror" class="error"></p>
 
+            <label>Salary</label>
             <input type="text" name="salary" id="salary" placeholder="Salary" onkeyup="validateSalary()">
             <p id="salaryerror" class="error"></p>
 
             <label>Application time limit:</label>
             <input type="date" name="last_date" id="last_date" onchange="validateLastDate()">
             <p id="lastdateerror" class="error"></p>
+
+            <label>Contact number</label>
+            <input type="text" id="phone" name="phone" placeholder="Phone number" onkeyup="validatePhone()">
+            <p id="phoneerror" class="error"></p>
 
             <div class="form-group">
                 <label for="interview">Interview?</label>
@@ -148,226 +243,8 @@
                 </div>
                 <p id="interviewerror" class="error"></p>
             </div>
-
             <input type="submit" value="Add Job">
         </form>
     </div>
-
-    <script>
-        function validateJobTitle() {
-            const jobTitle = document.getElementById('job_title').value.trim();
-            const error = document.getElementById("titleerror");
-
-            if (!jobTitle) {
-                error.textContent = "Job title is required.";
-                return false;
-            } else if (!/^[A-Za-z\s]+$/.test(jobTitle)) {
-                error.textContent = "Only letters are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateLocation() {
-            const location = document.getElementById('location').value.trim();
-            const error = document.getElementById("locationerror");
-
-            if (!location) {
-                error.textContent = "Location is required.";
-                return false;
-            } else if (!/^[A-Za-z\s]+$/.test(location)) {
-                error.textContent = "Only letters are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateJobDescription() 
-        {
-            const jobDescription = document.getElementById('job_description').value.trim();
-            const error = document.getElementById("descriptionerror");
-
-            if (!jobDescription) {
-                error.textContent = "Job description is required.";
-                return false;
-            } else if (!/^[A-Za-z\s()]+$/.test(jobDescription)) { 
-                error.textContent = "Only letters, spaces, and brackets () are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-        function validateWorkingHour() 
-        {
-            const workingHour = document.getElementById('working_hour').value.trim();
-            const error = document.getElementById('workinghourerror');
-
-            const regex = /^\d+\s*(hour|hours|week|weeks|month|months)$/i; // Accepts formats like "4 hours" or "3 weeks"
-
-            if (!workingHour) {
-                error.textContent = "Working hour is required.";
-                return false;
-            } else if (!regex.test(workingHour)) {
-                error.textContent = "Should be in hour  or week or month.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-        function validateDate() 
-        {
-        const dateInput = document.getElementById('date').value;
-        const error = document.getElementById('dateerror');
-
-        if (!dateInput) {
-            error.textContent = "Vacancy date is required.";
-            return false;
-        }
-
-        const selectedDate = new Date(dateInput);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize time to avoid timezone issues
-
-        const oneMonthLater = new Date(today);
-        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1); // One month from today
-
-        // Check if the selected date is in the past
-        if (selectedDate < today) {
-            error.textContent = "The selected date cannot be in the past.";
-            return false;
-        }
-
-        // Check if the selected date is more than 1 month ahead
-        if (selectedDate > oneMonthLater) {
-            error.textContent = "The selected date cannot be more than 1 month from today.";
-            return false;
-        }
-
-        //If valid, clear error message
-        error.textContent = "";
-        return true;
-    }
-
-
-        function validateVacancy() 
-        {
-            const vacancy = document.getElementById('vacancy').value.trim();
-            const error = document.getElementById('vacancyerror');
-
-            if (!vacancy) {
-                error.textContent = "Vacancy is required.";
-                return false;
-            } else if (!/^\d+$/.test(vacancy)) {
-                error.textContent = "Only numbers are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateSalary() {
-            const salary = document.getElementById('salary').value.trim();
-            const error = document.getElementById("salaryerror");
-
-            if (!salary) {
-                error.textContent = "Salary is required.";
-                return false;
-            } else if (!/^\d+$/.test(salary)) {
-                error.textContent = "Only numbers are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateLastDate() 
-        {
-            const lastDate = document.getElementById('last_date').value;
-            const vacancyDate = document.getElementById('date').value;
-            const error = document.getElementById('lastdateerror');
-
-            if (!lastDate) {
-                error.textContent = "Application last date is required.";
-                return false;
-            }
-
-            const selectedLastDate = new Date(lastDate);
-            const selectedVacancyDate = new Date(vacancyDate);
-            const today = new Date();
-
-            if (selectedLastDate < today) {
-                error.textContent = "The selected last date cannot be in the past.";
-                return false;
-            } else if (vacancyDate && selectedLastDate > selectedVacancyDate) {
-                error.textContent = "The application deadline must be before the vacancy date.";
-                return false;
-            } else if (vacancyDate && selectedLastDate.getTime() === selectedVacancyDate.getTime()) {
-                error.textContent = "The application deadline and vacancy date cannot be the same.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-
-        function validateInterview() {
-            const radios = document.getElementsByName("interview");
-            const error = document.getElementById("interviewerror");
-            let isChecked = false;
-
-            for (let radio of radios) {
-                if (radio.checked) {
-                    isChecked = true;
-                    break;
-                }
-            }
-
-            if (!isChecked) {
-                error.textContent = "Please select an interview option.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateForm() {
-    let valid = true;  // Assume all fields are valid
-
-    if (!validateJobTitle()) valid = false;
-    if (!validateLocation()) valid = false;
-    if (!validateJobDescription()) valid = false;
-    if (!validateWorkingHour()) valid = false;
-    if (!validateDate()) valid = false;
-    if (!validateVacancy()) valid = false;
-    if (!validateSalary()) valid = false;
-    if (!validateLastDate()) valid = false;
-    if (!validateInterview()) valid = false;
-
-    return valid; // Prevents form submission if any validation fails
-}
-
-    </script>
-
-    <style>
-        .error {
-            color: red;
-            font-size: 14px;
-        }
-    </style>
 </body>
 </html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        /* Header with Mountain Background */
+        .header {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://via.placeholder.com/1920x500');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Profile Section */
+        .profile-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .profile-photo {
+            position: absolute;
+            top: -75px;
+            left: 50px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid white;
+            overflow: hidden;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-info {
+            padding-top: 90px;
+            padding-left: 220px;
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        .profile-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .profile-title {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .profile-location {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .location-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Content Section */
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        
+        /* Left Sidebar */
+        .sidebar {
+            animation: fadeIn 1s ease-in;
+        }
+        
+        .contact-info {
+            margin-bottom: 20px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .chat-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #4ECDC4;
+            color: white;
+            padding: 12px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-button:hover {
+            background-color: #3aa8a0;
+            transform: translateY(-2px);
+        }
+        
+        .rating {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .rating-score {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .rating-stars {
+            color: #FFC107;
+            margin: 5px 0;
+        }
+        
+        .rating-count {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .intro-box, .calculator-box {
+            background-color: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: 250px;
+            animation: slideInUp 0.8s ease-out;
+        }
+        
+        .intro-box {
+            position: relative;
+            background-color: #e6f2ff;
+        }
+        
+        .intro-title {
+            font-size: 38px;
+            color: white;
+            padding: 30px;
+            font-weight: bold;
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.7);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button:hover {
+            background-color: rgba(0,0,0,0.9);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .calculator-box {
+            background-color: #e1f7f7;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .calculator-title {
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .house-icon {
+            font-size: 48px;
+            margin: 15px 0;
+        }
+        
+        .calculator-text {
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .calculator-dots {
+            display: flex;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ddd;
+        }
+        
+        .dot.active {
+            background-color: #4ECDC4;
+        }
+        
+        .calculate-button {
+            background-color: white;
+            color: #4ECDC4;
+            border: 2px solid #4ECDC4;
+            padding: 8px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .calculate-button:hover {
+            background-color: #4ECDC4;
+            color: white;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-photo {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .profile-info {
+                padding-left: 20px;
+                padding-top: 160px;
+                text-align: center;
+            }
+            
+            .profile-location {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Mountain Background -->
+    <div class="header"></div>
+    
+    <!-- Profile Section -->
+    <div class="profile-container">
+        <div class="profile-photo">
+            <img src="https://via.placeholder.com/150" alt="Profile Photo">
+        </div>
+        
+        <div class="profile-info">
+            <h1 class="profile-name">John Anderson</h1>
+            <p class="profile-title">Advisor and Consultant at Global Inc.</p>
+            
+            <div class="profile-location">
+                <div class="location-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>New York, USA</span>
+                </div>
+                <div class="location-item">
+                    <i class="fab fa-facebook"></i>
+                    <span>johnanderson55</span>
+                </div>
+                <div class="location-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>j.anderson</span>
+                </div>
+                <div class="location-item">
+                    <i class="fab fa-skype"></i>
+                    <span>john_anderson</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content Section -->
+    <div class="content">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <div>
+                        <div>+1 800 123 4567 (Office)</div>
+                        <div>+1 888 765 4321 (Mobile)</div>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>john.anderson@global.com</div>
+                </div>
+            </div>
+            
+            <a href="#" class="chat-button">
+                <i class="fas fa-comment"></i>
+                <span>Chat</span>
+            </a>
+            
+            <div class="rating">
+                <div class="rating-score">4.5</div>
+                <div class="rating-stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <div class="rating-count">123 reviews</div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="intro-box">
+                <h2 class="intro-title">Introduction</h2>
+                <div class="play-button">
+                    <i class="fas fa-play"></i>
+                </div>
+            </div>
+            
+            <div class="calculator-box">
+                <h3 class="calculator-title">LOAN CALCULATOR</h3>
+                <div class="house-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <p class="calculator-text">Get great rates and an effortless close.</p>
+                <div class="calculator-dots">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+                <a href="#" class="calculate-button">Calculate →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animation for elements when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate Play Button
+            const playButton = document.querySelector('.play-button');
+            setInterval(() => {
+                playButton.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                setTimeout(() => {
+                    playButton.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 500);
+            }, 2000);
+            
+            // Animate Calculator Dots
+            const dots = document.querySelectorAll('.dot');
+            let currentActive = 0;
+            
+            setInterval(() => {
+                dots.forEach(dot => dot.classList.remove('active'));
+                currentActive = (currentActive + 1) % dots.length;
+                dots[currentActive].classList.add('active');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

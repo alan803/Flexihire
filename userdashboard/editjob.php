@@ -18,13 +18,19 @@
     $title=$print['job_title'];
     $loc=$print['location'];
     $description=$print['job_description'];
-    $wrk_hour=$print['working_hour'];
     $vac_date=$print['vacancy_date'];
     $vac=$print['vacancy'];
     $sal=$print['salary'];
     $app_deadline=$print['application_deadline'];
     $itrview=$print['interview'];
-
+    $phone=$print['contact_no'];
+    $category=$print['category'];
+    $license=$print['license_required'];
+    $badge=$print['badge_required'];
+    $town=$print['town'];
+    $start_time=$print['start_time'];
+    $end_time=$print['end_time'];
+    $working_days=$print['working_days'];
     // for inserting value
     $sql = "SELECT u.company_name, l.email 
     FROM tbl_login AS l
@@ -43,32 +49,83 @@
         $username = $employer_data['company_name'];
     } 
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
-        $job_title = $_POST['job_title'];
-        $location = $_POST['location'];
-        $job_description = $_POST['job_description'];
-        $working_hour = $_POST['working_hour'];
-        $vacancy_date = $_POST['date'];
-        $vacancy = $_POST['vacancy'];
-        $salary = $_POST['salary'];
-        $application_deadline = $_POST['last_date'];
-        $interview = isset($_POST['interview']) ? $_POST['interview'] : null;
-    
-        $stmt = $conn->prepare("UPDATE tbl_jobs SET job_title=?, location=?, job_description=?, working_hour=?, vacancy_date=?, vacancy=?, salary=?, application_deadline=?, interview=? WHERE employer_id=?");
-        $stmt->bind_param("sssssssssi", $job_title, $location, $job_description, $working_hour, $vacancy_date, $vacancy, $salary, $application_deadline, $interview,$employer_id);
+        // Build the SQL query dynamically based on which fields have values
+        $updateFields = array();
+        $types = "";
+        $params = array();
+
+        // Helper function to add field if it has a value
+        function addField(&$updateFields, &$types, &$params, $field, $value) {
+            if (!empty($value)) {
+                $updateFields[] = "$field=?";
+                $types .= "s";
+                $params[] = $value;
+            }
+        }
+
+        // Add fields only if they have values
+        addField($updateFields, $types, $params, "job_title", $_POST['job_title']);
+        addField($updateFields, $types, $params, "location", $_POST['location']);
+        addField($updateFields, $types, $params, "job_description", $_POST['job_description']);
+        addField($updateFields, $types, $params, "vacancy_date", $_POST['date']);
+        addField($updateFields, $types, $params, "vacancy", $_POST['vacancy']);
+        addField($updateFields, $types, $params, "salary", $_POST['salary']);
+        addField($updateFields, $types, $params, "application_deadline", $_POST['last_date']);
+        addField($updateFields, $types, $params, "category", $_POST['category']);
+        addField($updateFields, $types, $params, "contact_no", $_POST['phone']);
+        addField($updateFields, $types, $params, "town", $_POST['town']);
+        
+        // Special handling for fields that might be empty strings but valid
+        if (isset($_POST['interview'])) {
+            addField($updateFields, $types, $params, "interview", $_POST['interview']);
+        }
+
+        // Handle license_required and badge_required based on category
+        if ($_POST['category'] === "Delivery and logistics") {
+            if (isset($_POST['license_required'])) {
+                addField($updateFields, $types, $params, "license_required", $_POST['license_required']);
+            }
+            if (isset($_POST['badge_required'])) {
+                addField($updateFields, $types, $params, "badge_required", $_POST['badge_required']);
+            }
+        } else {
+            // If category is not Delivery and logistics, set these fields to NULL
+            $updateFields[] = "license_required=NULL";
+            $updateFields[] = "badge_required=NULL";
+        }
+
+        if (isset($_POST['working_days'])) {
+            addField($updateFields, $types, $params, "working_days", $_POST['working_days']);
+        }
+        if (!empty($_POST['start_time'])) {
+            addField($updateFields, $types, $params, "start_time", $_POST['start_time']);
+        }
+        if (!empty($_POST['end_time'])) {
+            addField($updateFields, $types, $params, "end_time", $_POST['end_time']);
+        }
+
+        // Add employer_id to the parameters
+        $types .= "i";
+        $params[] = $employer_id;
+
+        if (!empty($updateFields)) {
+            $sql = "UPDATE tbl_jobs SET " . implode(", ", $updateFields) . " WHERE employer_id=?";
+            
+            $stmt = $conn->prepare($sql);
+            
+            // Bind parameters dynamically
+            if ($params) {
+                $stmt->bind_param($types, ...$params);
+            }
         
         if ($stmt->execute()) {
-            // Redirect to the same page with a success message
             header("Location: myjoblist.php");
             exit();
-        } 
-        else 
-        {
-            // Redirect with an error message if something goes wrong
-            header("Location: postjob.php?message=Error posting job.");
+            } else {
+                header("Location: postjob.php?message=Error updating job.");
             exit();
         }
-        if (isset($stmt) && $stmt !== false) 
-        {
+            
             $stmt->close();
         }
     }    
@@ -81,6 +138,7 @@
     <title>Post Job</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="postjob.css">
+    <script src="editjob.js"></script>
 </head>
 <body>
     <div class="sidebar">
@@ -127,25 +185,112 @@
 
     <div class="form-container">
         <form method="post" id="add_job" onsubmit="return validateForm()">
+            <input type="hidden" name="employer_id" value="<?php echo $employer_id; ?>">
+
+            <select name="category" id="category" onchange="validatecategory()">
+                <option value="">Select Category</option>
+                <option value="Delivery and logistics" <?php if($category == "Delivery and logistics") echo "selected"; ?>>Delivery & Logistics</option>
+                <option value="Hospitality and catering" <?php if($category == "Hospitality and catering") echo "selected"; ?>>Hospitality & Catering</option>
+                <option value="Housekeeping and cleaning" <?php if($category == "Housekeeping and cleaning") echo "selected"; ?>>Housekeeping & Cleaning</option>
+                <option value="Retail and store jobs" <?php if($category == "Retail and store jobs") echo "selected"; ?>>Retail & Store Jobs</option>
+                <option value="Warehouse and factory jobs" <?php if($category == "Warehouse and factory jobs") echo "selected"; ?>>Warehouse & Factory Jobs</option>
+                <option value="Maintenance" <?php if($category == "Maintenance") echo "selected"; ?>>Maintenance</option>
+            </select>
+            <p id="categoryerror" class="error"></p>
+
+            <!-- Add this after the category select -->
+            <div id="delivery-docs" style="display: <?php echo ($category == 'Delivery and logistics') ? 'block' : 'none'; ?>">
+                <div class="upload-container">
+                    <label>Driving License Required:</label>
+                    <select name="license_required" id="license_required" class="doc-select">
+                        <option value="">Select License Type</option>
+                        <option value="two_wheeler" <?php if($license == "two_wheeler") echo "selected"; ?>>Two Wheeler License</option>
+                        <option value="four_wheeler" <?php if($license == "four_wheeler") echo "selected"; ?>>Four Wheeler License</option>
+                        <option value="both" <?php if($license == "both") echo "selected"; ?>>Both Required</option>
+                        <option value="not_required" <?php if($license == "not_required") echo "selected"; ?>>Not Required</option>
+                    </select>
+                    <p id="licenseerror" class="error"></p>
+                </div>
+
+                <div class="upload-container">
+                    <label>Badge Required:</label>
+                    <select name="badge_required" id="badge_required" class="doc-select">
+                        <option value="">Select Badge Requirement</option>
+                        <option value="yes" <?php if($badge == "yes") echo "selected"; ?>>Yes</option>
+                        <option value="no" <?php if($badge == "no") echo "selected"; ?>>No</option>
+                    </select>
+                    <p id="badgeerror" class="error"></p>
+                </div>
+            </div>
+            <label>Job title</label>
             <input type="text" name="job_title" id="job_title" placeholder="Job title" value="<?php echo $title;?>" onkeyup="validateJobTitle()">
             <p id="titleerror" class="error"></p>
 
-            <input type="text" name="location" id="location" placeholder="Location" value="<?php echo $loc;?>" onkeyup="validateLocation()">
-            <p id="locationerror" class="error"></p>
-
+            <label>Job Description</label>
             <input type="text" name="job_description" id="job_description" placeholder="Job Description" value="<?php echo $description;?>" onkeyup="validateJobDescription()">
             <p id="descriptionerror" class="error"></p>
 
-            <input type="text" name="working_hour" id="working_hour" placeholder="Time limit of the job" value="<?php echo $wrk_hour;?>" onkeyup="validateWorkingHour()">
-            <p id="workinghourerror" class="error"></p>
+            <label>Location</label>
+            <select name="location" id="location" onchange="showTowns()">
+                <option value="">Select District</option>
+                <option value="Thiruvananthapuram" <?php if($loc == "Thiruvananthapuram") echo "selected"; ?>>Thiruvananthapuram</option>
+                <option value="Kollam" <?php if($loc == "Kollam") echo "selected"; ?>>Kollam</option>
+                <option value="Pathanamthitta" <?php if($loc == "Pathanamthitta") echo "selected"; ?>>Pathanamthitta</option>
+                <option value="Alappuzha" <?php if($loc == "Alappuzha") echo "selected"; ?>>Alappuzha</option>
+                <option value="Kottayam" <?php if($loc == "Kottayam") echo "selected"; ?>>Kottayam</option>
+                <option value="Idukki" <?php if($loc == "Idukki") echo "selected"; ?>>Idukki</option>
+                <option value="Ernakulam" <?php if($loc == "Ernakulam") echo "selected"; ?>>Ernakulam</option>
+                <option value="Thrissur" <?php if($loc == "Thrissur") echo "selected"; ?>>Thrissur</option>
+                <option value="Palakkad" <?php if($loc == "Palakkad") echo "selected"; ?>>Palakkad</option>
+                <option value="Malappuram" <?php if($loc == "Malappuram") echo "selected"; ?>>Malappuram</option>
+                <option value="Kozhikode" <?php if($loc == "Kozhikode") echo "selected"; ?>>Kozhikode</option>
+                <option value="Wayanad" <?php if($loc == "Wayanad") echo "selected"; ?>>Wayanad</option>
+                <option value="Kannur" <?php if($loc == "Kannur") echo "selected"; ?>>Kannur</option>
+                <option value="Kasaragod" <?php if($loc == "Kasaragod") echo "selected"; ?>>Kasaragod</option>
+            </select>
+            <p id="locationerror" class="error"></p>
+
+            <!-- Town selection -->
+            <label id="townLabel" style="display:none;">Select Town</label>
+            <select name="town" id="tvm_towns" style="display:none;">
+                <option value="">Select Town</option>
+            </select>
+            <p id="townerror" class="error"></p>
 
             <label>Vacancy date:</label>
             <input type="date" name="date" id="date" onchange="validateDate()" value="<?php echo $vac_date;?>" >
             <p id="dateerror" class="error"></p>
 
+            <label>Working hours</label>
+            <div class="time-container">
+                <div class="time-selects">
+                    <select id="start-time" name="start_time" class="time-select">
+                        <option value="">Select Start Time</option>
+                    </select>
+
+                    <span class="separator">to</span>
+
+                    <select id="end-time" name="end_time" class="time-select">
+                        <option value="">Select End Time</option>
+                    </select>
+                </div>
+                <p id="timeerror" class="error"></p>
+            </div>
+
+            <label>Working days</label>
+            <select name="working_days" id="working_days" onchange="validateWorkingDays()">
+                <option value="">Select Working Days</option>
+                <option value="part_time" <?php if($working_days == "part_time") echo "selected"; ?>>Part Time</option>
+                <option value="full_day" <?php if($working_days == "full_day") echo "selected"; ?>>Full day</option>
+                <option value="shift" <?php if($working_days == "shift") echo "selected"; ?>>Shift-based</option>
+            </select>
+            <p id="workingdayserror" class="error"></p>
+
+            <label>Vacancy</label>
             <input type="text" name="vacancy" id="vacancy" placeholder="No of vacancy" value="<?php echo $vac;?>" onkeyup="validateVacancy()">
             <p id="vacancyerror" class="error"></p>
 
+            <label>Salary</label>
             <input type="text" name="salary" id="salary" placeholder="Salary" value="<?php echo floor($sal);?>" onkeyup="validateSalary()">
             <p id="salaryerror" class="error"></p>
 
@@ -153,6 +298,9 @@
             <input type="date" name="last_date" id="last_date" value="<?php echo $app_deadline;?>" onchange="validateLastDate()">
             <p id="lastdateerror" class="error"></p>
 
+            <label>Contact number</label>
+            <input type="text" id="phone" name="phone"  value ="<?php echo $phone;?>" onkeyup="validatePhone()">
+            <p id="phoneerror" class="error"></p>
             <div class="form-group">
                 <label for="interview">Interview?</label>
                 <div class="radio-group">
@@ -166,225 +314,148 @@
                 <p id="interviewerror" class="error"></p>
             </div>
 
+            <button type="button" onclick="window.location.href='myjoblist.php'" id="cancel">Cancel</button>
             <input type="submit" value="Update">
         </form>
     </div>
-
-    <script>
-        function validateJobTitle() {
-            const jobTitle = document.getElementById('job_title').value.trim();
-            const error = document.getElementById("titleerror");
-
-            if (!jobTitle) {
-                error.textContent = "Job title is required.";
-                return false;
-            } else if (!/^[A-Za-z\s]+$/.test(jobTitle)) {
-                error.textContent = "Only letters are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateLocation() {
-            const location = document.getElementById('location').value.trim();
-            const error = document.getElementById("locationerror");
-
-            if (!location) {
-                error.textContent = "Location is required.";
-                return false;
-            } else if (!/^[A-Za-z\s]+$/.test(location)) {
-                error.textContent = "Only letters are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateJobDescription() 
-        {
-            const jobDescription = document.getElementById('job_description').value.trim();
-            const error = document.getElementById("descriptionerror");
-
-            if (!jobDescription) {
-                error.textContent = "Job description is required.";
-                return false;
-            } else if (!/^[A-Za-z\s()]+$/.test(jobDescription)) { 
-                error.textContent = "Only letters, spaces, and brackets () are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-        function validateWorkingHour() 
-        {
-            const workingHour = document.getElementById('working_hour').value.trim();
-            const error = document.getElementById('workinghourerror');
-
-            const regex = /^\d+\s*(hour|hours|week|weeks|month|months)$/i; // Accepts formats like "4 hours" or "3 weeks"
-
-            if (!workingHour) {
-                error.textContent = "Working hour is required.";
-                return false;
-            } else if (!regex.test(workingHour)) {
-                error.textContent = "Should be in hour  or week or month.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-        function validateDate() 
-        {
-        const dateInput = document.getElementById('date').value;
-        const error = document.getElementById('dateerror');
-
-        if (!dateInput) {
-            error.textContent = "Vacancy date is required.";
-            return false;
-        }
-
-        const selectedDate = new Date(dateInput);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize time to avoid timezone issues
-
-        const oneMonthLater = new Date(today);
-        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1); // One month from today
-
-        // Check if the selected date is in the past
-        if (selectedDate < today) {
-            error.textContent = "The selected date cannot be in the past.";
-            return false;
-        }
-
-        // Check if the selected date is more than 1 month ahead
-        if (selectedDate > oneMonthLater) {
-            error.textContent = "The selected date cannot be more than 1 month from today.";
-            return false;
-        }
-
-        //If valid, clear error message
-        error.textContent = "";
-        return true;
-    }
-
-
-        function validateVacancy() 
-        {
-            const vacancy = document.getElementById('vacancy').value.trim();
-            const error = document.getElementById('vacancyerror');
-
-            if (!vacancy) {
-                error.textContent = "Vacancy is required.";
-                return false;
-            } else if (!/^\d+$/.test(vacancy)) {
-                error.textContent = "Only numbers are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateSalary() {
-            const salary = document.getElementById('salary').value.trim();
-            const error = document.getElementById("salaryerror");
-
-            if (!salary) {
-                error.textContent = "Salary is required.";
-                return false;
-            } else if (!/^\d+$/.test(salary)) {
-                error.textContent = "Only numbers are allowed.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateLastDate() 
-        {
-            const lastDate = document.getElementById('last_date').value;
-            const vacancyDate = document.getElementById('date').value;
-            const error = document.getElementById('lastdateerror');
-
-            if (!lastDate) {
-                error.textContent = "Application last date is required.";
-                return false;
-            }
-
-            const selectedLastDate = new Date(lastDate);
-            const selectedVacancyDate = new Date(vacancyDate);
-            const today = new Date();
-
-            if (selectedLastDate < today) {
-                error.textContent = "The selected last date cannot be in the past.";
-                return false;
-            } else if (vacancyDate && selectedLastDate > selectedVacancyDate) {
-                error.textContent = "The application deadline must be before the vacancy date.";
-                return false;
-            } else if (vacancyDate && selectedLastDate.getTime() === selectedVacancyDate.getTime()) {
-                error.textContent = "The application deadline and vacancy date cannot be the same.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-
-
-        function validateInterview() {
-            const radios = document.getElementsByName("interview");
-            const error = document.getElementById("interviewerror");
-            let isChecked = false;
-
-            for (let radio of radios) {
-                if (radio.checked) {
-                    isChecked = true;
-                    break;
-                }
-            }
-
-            if (!isChecked) {
-                error.textContent = "Please select an interview option.";
-                return false;
-            }
-
-            error.textContent = "";
-            return true;
-        }
-
-        function validateForm() {
-    let valid = true;  // Assume all fields are valid
-
-    if (!validateJobTitle()) valid = false;
-    if (!validateLocation()) valid = false;
-    if (!validateJobDescription()) valid = false;
-    if (!validateWorkingHour()) valid = false;
-    if (!validateDate()) valid = false;
-    if (!validateVacancy()) valid = false;
-    if (!validateSalary()) valid = false;
-    if (!validateLastDate()) valid = false;
-    if (!validateInterview()) valid = false;
-
-    return valid; // Prevents form submission if any validation fails
-}
-
-    </script>
-
     <style>
-        .error {
+        .error 
+        {
             color: red;
             font-size: 14px;
         }
+        #cancel
+        {
+            cursor: pointer;
+            background-color: #1e2a4a;
+            color:white;
+            width:200px;
+            position: relative;
+            left:150px;
+        }
+        input[type="submit"] 
+        {
+            cursor: pointer;
+            background-color: #1e2a4a;
+            color:white;
+            width:200px;
+            position: relative;
+            left:190px;
+        }
     </style>
+    <script>
+        // District-Town mapping
+        const districtTowns = {
+            'Thiruvananthapuram': ['Thiruvananthapuram', 'Neyyattinkara', 'Attingal', 'Varkala', 'Nedumangad', 'Kazhakkoottam', 'Kallambalam', 'Kovalam', 'Balaramapuram', 'Pothencode'],
+            'Kollam': ['Kollam', 'Paravur', 'Punalur', 'Karunagappally', 'Kottarakkara', 'Chavara', 'Kundara', 'Anchal', 'Oachira', 'Sasthamkotta'],
+            'Pathanamthitta': ['Pathanamthitta', 'Adoor', 'Thiruvalla', 'Ranni', 'Pandalam', 'Konni', 'Mallappally', 'Kozhencherry', 'Mannarakulanji', 'Seethathode'],
+            'Alappuzha': ['Alappuzha', 'Chengannur', 'Kayamkulam', 'Mavelikkara', 'Haripad', 'Cherthala', 'Ambalappuzha', 'Thakazhi', 'Mannar', 'Edathua'],
+            'Kottayam': ['Kottayam', 'Pala', 'Changanassery', 'Vaikom', 'Ettumanoor', 'Erattupetta', 'Kuravilangad', 'Kanjirappally', 'Pampady', 'Kidangoor'],
+            'Idukki': ['Thodupuzha', 'Munnar', 'Adimali', 'Kumily', 'Kattappana', 'Nedumkandam', 'Vagamon', 'Devikulam', 'Peermade', 'Udumalpettai'],
+            'Ernakulam': ['Kochi', 'Aluva', 'Angamaly', 'Muvattupuzha', 'Perumbavoor', 'Kothamangalam', 'North Paravur', 'Kakkanad', 'Piravom', 'Kaloor'],
+            'Thrissur': ['Thrissur', 'Chalakudy', 'Kodungallur', 'Irinjalakuda', 'Guruvayur', 'Kunnamkulam', 'Wadakkanchery', 'Pavaratty', 'Kecheri', 'Mannuthy'],
+            'Palakkad': ['Palakkad', 'Ottapalam', 'Chittur', 'Pattambi', 'Shoranur', 'Mannarkkad', 'Alathur', 'Nemmara', 'Cherpulassery', 'Kongad'],
+            'Malappuram': ['Malappuram', 'Tirur', 'Ponnani', 'Manjeri', 'Perinthalmanna', 'Nilambur', 'Kottakkal', 'Parappanangadi', 'Edappal', 'Kondotty'],
+            'Kozhikode': ['Kozhikode', 'Vadakara', 'Koyilandy', 'Ramanattukara', 'Feroke', 'Koduvally', 'Balussery', 'Mavoor', 'Chelannur', 'Thamarassery'],
+            'Wayanad': ['Kalpetta', 'Sulthan Bathery', 'Mananthavady', 'Meenangadi', 'Panamaram', 'Vythiri', 'Pulpally', 'Ambalavayal', 'Muttil', 'Thariode'],
+            'Kannur': ['Kannur', 'Thalassery', 'Payyanur', 'Mattannur', 'Iritty', 'Koothuparamba', 'Taliparamba', 'Kuthuparamba', 'Panoor', 'Chirakkal'],
+            'Kasaragod': ['Kasaragod', 'Kanhangad', 'Nileshwar', 'Cheruvathur', 'Uppala', 'Manjeshwar', 'Periya', 'Hosdurg', 'Bekal', 'Mogral Puthur']
+        };
+
+        function showTowns() {
+            const selectedDistrict = document.getElementById('location').value;
+            const townSelect = document.getElementById('tvm_towns');
+            const townLabel = document.getElementById('townLabel');
+            const savedTown = '<?php echo $town; ?>';
+            
+            // Clear existing options
+            townSelect.innerHTML = '<option value="">Select Town</option>';
+            
+            if (selectedDistrict) {
+                // Show town dropdown and label immediately
+                townSelect.style.display = 'block';
+                townLabel.style.display = 'block';
+                
+                // Get towns for selected district
+                const towns = districtTowns[selectedDistrict] || [];
+                
+                // Add town options
+                towns.forEach(town => {
+                    const option = document.createElement('option');
+                    option.value = town;
+                    option.textContent = town;
+                    if (town === savedTown) {
+                        option.selected = true;
+                    }
+                    townSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Function to generate time options
+        function generateTimeOptions(selectElement, selectedTime) {
+            console.log('Generating options for time:', selectedTime); // Debug log
+            
+            selectElement.innerHTML = '<option value="">Select Time</option>';
+            
+            // Format the selectedTime to ensure proper comparison
+            let formattedSelectedTime = selectedTime;
+            if (selectedTime && selectedTime.length === 8) { // Handle HH:MM:SS format from database
+                formattedSelectedTime = selectedTime.substring(0, 5); // Extract HH:MM part
+            }
+            
+            console.log('Formatted time for comparison:', formattedSelectedTime); // Debug log
+
+            for (let hour = 0; hour < 24; hour++) {
+                for (let min = 0; min < 60; min += 30) {
+                    let formattedHour = hour.toString().padStart(2, '0');
+                    let formattedMinute = min.toString().padStart(2, '0');
+                    let timeValue = `${formattedHour}:${formattedMinute}`;
+                    let displayHour = hour % 12 || 12;
+                    let amPm = hour < 12 ? "AM" : "PM";
+                    let timeText = `${displayHour}:${formattedMinute} ${amPm}`;
+                    
+                    let option = document.createElement('option');
+                    option.value = timeValue;
+                    option.textContent = timeText;
+                    
+                    // Compare the formatted times
+                    if (timeValue === formattedSelectedTime) {
+                        console.log('Found matching time:', timeValue); // Debug log
+                        option.selected = true;
+                    }
+                    selectElement.appendChild(option);
+                }
+            }
+        }
+
+        // Initialize everything when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize time selectors with saved values
+            const startTime = '<?php echo $start_time; ?>'.trim();
+            const endTime = '<?php echo $end_time; ?>'.trim();
+            
+            // Debug log to check the values
+            console.log('Raw Start Time from PHP:', startTime);
+            console.log('Raw End Time from PHP:', endTime);
+            
+            generateTimeOptions(document.getElementById('start-time'), startTime);
+            generateTimeOptions(document.getElementById('end-time'), endTime);
+
+            // Initialize town selection if location is already selected
+            const selectedDistrict = document.getElementById('location').value;
+            if(selectedDistrict) {
+                // Show town dropdown and label
+                document.getElementById('tvm_towns').style.display = 'block';
+                document.getElementById('townLabel').style.display = 'block';
+                showTowns();
+            }
+
+            // Show delivery docs if category is Delivery and logistics
+            if('<?php echo $category; ?>' === 'Delivery and logistics') {
+                document.getElementById('delivery-docs').style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>

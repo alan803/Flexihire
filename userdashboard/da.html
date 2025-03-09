@@ -3,304 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employer Dashboard - Student Part-time Jobs</title>
+    <title>Time Selector</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --background-color: #f5f6fa;
-            --white: #ffffff;
-        }
-
         body {
-            background-color: var(--background-color);
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-
-        .container {
+        .time-container {
             display: flex;
-            min-height: 100vh;
-            flex-wrap: wrap;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 250px;
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: 20px;
-        }
-
-        .logo {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .logo h2 {
-            color: var(--white);
-        }
-
-        .nav-menu {
-            margin-top: 30px;
-        }
-
-        .nav-menu ul {
-            list-style: none;
-        }
-
-        .nav-menu li {
-            padding: 15px;
-            margin: 5px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .nav-menu li:hover {
-            background-color: var(--secondary-color);
-        }
-
-        .nav-menu .active {
-            background-color: var(--secondary-color);
-        }
-
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            margin-left: 250px;
-            transition: margin-left 0.3s;
-        }
-
-        .header {
-            background-color: var(--white);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background-color: var(--white);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .stat-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .stat-card p {
-            font-size: 24px;
-            color: var(--secondary-color);
-        }
-
-        .recent-applications {
-            background-color: var(--white);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            color: var(--primary-color);
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-        }
-
-        .pending {
-            background-color: #ffeeba;
-            color: #856404;
-        }
-
-        .scheduled {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-
-        .completed {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .action-buttons {
-            display: flex;
+            align-items: center;
             gap: 10px;
         }
-
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
+        select {
+            padding: 8px;
+            font-size: 16px;
         }
-
-        .btn-primary {
-            background-color: var(--secondary-color);
-            color: var(--white);
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: var(--white);
-        }
-
-        /* Mobile Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .dashboard-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-menu li {
-                padding: 12px;
-            }
+        .separator {
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <h2>JobConnect</h2>
-            </div>
-            <nav class="nav-menu">
-                <ul>
-                    <li class="active"><a href="#">Dashboard</a></li>
-                    <li><a href="#">Job Postings</a></li>
-                    <li><a href="#">Applications</a></li>
-                    <li><a href="#">Interviews</a></li>
-                    <li><a href="#">Messages</a></li>
-                    <li><a href="#">Settings</a></li>
-                </ul>
-            </nav>
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <h1>Welcome back, Employer!</h1>
-            </div>
+    <div class="time-container">
+        <!-- <label for="start-time"></label> -->
+        <select id="start-time"></select>
 
-            <!-- Dashboard Stats -->
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <h3>Active Job Posts</h3>
-                    <p>12</p>
-                </div>
-                <div class="stat-card">
-                    <h3>New Applications</h3>
-                    <p>48</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Pending Interviews</h3>
-                    <p>15</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Hired Students</h3>
-                    <p>26</p>
-                </div>
-            </div>
+        <span class="separator">to</span>
 
-            <!-- Recent Applications Table -->
-            <div class="recent-applications">
-                <h2>Recent Applications</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Position</th>
-                            <th>Applied Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>John Doe</td>
-                            <td>Web Developer</td>
-                            <td>2025-01-30</td>
-                            <td><span class="status-badge pending">Pending</span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-primary">Schedule Interview</button>
-                                    <button class="btn btn-danger">Reject</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Jane Smith</td>
-                            <td>Content Writer</td>
-                            <td>2025-01-29</td>
-                            <td><span class="status-badge scheduled">Interview Scheduled</span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-primary">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Mike Johnson</td>
-                            <td>Graphic Designer</td>
-                            <td>2025-01-28</td>
-                            <td><span class="status-badge completed">Completed</span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-primary">View Profile</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- <label for="end-time">End Time:</label> -->
+        <select id="end-time"></select>
     </div>
+
+    <p id="error-message" style="color: red; margin-top: 10px;"></p>
+
+    <script>
+        function generateTimeOptions(selectElement) {
+            selectElement.innerHTML = ""; // Clear previous options
+            const timeIntervals = 30; // 30-minute intervals
+            for (let hour = 0; hour < 24; hour++) {
+                for (let min = 0; min < 60; min += timeIntervals) {
+                    let formattedHour = hour % 12 || 12; // Convert 24-hour format to 12-hour
+                    let amPm = hour < 12 ? "AM" : "PM";
+                    let formattedMinute = min.toString().padStart(2, "0");
+                    let timeValue = `${hour.toString().padStart(2, "0")}:${formattedMinute}`;
+                    let timeText = `${formattedHour}:${formattedMinute} ${amPm}`;
+                    let option = new Option(timeText, timeValue);
+                    selectElement.appendChild(option);
+                }
+            }
+        }
+
+        function validateTimeSelection() {
+            let startTime = document.getElementById("start-time").value;
+            let endTime = document.getElementById("end-time").value;
+            let errorMessage = document.getElementById("error-message");
+
+            if (startTime && endTime && startTime >= endTime) {
+                errorMessage.textContent = "End time must be later than start time!";
+            } else {
+                errorMessage.textContent = "";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let startTimeSelect = document.getElementById("start-time");
+            let endTimeSelect = document.getElementById("end-time");
+
+            generateTimeOptions(startTimeSelect);
+            generateTimeOptions(endTimeSelect);
+
+            startTimeSelect.addEventListener("change", validateTimeSelection);
+            endTimeSelect.addEventListener("change", validateTimeSelection);
+        });
+    </script>
+
 </body>
 </html>

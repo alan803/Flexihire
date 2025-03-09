@@ -71,7 +71,7 @@ mysqli_stmt_close($stmt);
     <div class="settings-section">
         <div class="nav-item">
             <i class="fas fa-user"></i>
-            <a>My Profile</a>
+            <a href="employer_profile.php">My Profile</a>
         </div>
         <div class="nav-item">
             <i class="fas fa-sign-out-alt"></i>

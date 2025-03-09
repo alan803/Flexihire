@@ -9,7 +9,7 @@ if ($conn->connect_error) {
 }
 
 // SQL query to drop the table
-$sql = "ALTER TABLE tbl_job_posting MODIFY interview ENUM('yes', 'no') DEFAULT NULL";
+$sql = "DROP TABLE categories";
 
 // Execute the query
 if ($conn->query($sql) === TRUE) {

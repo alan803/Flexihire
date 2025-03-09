@@ -3,15 +3,21 @@
     padding: 0;
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    transition: all 0.3s ease;
+    transition: none !important;
+    animation: none !important;
 }
 body
 {
     background: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin-left: 250px; /* Add margin equal to sidebar width */
+    min-height: 100vh; /* Ensure minimum height covers viewport */
 }
-.form-container {
+.form-container 
+{
     position: relative;
-    left:140px;
+    left:10px;
     width: 800px;
     margin: 40px auto;
     padding: 20px;
@@ -20,21 +26,22 @@ body
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.form-container h2 {
+.form-container h2 
+{
     text-align: center;
     color: #333;
     margin-bottom: 20px;
 }
 
 .form-container input,
-.form-container textarea {
+.form-container textarea 
+{
     width: calc(100% - 40px);
     padding: 15px;
     margin: 15px 0;
     border: 1px solid #ccc;
     border-radius: 6px;
     box-sizing: border-box;
-    transition: border-color 0.3s;
 }
 
 .form-container input:focus,
@@ -52,7 +59,6 @@ body
     border-radius: 6px;
     cursor: pointer;
     margin-top: 25px;
-    transition: background-color 0.3s;
 }
 
 .form-container button:hover {
@@ -72,12 +78,17 @@ input[type="submit"]
     color:white;
     width:200px;
     position: relative;
-    left:280px;
+    left:250px;
 }
 label
 {
+    display: block;
     position: relative;
-    left:35px;
+    left: 35px;
+    margin-top: 20px !important;
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: #333;
 }
 /* Main Container */
 .container {
@@ -145,7 +156,6 @@ label
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
@@ -174,21 +184,29 @@ a
 .radio-group input[type="radio"] {
     margin-right: 5px; /* Ensures spacing between radio and its label */
 }
-#noo
-{
+
+/* Specific styling for radio group labels if needed */
+.radio-group label {
+    display: inline-block;
+    position: static;  /* Reset position for radio labels */
+    margin-top: 0 !important;
+}
+
+#yess {
     position: relative;
-    left:-350px;
+    left: -150px;
 }
-#yess
-{
-    position:relative;
-    left:-150px;
-}
-#no
-{
+
+#noo {
     position: relative;
-    left:-200px;
+    left: -350px;
 }
+
+#no {
+    position: relative;
+    left: -200px;
+}
+
 .error {
     color: red;
     font-size: 14px;
@@ -211,4 +229,386 @@ form {
     padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+#location
+{
+    position: relative;
+    left:30px;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+#link
+{
+    text-decoration: none;
+    color:white;
+}
+.dropdown {
+    width: 100%;
+}
+
+#districtDropdown {
+    width: 100%; /* Ensures button takes full width */
+    text-align: left;
+}
+
+.dropdown-menu {
+    width: 20%; /* Ensures dropdown matches button width */
+}
+.dropdown-menu {
+    min-width: 230px; /* Adjust dropdown width */
+}
+
+/* Ensure dropdown stays within sidebar */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    left: 100%;
+    top: 0;
+    margin-left: -10px;
+    display: none;
+    background-color: #0056b3; /* Slightly darker blue */
+    border-radius: 5px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+/* Add these styles to match other form elements */
+input [type="select"] 
+{
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+select:hover {
+    border-color: #2196F3;
+    background-color: #f0f7ff;
+}
+
+.error {
+    color: red;
+    font-size: 14px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+/* Update the select styles to match input styling and positioning */
+select {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+    padding: 15px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background-color: white;
+}
+
+select:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+select:hover {
+    border-color: #2196F3;
+}
+
+/* If you need specific styling for the town select */
+#tvm_towns {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+}
+option {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 16px;
+    color: #333;
+    padding: 10px;
+}
+
+.custom-dropdown {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+}
+
+.dropdown-select {
+    width: 100%;
+    padding: 15px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dropdown-menu,
+.submenu,
+.sub-submenu {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+.menu-item,
+.submenu-item,
+.sub-submenu-item {
+    padding: 12px 15px;
+    cursor: pointer;
+}
+
+/* Direct display without transitions */
+.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.submenu-item:hover > .sub-submenu {
+    display: block;
+}
+
+#category {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+    padding: 15px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: white;
+}
+
+/* Remove all hover states */
+.menu-item:hover,
+.submenu-item:hover,
+.sub-submenu-item:hover,
+.dropdown-select:hover,
+#category:hover {
+    border-color: #ccc;
+    background-color: white;
+}
+
+/* Add these styles to your CSS */
+.time-container {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+    margin: 15px 0;
+}
+
+.time-selects {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.time-select {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: white;
+    position: relative;
+    left:0px;
+}
+
+.separator {
+    font-size: 16px;
+    color: #666;
+    padding: 0 10px;
+}
+
+/* Update error message positioning */
+#timeerror {
+    margin-top: 5px;
+    margin-bottom: 0;
+    color: red;
+    font-size: 14px;
+    position: relative;
+    left:-30px;
+}
+
+/* Update dropdown and time selection styles to remove hover effects */
+.menu-item:hover {
+    background-color: transparent; /* Remove hover background */
+}
+
+.sub-submenu-item:hover {
+    background-color: transparent; /* Remove hover background */
+}
+
+.dropdown-select:hover {
+    border-color: #ccc; /* Keep original border color */
+}
+
+.time-select:hover {
+    border-color: #ccc; /* Keep original border color */
+}
+
+select:hover {
+    border-color: #ccc; /* Keep original border color */
+}
+
+/* Keep the submenu display on hover */
+.has-submenu:hover > .submenu,
+.submenu-item:hover > .sub-submenu {
+    display: block;
+}
+
+/* Keep focus states for accessibility */
+.time-select:focus,
+select:focus,
+.dropdown-select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Update select styles to specifically target category */
+#category:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Ensure consistent styling with other selects */
+select:not(.time-select) {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+    margin: 15px 0;
+}
+
+/* Remove animations and transitions */
+.custom-dropdown,
+.dropdown-select,
+.dropdown-menu,
+.submenu,
+.sub-submenu,
+#category,
+select {
+    transition: none !important;
+}
+
+/* Ensure no hover effects */
+.menu-item,
+.submenu-item,
+.sub-submenu-item,
+.dropdown-select,
+#category {
+    transition: none !important;
+}
+
+/* Keep the display functionality without animation */
+.has-submenu:hover > .submenu,
+.submenu-item:hover > .sub-submenu {
+    display: block;
+    transition: none !important;
+}
+
+/* Remove any transition on border changes */
+#category:hover,
+#category:focus,
+.dropdown-select:hover,
+.dropdown-select:focus {
+    transition: none !important;
+}
+
+/* Add styles for the new fields */
+.upload-container {
+    width: 680px !important;
+    position: relative;
+    left: 35px;
+    margin: 15px 0;
+}
+
+.doc-select {
+    width: 100% !important;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: white;
+}
+#license_required
+{
+    width: 640px !important;
+}
+#badge_required
+{
+    width: 640px !important;
+}
+
+/* Add or update these styles */
+.submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.sub-submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.has-submenu {
+    position: relative;
+}
+
+.menu-item,
+.submenu-item,
+.sub-submenu-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    position: relative;
+}
+
+.has-submenu > .submenu,
+.submenu-item.has-submenu > .sub-submenu {
+    display: none;
+}
+
+.has-submenu:hover > .submenu,
+.submenu-item.has-submenu:hover > .sub-submenu {
+    display: block;
+}
+
+/* Add z-index to ensure proper layering */
+.dropdown-menu {
+    z-index: 1000;
+}
+
+.submenu {
+    z-index: 1001;
+}
+
+.sub-submenu {
+    z-index: 1002;
 }

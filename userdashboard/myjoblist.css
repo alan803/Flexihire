@@ -8,6 +8,10 @@
 body
 {
     background: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin-left: 250px; /* Add margin equal to sidebar width */
+    min-height: 100vh; /* Ensure minimum height covers viewport */
 }
 /* Main Container */
 .container {
@@ -103,7 +107,7 @@ a
     border-radius: 8px; /* Optional: rounds the corners */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
-    margin-right: 100px; /* Align job items to the left */
+    margin-right: 170px; /* Align job items to the left */
     background-color: white;
 }
 
