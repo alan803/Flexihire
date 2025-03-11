@@ -785,3 +785,34 @@ textarea.form-input {
     background: #f44336;
     color: white;
 }
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.form-input.error {
+    border-color: #dc3545;
+}
+
+.form-input.valid {
+    border-color: #28a745;
+}
+
+/* Select Input Styles */
+select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+select.form-input:focus {
+    border-color: #333a44;
+    box-shadow: 0 0 0 2px rgba(51, 58, 68, 0.1);
+    outline: none;
+}

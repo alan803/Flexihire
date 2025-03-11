@@ -1,12 +1,18 @@
 <?php
     session_start();
+    //checking if user id set or not
+    if (!isset($_SESSION['user_id'])) 
+    {
+        header("Location: ../../../login/login.php");
+        exit();
+    }
     include '../../../database/connectdatabase.php';
     $dbname="project";
     mysqli_select_db($conn,$dbname);
 
     // retriving data from session
     $user_id=$_SESSION['user_id'];
-    $sql = "SELECT u.first_name, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.username 
+    $sql = "SELECT u.username, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.username 
         FROM tbl_login l
         JOIN tbl_user u ON l.user_id = u.user_id
         WHERE l.login_id = '$user_id'";
@@ -14,14 +20,30 @@
     $user_data = mysqli_fetch_assoc($result);
 
     // storing data to variables
-    $username = $user_data['first_name'];
+    $username = $user_data['username'];
     $email=$user_data['email'];
     $new_username=$user_data['username'];
+    $phone=$user_data['phone_number'];
+    $address=$user_data['address'];
 
     // Get the profile image path for web access
     $profile_image_path = !empty($user_data['profile_image']) 
         ? '/mini project/database/profile_picture/' . $user_data['profile_image']
         : '';
+
+    // At the top of the file after session_start()
+    require_once '../../../database/connectdatabase.php';
+
+    // Get the current user's ID from session
+    $user_id = $_SESSION['user_id'];
+
+    // Fetch the latest user data from database
+    $sql = "SELECT * FROM tbl_user WHERE user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($result);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,82 +52,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Edit</title>
     <link rel="stylesheet" href="userprofile.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="grid-container">
-            <img src="grid.png" id="grid" class="grid">
-    </div>
-    <div class="sidebar" id="sidebar">
-        <ul class="sidebar-menu">
-            <li><a id="sidebar-item" href="../../userdashboard.php">Job List</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobgrid/jobgrid.html">Job Grid</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/applyjob/applyjob.html">Apply job</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobdetails/jobdetails.html">Job Details</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobcategory/jobcategory.html">Job Category</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/appointment/appointment.html">Appointments</a></li>
-            <li><a id="sidebar-item" href="userprofile.php">Profile</a></li>
-        </ul>
-    </div>
-    <div class="container">
-        <header class="header">
-            <a href="../../userdashboard.php" id="back"><span class="arrow-circle">←</span>&nbsp;&nbsp;Back</a>
-            
-            <div class="user-menu">
-                <div class="user-profile">
-                    <?php if (!empty($user_data['profile_image'])): ?>
-                        <img src="<?php echo $profile_image_path; ?>" alt="User" class="user-avatar" style="width: 32px; height: 32px; object-fit: cover;">
-                    <?php else: ?>
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='32' height='32'%3E%3Cpath fill='%23666' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="User" class="user-avatar">
-                    <?php endif; ?>
-                    <span>
-                        <?php echo isset($new_username) && !empty($new_username) ? $new_username : $username; ?>
-                    </span>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="../../logowithoutbcakground.png" alt="Logo" class="logo">
+            <h1>FlexiHire</h1>
+        </div>
+        
+        <div class="nav-right">
+            <div class="profile-container">
+                <?php if (!empty($user_data['profile_image'])): ?>
+                    <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
+                <?php else: ?>
+                    <img src="profile.png" class="profile-pic" alt="Profile">
+                <?php endif; ?>
+                <div class="dropdown-menu">
+                    <div class="user-info">
+                        <span class="username"><?php echo htmlspecialchars($user['first_name']); ?></span>
+                        <span class="email"><?php echo $email; ?></span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                    <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
-        </header>
+        </div>
+    </nav>
 
-        <section class="profile-section">
-            <h2 class="profile-title">Profile</h2>
-            
-            <div class="profile-content">
-                <div class="profile-image-section">
-                    <div class="profile-image">
-                        <?php if (!empty($user_data['profile_image'])): ?>
-                            <img src="<?php echo $profile_image_path; ?>" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
-                        <?php else: ?>
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23666' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="Profile Picture">
-                        <?php endif; ?>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-menu">
+                <a href="../../userdashboard.php"><i class="fas fa-list"></i> Job List</a>
+                <a href="../../sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i> Job Grid</a>
+                <a href="../../sidebar/applyjob/applyjob.html"><i class="fas fa-paper-plane"></i> Apply Job</a>
+                <!-- <a href="../../sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
+                <a href="../../sidebar/jobcategory/jobcategory.html"><i class="fas fa-tags"></i> Job Category</a>
+                <a href="../../sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+            </div>
+            <div class="logout-container">
+                <div class="sidebar-divider"></div>
+                <a href="../../../login/logout.php" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <section class="profile-section">
+                <h2 class="profile-title">Profile</h2>
+                
+                <div class="profile-content">
+                    <div class="profile-image-section">
+                        <div class="profile-image">
+                            <?php if (!empty($user_data['profile_image'])): ?>
+                                <img src="<?php echo $profile_image_path; ?>" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
+                            <?php else: ?>
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23666' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="Profile Picture">
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="logo-btn">LOGO</button>
+                        </div>
                     </div>
-                    
-                    <div class="action-buttons">
-                        <button class="logo-btn">LOGO</button>
-                    </div>
-                </div>
-                <!-- form -->
-                <form  method="POST">
-                    <div class="profile-details">
-                        <div class="detail-item">
+
+                    <form method="POST">
+                        <div class="profile-details">
+                            <div class="detail-item">
                                 <div class="detail-label">Username:</div>
-                                    <input type="text" name="name" class="detail-value" value="<?php echo isset($new_username) && !empty($new_username) ? $new_username : $username; ?>" readonly>
-                                </div>
+                                <input type="text" name="name" class="detail-value" value="<?php echo htmlspecialchars($user['username']); ?>" readonly>
+                            </div>
 
                             <div class="detail-item">
                                 <div class="detail-label">Email:</div>
-                                    <input type="email" name="email" class="detail-value" value="<?php echo$email;?>" readonly>
-                                </div>
+                                <input type="email" name="email" class="detail-value" value="<?php echo$email;?>" readonly>
+                            </div>
 
                             <div class="detail-item">
                                 <div class="form-group">
                                     <label>Phone Number</label>
                                     <div class="phone-input">
                                         <span>+91</span>
-                                        <input type="tel" name="phone" id="phone" placeholder="Enter phone number" readonly>
+                                        <input type="tel" name="phone" id="phone" placeholder="Enter phone number" value="<?php echo $phone; ?>" readonly>
                                     </div>
                                 </div>
+                            </div>
 
                             <div class="detail-item">
-                            <div class="detail-label">Address:</div>
-                                <input type="text" name="address" class="detail-value" placeholder="Add your address" readonly>
+                                <div class="detail-label">Address:</div>
+                                <input type="text" name="address" class="detail-value" placeholder="Add your address" value="<?php echo $address; ?>" readonly>
                             </div>
 
                             <button type="submit" class="edit-btn">
@@ -113,44 +155,28 @@
                                 <a href="user_profile_update.php">EDIT PROFILE</a>
                             </button>
                         </div>
-                </form>
-
-            </div>
-        </section>
+                    </form>
+                </div>
+            </section>
+        </main>
     </div>
+
     <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const gridicon = document.getElementById("grid");
-    const sidebar = document.getElementById("sidebar");
+        document.addEventListener('DOMContentLoaded', function() {
+            const profilePic = document.querySelector('.profile-pic');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
 
-    // Disable transition temporarily to prevent animation on page reload
-    sidebar.style.transition = "none";
+            profilePic.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
 
-    // Retrieve sidebar state from localStorage
-    let isOpen = localStorage.getItem("sidebarOpen") === "true";
-
-    // Apply the saved state without triggering animation
-    if (isOpen) {
-        sidebar.classList.add("show");
-    } else {
-        sidebar.classList.remove("show");
-    }
-
-    // Re-enable transition after a short delay
-    setTimeout(() => {
-        sidebar.style.transition = "width 0.3s ease-in-out";
-    }, 50); // Small delay ensures transition is only applied on user interaction
-
-    // Toggle sidebar when grid icon is clicked
-    gridicon.addEventListener("click", function () {
-        isOpen = !isOpen;
-        sidebar.classList.toggle("show", isOpen);
-
-        // Save the state in localStorage
-        localStorage.setItem("sidebarOpen", isOpen);
-    });
-});
-
+            document.addEventListener('click', function(e) {
+                if (!dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+        });
     </script>
 </body>
 </html>

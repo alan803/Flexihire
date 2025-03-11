@@ -1,26 +1,46 @@
 <?php
     session_start();
+    
+    // Check if user is logged in
+    if (!isset($_SESSION['employer_id'])) {
+        // Redirect to login page if not logged in
+        header("Location: ../login/loginvalidation.php");
+        exit();
+    }
+
     include '../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
-    $employer_id=$_SESSION['employer_id'];
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
+    
+    $employer_id = $_SESSION['employer_id'];
 
-    // Fetch employer details
-    $sql="SELECT * FROM tbl_employer WHERE employer_id=$employer_id";
-    $result=mysqli_query($conn,$sql);
-    $row=mysqli_fetch_assoc($result);
-    $company_name=$row['company_name'];
-
+    // Use prepared statement to prevent SQL injection
+    $sql = "SELECT * FROM tbl_employer WHERE employer_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $employer_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if (!$result) {
+        die("Query failed: " . mysqli_error($conn));
+    }
+    
+    $row = mysqli_fetch_assoc($result);
+    
+    if (!$row) {
+        die("No employer found with ID: " . $employer_id);
+    }
+    
     // Fetch email from tbl_login
-    $sql_email = "SELECT email FROM tbl_login WHERE user_id = $employer_id";
-    $result_email = mysqli_query($conn, $sql_email);
+    $sql_email = "SELECT email FROM tbl_login WHERE user_id = ?";
+    $stmt_email = mysqli_prepare($conn, $sql_email);
+    mysqli_stmt_bind_param($stmt_email, "i", $employer_id);
+    mysqli_stmt_execute($stmt_email);
+    $result_email = mysqli_stmt_get_result($stmt_email);
     $row_email = mysqli_fetch_assoc($result_email);
     $email = $row_email['email'];
-
-    // Add this after your database query to check the data
-    if (!$result) {
-        echo "Query failed: " . mysqli_error($conn);
-    }
+    
+    $company_name = $row['company_name'];
 
     // Check if row data exists
     if ($row) {
@@ -48,10 +68,16 @@
 
     <div class="sidebar">
         <div class="logo-container">
-            <img src="logo.png" alt="AutoRecruits.in">
+            <?php if(!empty($row['profile_image'])): ?>
+                <img src="<?php echo htmlspecialchars($row['profile_image']); ?>" 
+                     alt="<?php echo htmlspecialchars($company_name); ?>"
+                     onerror="this.src='company-logo.png';">
+            <?php else: ?>
+                <img src="company-logo.png" alt="AutoRecruits.in">
+            <?php endif; ?>
         </div>
         <div class="company-info">
-            <span><?php echo htmlspecialchars($company_name); ?></span>
+            <span style="position:relative; left:10px;"><?php echo htmlspecialchars($company_name); ?></span>
         </div>
         <nav class="nav-menu">
             <div class="nav-item active">
@@ -89,7 +115,9 @@
             <div class="header-banner"></div>
             <div class="profile-info-container">
                 <div class="profile-photo">
-                    <img src="company-logo.png" alt="Company Logo">
+                    <img src="<?php echo !empty($row['profile_image']) ? htmlspecialchars($row['profile_image']) : 'company-logo.png'; ?>" 
+                         alt="Company Logo"
+                         onerror="this.src='company-logo.png';">
                 </div>
                 <div class="profile-details">
                     <h1 class="company-name"><?php echo htmlspecialchars($row['company_name']); ?></h1>

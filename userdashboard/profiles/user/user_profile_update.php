@@ -3,7 +3,8 @@
     // loged or not
     if (!isset($_SESSION['user_id'])) 
     {
-        die("User is not logged in. Please log in first.");
+        header("Location: ../../../login/login.php");
+        exit();
     }
 
     include '../../../database/connectdatabase.php';
@@ -11,7 +12,7 @@
     mysqli_select_db($conn, $dbname);
     $user_id = $_SESSION['user_id'];//getting user id from session
 
-    $sql = "SELECT u.first_name, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.user_id 
+    $sql = "SELECT u.username, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.user_id 
             FROM tbl_login l
             JOIN tbl_user u ON l.user_id = u.user_id
             WHERE l.login_id = '$user_id'";
@@ -29,7 +30,7 @@
     {
         die("User data not found.");
     }
-    $username = $user_data['first_name'];
+    $username = $user_data['username'];
     $email = $user_data['email'];
     $profile_image = $user_data['profile_image'];
     $phone = $user_data['phone_number'];
@@ -96,16 +97,27 @@
         $new_address = trim($_POST['address']);
         $new_email = trim($_POST['email']);
 
-        if (!empty($new_username) && $new_username !== $username) 
-        {
+        // Debug
+        error_log("New Username: " . $new_username);
+        error_log("Actual User ID: " . $actual_user_id);
+
+        if (!empty($new_username) && $new_username !== $username) {
+            // Update the username column instead of first_name
             $update_sql = "UPDATE tbl_user SET username = ? WHERE user_id = ?";
             $stmt = mysqli_prepare($conn, $update_sql);
-            mysqli_stmt_bind_param($stmt, "si", $new_username, $actual_user_id);
-            if(mysqli_stmt_execute($stmt)) {
-                $_SESSION['username'] = $new_username;
-                $isUpdated = true;
+            
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "si", $new_username, $actual_user_id);
+                
+                if(mysqli_stmt_execute($stmt)) {
+                    error_log("Username update successful");
+                    $_SESSION['username'] = $new_username;
+                    $isUpdated = true;
+                } else {
+                    error_log("Username update failed: " . mysqli_error($conn));
+                }
+                mysqli_stmt_close($stmt);
             }
-            mysqli_stmt_close($stmt);
         }
 
         if (!empty($new_phone) && $new_phone !== $phone) 
@@ -160,6 +172,9 @@
         // If any value was updated, refresh the page
         if ($isUpdated) 
         {
+            // Clear any cached username in session
+            unset($_SESSION['display_name']);
+            
             header("Location: userprofile.php");
             exit();
         }
@@ -172,86 +187,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile</title>
+    <link rel="stylesheet" href="userprofile.css">
     <link rel="stylesheet" href="user_profile_update.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <div class="grid-container">
-            <img src="grid.png" id="grid" class="grid">
-    </div>
-    <div class="sidebar" id="sidebar">
-        <ul class="sidebar-menu">
-            <li><a id="sidebar-item" href="../../userdashboard.php">Job List</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobgrid/jobgrid.html">Job Grid</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/applyjob/applyjob.html">Apply job</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobdetails/jobdetails.html">Job Details</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/jobcategory/jobcategory.html">Job Category</a></li>
-            <li><a id="sidebar-item" href="../../sidebar/appointment/appointment.html">Appointments</a></li>
-            <li><a id="sidebar-item" href="userprofile.php">Profile</a></li>
-        </ul>
-    </div>
-    <div class="container">
-        <div class="header">
-            <a href="userprofile.php" id="back"><span class="arrow-circle">←</span> Back</a>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="../../logowithoutbcakground.png" alt="Logo" class="logo">
+            <h1>FlexiHire</h1>
         </div>
-
-        <h1 class="title">Edit Profile</h1>
-
-        <div class="profile-section">
-            <div class="profile-image">
-                <!-- Dynamically load user's profile picture -->
-                <img id="previewImage" 
-                src="<?php echo !empty($user_data['profile_image']) ? '../../../database/profile_picture/' . $user_data['profile_image'] : '/api/placeholder/250/250'; ?>" 
-                alt="Profile" style="width: 150px; height: 150px; object-fit: cover;">
-
-                <div class="upload-buttons">
-                    <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="previewProfileImage(this)">
-                    <button type="button" class="upload-btn" onclick="document.getElementById('profile_image').click();">
-                        CHANGE PROFILE
-                    </button>
+        
+        <div class="nav-right">
+            <div class="profile-container">
+                <?php if (!empty($profile_image)): ?>
+                    <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
+                <?php else: ?>
+                    <img src="profile.png" class="profile-pic" alt="Profile">
+                <?php endif; ?>
+                <div class="dropdown-menu">
+                    <div class="user-info">
+                        <span class="username"><?php echo $new_username ?? $username; ?></span>
+                        <span class="email"><?php echo $email; ?></span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                    <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
-                <p id="imageError"></p>
             </div>
-
-            <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
-                <!-- Hidden file input to store the selected file -->
-                <input type="file" id="hidden_profile_image" name="profile_image" style="display: none;">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" id="username" name="name" placeholder="Enter your username" onkeyup="validateUsername()">
-                        <p class="error" id="usernameError"></p> <!-- Error message element -->
-                    </div>
-
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" name="email" placeholder="Enter your email" onkeyup="validateEmail()">
-                        <p class="error" id="emailError"></p> <!-- Error message element -->
-                    </div>
-
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <div class="phone-input">
-                            <span>+91</span>
-                            <input type="tel" name="phone" id="phone" placeholder="Enter phone number" onkeyup="validatePhone()">
-                        </div>
-                        <p class="error" id="phoneError"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" name="address" id="address" placeholder="Enter your address" onkeyup="validateAddress()">
-                        <p class="error" id="addressError"></p>
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <a href="userprofile.php"><button type="button" class="btn btn-secondary">CANCEL</button></a>
-                    <button type="submit" class="btn btn-primary">SAVE</button>
-                </div>
-            </form>
         </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar section -->
+        <div class="grid-container">
+            <img src="../../grid.png" alt="grid" class="grid" id="grid">
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-menu">
+                <a href="../../userdashboard.php"><i class="fas fa-list"></i> Job List</a>
+                <a href="../../sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i> Job Grid</a>
+                <a href="../../sidebar/applyjob/applyjob.html"><i class="fas fa-paper-plane"></i> Apply Job</a>
+                <!-- <a href="../../sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
+                <a href="../../sidebar/jobcategory/jobcategory.html"><i class="fas fa-tags"></i> Job Category</a>
+                <a href="../../sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+            </div>
+            <div class="logout-container">
+                <div class="sidebar-divider"></div>
+                <a href="../../../login/logout.php" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <section class="profile-section">
+                <h2 class="profile-title">Edit Profile</h2>
+                
+                <div class="profile-content">
+                    <div class="profile-image-section">
+                        <div class="profile-image">
+                            <img id="previewImage" 
+                                src="<?php echo !empty($user_data['profile_image']) ? '../../../database/profile_picture/' . $user_data['profile_image'] : '/api/placeholder/250/250'; ?>" 
+                                alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        
+                        <div class="upload-buttons">
+                            <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="previewProfileImage(this)">
+                            <button type="button" id="changeProfileBtn" class="profile-btn change-button" onclick="document.getElementById('profile_image').click();">
+                                <i class="fas fa-camera"></i>
+                                Change
+                            </button>
+                        </div>
+                        <p id="imageError" class="error-message"></p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm();" class="profile-details">
+                        <input type="file" id="hidden_profile_image" name="profile_image" style="display: none;">
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">Username</div>
+                            <input type="text" id="username" name="name" class="detail-value" 
+                                   placeholder="Enter your username" 
+                                   value="<?php echo isset($new_username) ? htmlspecialchars($new_username) : htmlspecialchars($username); ?>" 
+                                   onkeyup="validateUsername()">
+                            <p class="error" id="usernameError"></p>
+                        </div>
+
+                        <div class="detail-item">
+                            <div class="detail-label">Email</div>
+                            <input type="email" id="email" name="email" class="detail-value" 
+                                   placeholder="Enter your email" value="<?php echo $email; ?>"
+                                   onkeyup="validateEmail()">
+                            <p class="error" id="emailError"></p>
+                        </div>
+
+                        <div class="detail-item">
+                            <div class="detail-label">Phone Number</div>
+                            <div class="phone-input">
+                                <span>+91</span>
+                                <input type="tel" name="phone" id="phone" 
+                                       placeholder="Enter phone number" value="<?php echo $phone; ?>"
+                                       onkeyup="validatePhone()">
+                            </div>
+                            <p class="error" id="phoneError"></p>
+                        </div>
+
+                        <div class="detail-item">
+                            <div class="detail-label">Address</div>
+                            <input type="text" name="address" id="address" class="detail-value" 
+                                   placeholder="Enter your address" value="<?php echo $address; ?>"
+                                   onkeyup="validateAddress()">
+                            <p class="error" id="addressError"></p>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button type="button" id="cancelBtn" class="profile-btn cancel-button" onclick="window.location.href='userprofile.php'">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" id="saveBtn" name="update_profile" class="profile-btn save-button">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
     </div>
+
+    <div class="sidebar-overlay" id="overlay"></div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -430,38 +501,43 @@
 
         return isUsernameValid && isPhoneValid && isAddressValid && isEmailValid;
     }
-    document.addEventListener("DOMContentLoaded", function () {
-    const gridicon = document.getElementById("grid");
-    const sidebar = document.getElementById("sidebar");
 
-    // Disable transition temporarily to prevent animation on page reload
-    sidebar.style.transition = "none";
+    document.addEventListener("DOMContentLoaded", function() {
+        const gridIcon = document.getElementById('grid');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
 
-    // Retrieve sidebar state from localStorage
-    let isOpen = localStorage.getItem("sidebarOpen") === "true";
+        // Disable transition temporarily
+        sidebar.style.transition = "none";
+        
+        // Get saved state
+        const isOpen = localStorage.getItem("sidebarOpen") === "true";
+        
+        if (isOpen) {
+            sidebar.classList.add("show");
+            overlay.classList.add("show");
+        }
+        
+        // Re-enable transition
+        setTimeout(() => {
+            sidebar.style.transition = "all 0.3s ease";
+        }, 100);
 
-    // Apply the saved state without triggering animation
-    if (isOpen) {
-        sidebar.classList.add("show");
-    } else {
-        sidebar.classList.remove("show");
-    }
+        gridIcon.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+            
+            // Save state
+            localStorage.setItem("sidebarOpen", sidebar.classList.contains("show"));
+        });
 
-    // Re-enable transition after a short delay
-    setTimeout(() => {
-        sidebar.style.transition = "width 0.3s ease-in-out";
-    }, 50); // Small delay ensures transition is only applied on user interaction
-
-    // Toggle sidebar when grid icon is clicked
-    gridicon.addEventListener("click", function () {
-        isOpen = !isOpen;
-        sidebar.classList.toggle("show", isOpen);
-
-        // Save the state in localStorage
-        localStorage.setItem("sidebarOpen", isOpen);
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            localStorage.setItem("sidebarOpen", "false");
+        });
     });
-});
-
     </script>
 </body>
 </html>

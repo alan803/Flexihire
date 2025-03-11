@@ -133,11 +133,25 @@
         <!-- Main Sidebar -->
         <div class="sidebar">
             <div class="logo-container">
-                <img src="logo.png" alt="AutoRecruits.in">
+                <?php 
+                $sql_profile = "SELECT profile_image FROM tbl_employer WHERE employer_id = ?";
+                $stmt_profile = mysqli_prepare($conn, $sql_profile);
+                mysqli_stmt_bind_param($stmt_profile, "i", $employer_id);
+                mysqli_stmt_execute($stmt_profile);
+                $result_profile = mysqli_stmt_get_result($stmt_profile);
+                $profile_data = mysqli_fetch_assoc($result_profile);
+                ?>
+                <?php if(!empty($profile_data['profile_image'])): ?>
+                    <img src="<?php echo htmlspecialchars($profile_data['profile_image']); ?>" 
+                         alt="<?php echo htmlspecialchars($username); ?>"
+                         onerror="this.src='company-logo.png';">
+                <?php else: ?>
+                    <img src="company-logo.png" alt="AutoRecruits.in">
+                <?php endif; ?>
             </div>
             <div class="company-info">
-                <span><?php echo $username."<br>";
-                            echo $email;
+                <span style="position:relative; left:-70px;font-size:15px;"><?php echo htmlspecialchars($username)."<br>";
+                            // echo htmlspecialchars($email);
                         ?>
                 </span>
             </div>
