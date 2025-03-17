@@ -131,6 +131,12 @@
     </div>
     <div class="form-container">
         <form method="post" id="add_job" onsubmit="return validateForm()">
+            <?php if (isset($_GET['message'])): ?>
+                <div class="alert" id="alertMessage">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo htmlspecialchars($_GET['message']); ?>
+                </div>
+            <?php endif; ?>
             <select name="category" id="category" onchange="validatecategory()">
                 <option value="">Select Category</option>
                 <option value="Delivery and logistics">Delivery & Logistics</option>
@@ -261,5 +267,24 @@
             <input type="submit" value="Add Job">
         </form>
     </div>
+    <script>
+        // Auto-hide alert message
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertMessage = document.getElementById('alertMessage');
+            if (alertMessage) {
+                setTimeout(() => {
+                    alertMessage.style.opacity = '0';
+                    alertMessage.style.transition = 'opacity 1.0s ease';
+                    setTimeout(() => {
+                        alertMessage.remove();
+                        // Remove the message parameter from URL
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('message');
+                        window.history.replaceState({}, '', url);
+                    }, 500);
+                }, 5000); // Changed to 5000ms (5 seconds)
+            }
+        });
+    </script>
 </body>
 </html>

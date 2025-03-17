@@ -1,135 +1,164 @@
 <?php
-    session_start();
-    $employer_id=$_SESSION['employer_id'];
-    include '../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
-    $error="";
+session_start();
+include '../database/connectdatabase.php';
+$dbname = "project";
+mysqli_select_db($conn, $dbname);
 
-    if (!isset($_SESSION['employer_id'])) 
-    {
-        header("Location: ../login/loginvalidation.php");
-        exit();
+// Check if employer is logged in
+if (!isset($_SESSION['employer_id'])) {
+    header("Location: ../login/loginvalidation.php");
+    exit();
+}
+
+$employer_id = $_SESSION['employer_id'];
+$error = "";
+
+// Get job_id from URL and validate it
+$job_id = isset($_GET['job_id']) ? intval($_GET['job_id']) : 0;
+
+if (!$job_id) {
+    header("Location: myjoblist.php?error=Invalid job ID");
+    exit();
+}
+
+// Fetch the specific job details
+$sql = "SELECT * FROM tbl_jobs WHERE job_id = ? AND employer_id = ?";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, "ii", $job_id, $_SESSION['employer_id']);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$print = mysqli_fetch_assoc($result);
+
+// Verify job exists and belongs to current employer
+if (!$print) {
+    header("Location: myjoblist.php?error=Job not found");
+    exit();
+}
+
+// Debug output
+echo "<!-- Debug: job_id = " . htmlspecialchars($job_id) . " -->";
+
+// Initialize variables to avoid undefined errors
+$title = $loc = $description = $vac_date = $vac = $sal = $app_deadline = $itrview = $phone = $category = $license = $badge = $town = $start_time = $end_time = $working_days = "";
+
+if ($print) {
+    $title = $print['job_title'];
+    $loc = $print['location'];
+    $description = $print['job_description'];
+    $vac_date = $print['vacancy_date'];
+    $vac = $print['vacancy'];
+    $sal = $print['salary'];
+    $app_deadline = $print['application_deadline'];
+    $itrview = $print['interview'];
+    $phone = $print['contact_no'];
+    $category = $print['category'];
+    $license = $print['license_required'];
+    $badge = $print['badge_required'];
+    $town = $print['town'];
+    $start_time = $print['start_time'];
+    $end_time = $print['end_time'];
+    $working_days = $print['working_days'];
+}
+
+// Debug output
+echo "<!-- Debug: Location = " . htmlspecialchars($loc) . " -->";
+echo "<!-- Debug: Town = " . htmlspecialchars($town) . " -->";
+
+// Fetch employer details
+$sql = "SELECT u.company_name, l.email 
+        FROM tbl_login AS l
+        JOIN tbl_employer AS u ON l.employer_id = u.employer_id
+        WHERE u.employer_id = ?";
+
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, "i", $employer_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$employer_data = mysqli_fetch_assoc($result);
+mysqli_stmt_close($stmt);
+
+$email = $employer_data['email'] ?? '';
+$username = $employer_data['company_name'] ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    // Build dynamic update query
+    $updateFields = [];
+    $types = "";
+    $params = [];
+
+    function addField(&$updateFields, &$types, &$params, $field, $value) {
+        if (!empty($value)) {
+            $updateFields[] = "$field=?";
+            $types .= "s";
+            $params[] = $value;
+        }
     }
-    // for displaying the already inputed value
-    $sqlprint="SELECT * FROM tbl_jobs WHERE employer_id='$employer_id'";
-    $resultprint=mysqli_query($conn,$sqlprint);
-    $print=mysqli_fetch_assoc($resultprint);
-    $title=$print['job_title'];
-    $loc=$print['location'];
-    $description=$print['job_description'];
-    $vac_date=$print['vacancy_date'];
-    $vac=$print['vacancy'];
-    $sal=$print['salary'];
-    $app_deadline=$print['application_deadline'];
-    $itrview=$print['interview'];
-    $phone=$print['contact_no'];
-    $category=$print['category'];
-    $license=$print['license_required'];
-    $badge=$print['badge_required'];
-    $town=$print['town'];
-    $start_time=$print['start_time'];
-    $end_time=$print['end_time'];
-    $working_days=$print['working_days'];
-    // for inserting value
-    $sql = "SELECT u.company_name, l.email 
-    FROM tbl_login AS l
-    JOIN tbl_employer AS u ON l.employer_id = u.employer_id
-    WHERE u.employer_id = ?";
 
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $employer_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+    // Collect input values
+    addField($updateFields, $types, $params, "job_title", $_POST['job_title']);
+    addField($updateFields, $types, $params, "location", $_POST['location']);
+    addField($updateFields, $types, $params, "job_description", $_POST['job_description']);
+    addField($updateFields, $types, $params, "vacancy_date", $_POST['date']);
+    addField($updateFields, $types, $params, "vacancy", $_POST['vacancy']);
+    addField($updateFields, $types, $params, "salary", $_POST['salary']);
+    addField($updateFields, $types, $params, "application_deadline", $_POST['last_date']);
+    addField($updateFields, $types, $params, "category", $_POST['category']);
+    addField($updateFields, $types, $params, "contact_no", $_POST['phone']);
+    addField($updateFields, $types, $params, "town", $_POST['town']);
 
-    if ($result && mysqli_num_rows($result) > 0) 
-    {
-        $employer_data = mysqli_fetch_array($result);
-        $email = $employer_data['email'];
-        $username = $employer_data['company_name'];
-    } 
-    if ($_SERVER['REQUEST_METHOD'] == "POST") {
-        // Build the SQL query dynamically based on which fields have values
-        $updateFields = array();
-        $types = "";
-        $params = array();
+    if (isset($_POST['interview'])) {
+        addField($updateFields, $types, $params, "interview", $_POST['interview']);
+    }
 
-        // Helper function to add field if it has a value
-        function addField(&$updateFields, &$types, &$params, $field, $value) {
-            if (!empty($value)) {
-                $updateFields[] = "$field=?";
-                $types .= "s";
-                $params[] = $value;
-            }
+    if ($_POST['category'] === "Delivery and logistics") {
+        if (isset($_POST['license_required'])) {
+            addField($updateFields, $types, $params, "license_required", $_POST['license_required']);
         }
+        if (isset($_POST['badge_required'])) {
+            addField($updateFields, $types, $params, "badge_required", $_POST['badge_required']);
+        }
+    } else {
+        $updateFields[] = "license_required=NULL";
+        $updateFields[] = "badge_required=NULL";
+    }
 
-        // Add fields only if they have values
-        addField($updateFields, $types, $params, "job_title", $_POST['job_title']);
-        addField($updateFields, $types, $params, "location", $_POST['location']);
-        addField($updateFields, $types, $params, "job_description", $_POST['job_description']);
-        addField($updateFields, $types, $params, "vacancy_date", $_POST['date']);
-        addField($updateFields, $types, $params, "vacancy", $_POST['vacancy']);
-        addField($updateFields, $types, $params, "salary", $_POST['salary']);
-        addField($updateFields, $types, $params, "application_deadline", $_POST['last_date']);
-        addField($updateFields, $types, $params, "category", $_POST['category']);
-        addField($updateFields, $types, $params, "contact_no", $_POST['phone']);
-        addField($updateFields, $types, $params, "town", $_POST['town']);
+    addField($updateFields, $types, $params, "working_days", $_POST['working_days']);
+    addField($updateFields, $types, $params, "start_time", $_POST['start_time']);
+    addField($updateFields, $types, $params, "end_time", $_POST['end_time']);
+
+    // Add job_id and employer_id for WHERE clause
+    $types .= "ii"; // Add two more integer parameters
+    $params[] = $job_id; // Add job_id
+    $params[] = $_SESSION['employer_id']; // Add employer_id
+
+    if (!empty($updateFields)) {
+        $sql = "UPDATE tbl_jobs SET " . implode(", ", $updateFields) . 
+               " WHERE job_id=? AND employer_id=?"; // Add WHERE clause with both conditions
         
-        // Special handling for fields that might be empty strings but valid
-        if (isset($_POST['interview'])) {
-            addField($updateFields, $types, $params, "interview", $_POST['interview']);
-        }
+        $stmt = $conn->prepare($sql);
 
-        // Handle license_required and badge_required based on category
-        if ($_POST['category'] === "Delivery and logistics") {
-            if (isset($_POST['license_required'])) {
-                addField($updateFields, $types, $params, "license_required", $_POST['license_required']);
-            }
-            if (isset($_POST['badge_required'])) {
-                addField($updateFields, $types, $params, "badge_required", $_POST['badge_required']);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            if ($stmt->execute()) {
+                $stmt->close();
+                header("Location: myjoblist.php?message=Job updated successfully");
+                exit();
+            } else {
+                $stmt->close();
+                header("Location: myjoblist.php?error=Error updating job");
+                exit();
             }
         } else {
-            // If category is not Delivery and logistics, set these fields to NULL
-            $updateFields[] = "license_required=NULL";
-            $updateFields[] = "badge_required=NULL";
-        }
-
-        if (isset($_POST['working_days'])) {
-            addField($updateFields, $types, $params, "working_days", $_POST['working_days']);
-        }
-        if (!empty($_POST['start_time'])) {
-            addField($updateFields, $types, $params, "start_time", $_POST['start_time']);
-        }
-        if (!empty($_POST['end_time'])) {
-            addField($updateFields, $types, $params, "end_time", $_POST['end_time']);
-        }
-
-        // Add employer_id to the parameters
-        $types .= "i";
-        $params[] = $employer_id;
-
-        if (!empty($updateFields)) {
-            $sql = "UPDATE tbl_jobs SET " . implode(", ", $updateFields) . " WHERE employer_id=?";
-            
-            $stmt = $conn->prepare($sql);
-            
-            // Bind parameters dynamically
-            if ($params) {
-                $stmt->bind_param($types, ...$params);
-            }
-        
-        if ($stmt->execute()) {
-            header("Location: myjoblist.php");
-            exit();
-            } else {
-                header("Location: postjob.php?message=Error updating job.");
+            header("Location: myjoblist.php?error=Database error");
             exit();
         }
-            
-            $stmt->close();
-        }
-    }    
+    }
+}
+
+// Close database connection
+// mysqli_close($conn);  // Remove this early close
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,24 +221,23 @@
             </div>
         </div>
     </div>
-    <?php if (isset($_GET['message'])): ?>
-        <div class="alert">
-            <?php echo htmlspecialchars($_GET['message']); ?>
-        </div>
-    <?php endif; ?>
-
     <div class="form-container">
         <form method="post" id="add_job" onsubmit="return validateForm()">
             <input type="hidden" name="employer_id" value="<?php echo $employer_id; ?>">
-
+            <?php if (isset($_GET['message'])): ?>
+                <div class="alert" id="alertMessage">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo htmlspecialchars($_GET['message']); ?>
+                </div>
+            <?php endif; ?>
             <select name="category" id="category" onchange="validatecategory()">
                 <option value="">Select Category</option>
-                <option value="Delivery and logistics" <?php if($category == "Delivery and logistics") echo "selected"; ?>>Delivery & Logistics</option>
-                <option value="Hospitality and catering" <?php if($category == "Hospitality and catering") echo "selected"; ?>>Hospitality & Catering</option>
-                <option value="Housekeeping and cleaning" <?php if($category == "Housekeeping and cleaning") echo "selected"; ?>>Housekeeping & Cleaning</option>
-                <option value="Retail and store jobs" <?php if($category == "Retail and store jobs") echo "selected"; ?>>Retail & Store Jobs</option>
-                <option value="Warehouse and factory jobs" <?php if($category == "Warehouse and factory jobs") echo "selected"; ?>>Warehouse & Factory Jobs</option>
-                <option value="Maintenance" <?php if($category == "Maintenance") echo "selected"; ?>>Maintenance</option>
+                <option value="Delivery and logistics" <?php echo ($category == "Delivery and logistics") ? "selected" : ""; ?>>Delivery & Logistics</option>
+                <option value="Hospitality and catering" <?php echo ($category == "Hospitality and catering") ? "selected" : ""; ?>>Hospitality & Catering</option>
+                <option value="Housekeeping and cleaning" <?php echo ($category == "Housekeeping and cleaning") ? "selected" : ""; ?>>Housekeeping & Cleaning</option>
+                <option value="Retail and store jobs" <?php echo ($category == "Retail and store jobs") ? "selected" : ""; ?>>Retail & Store Jobs</option>
+                <option value="Warehouse and factory jobs" <?php echo ($category == "Warehouse and factory jobs") ? "selected" : ""; ?>>Warehouse & Factory Jobs</option>
+                <option value="Maintenance" <?php echo ($category == "Maintenance") ? "selected" : ""; ?>>Maintenance</option>
             </select>
             <p id="categoryerror" class="error"></p>
 
@@ -219,10 +247,10 @@
                     <label>Driving License Required:</label>
                     <select name="license_required" id="license_required" class="doc-select">
                         <option value="">Select License Type</option>
-                        <option value="two_wheeler" <?php if($license == "two_wheeler") echo "selected"; ?>>Two Wheeler License</option>
-                        <option value="four_wheeler" <?php if($license == "four_wheeler") echo "selected"; ?>>Four Wheeler License</option>
-                        <option value="both" <?php if($license == "both") echo "selected"; ?>>Both Required</option>
-                        <option value="not_required" <?php if($license == "not_required") echo "selected"; ?>>Not Required</option>
+                        <option value="two_wheeler" <?php echo ($license == "two_wheeler") ? "selected" : ""; ?>>Two Wheeler License</option>
+                        <option value="four_wheeler" <?php echo ($license == "four_wheeler") ? "selected" : ""; ?>>Four Wheeler License</option>
+                        <option value="both" <?php echo ($license == "both") ? "selected" : ""; ?>>Both Required</option>
+                        <option value="not_required" <?php echo ($license == "not_required") ? "selected" : ""; ?>>Not Required</option>
                     </select>
                     <p id="licenseerror" class="error"></p>
                 </div>
@@ -231,8 +259,8 @@
                     <label>Badge Required:</label>
                     <select name="badge_required" id="badge_required" class="doc-select">
                         <option value="">Select Badge Requirement</option>
-                        <option value="yes" <?php if($badge == "yes") echo "selected"; ?>>Yes</option>
-                        <option value="no" <?php if($badge == "no") echo "selected"; ?>>No</option>
+                        <option value="yes" <?php echo ($badge == "yes") ? "selected" : ""; ?>>Yes</option>
+                        <option value="no" <?php echo ($badge == "no") ? "selected" : ""; ?>>No</option>
                     </select>
                     <p id="badgeerror" class="error"></p>
                 </div>
@@ -248,20 +276,17 @@
             <label>Location</label>
             <select name="location" id="location" onchange="showTowns()">
                 <option value="">Select District</option>
-                <option value="Thiruvananthapuram" <?php if($loc == "Thiruvananthapuram") echo "selected"; ?>>Thiruvananthapuram</option>
-                <option value="Kollam" <?php if($loc == "Kollam") echo "selected"; ?>>Kollam</option>
-                <option value="Pathanamthitta" <?php if($loc == "Pathanamthitta") echo "selected"; ?>>Pathanamthitta</option>
-                <option value="Alappuzha" <?php if($loc == "Alappuzha") echo "selected"; ?>>Alappuzha</option>
-                <option value="Kottayam" <?php if($loc == "Kottayam") echo "selected"; ?>>Kottayam</option>
-                <option value="Idukki" <?php if($loc == "Idukki") echo "selected"; ?>>Idukki</option>
-                <option value="Ernakulam" <?php if($loc == "Ernakulam") echo "selected"; ?>>Ernakulam</option>
-                <option value="Thrissur" <?php if($loc == "Thrissur") echo "selected"; ?>>Thrissur</option>
-                <option value="Palakkad" <?php if($loc == "Palakkad") echo "selected"; ?>>Palakkad</option>
-                <option value="Malappuram" <?php if($loc == "Malappuram") echo "selected"; ?>>Malappuram</option>
-                <option value="Kozhikode" <?php if($loc == "Kozhikode") echo "selected"; ?>>Kozhikode</option>
-                <option value="Wayanad" <?php if($loc == "Wayanad") echo "selected"; ?>>Wayanad</option>
-                <option value="Kannur" <?php if($loc == "Kannur") echo "selected"; ?>>Kannur</option>
-                <option value="Kasaragod" <?php if($loc == "Kasaragod") echo "selected"; ?>>Kasaragod</option>
+                <?php
+                $districts = [
+                    'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha', 
+                    'Kottayam', 'Idukki', 'Ernakulam', 'Thrissur', 'Palakkad', 
+                    'Malappuram', 'Kozhikode', 'Wayanad', 'Kannur', 'Kasaragod'
+                ];
+                foreach ($districts as $district) {
+                    $selected = ($loc == $district) ? 'selected' : '';
+                    echo "<option value='{$district}' {$selected}>{$district}</option>";
+                }
+                ?>
             </select>
             <p id="locationerror" class="error"></p>
 
@@ -378,21 +403,26 @@
         };
 
         function showTowns() {
+            console.log('showTowns function called'); // Debug log
             const selectedDistrict = document.getElementById('location').value;
             const townSelect = document.getElementById('tvm_towns');
             const townLabel = document.getElementById('townLabel');
             const savedTown = '<?php echo $town; ?>';
             
+            console.log('Selected District:', selectedDistrict); // Debug log
+            console.log('Saved Town:', savedTown); // Debug log
+            
             // Clear existing options
             townSelect.innerHTML = '<option value="">Select Town</option>';
             
             if (selectedDistrict) {
-                // Show town dropdown and label immediately
+                // Show town dropdown and label
                 townSelect.style.display = 'block';
                 townLabel.style.display = 'block';
                 
                 // Get towns for selected district
                 const towns = districtTowns[selectedDistrict] || [];
+                console.log('Available Towns:', towns); // Debug log
                 
                 // Add town options
                 towns.forEach(town => {
@@ -401,9 +431,14 @@
                     option.textContent = town;
                     if (town === savedTown) {
                         option.selected = true;
+                        console.log('Setting selected town:', town); // Debug log
                     }
                     townSelect.appendChild(option);
                 });
+            } else {
+                // Hide town dropdown and label if no district is selected
+                townSelect.style.display = 'none';
+                townLabel.style.display = 'none';
             }
         }
 
@@ -446,6 +481,7 @@
 
         // Initialize everything when the page loads
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded'); // Debug log
             // Initialize time selectors with saved values
             const startTime = '<?php echo $start_time; ?>'.trim();
             const endTime = '<?php echo $end_time; ?>'.trim();
@@ -471,6 +507,52 @@
                 document.getElementById('delivery-docs').style.display = 'block';
             }
         });
+        // Auto-hide alert message
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertMessage = document.getElementById('alertMessage');
+            if (alertMessage) {
+                setTimeout(() => {
+                    alertMessage.style.opacity = '0';
+                    alertMessage.style.transition = 'opacity 1.0s ease';
+                    setTimeout(() => {
+                        alertMessage.remove();
+                        // Remove the message parameter from URL
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('message');
+                        window.history.replaceState({}, '', url);
+                    }, 500);
+                }, 5000); // Changed to 5000ms (5 seconds)
+            }
+        });
+
+        function validatecategory() {
+            const category = document.getElementById('category').value;
+            const deliveryDocs = document.getElementById('delivery-docs');
+            
+            console.log('Selected category:', category); // Debug log
+            
+            if (category === 'Delivery and logistics') {
+                deliveryDocs.style.display = 'block';
+            } else {
+                deliveryDocs.style.display = 'none';
+                // Reset delivery-specific fields
+                if (document.getElementById('license_required')) {
+                    document.getElementById('license_required').value = '';
+                }
+                if (document.getElementById('badge_required')) {
+                    document.getElementById('badge_required').value = '';
+                }
+            }
+        }
+
+        // Call validatecategory on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            validatecategory();
+        });
     </script>
 </body>
 </html>
+<?php
+// Close the connection here, after all database operations are complete
+mysqli_close($conn);
+?>

@@ -97,7 +97,8 @@ mysqli_stmt_close($stmt);
 
 <div class="job_list">
     <?php if (isset($_GET['message'])): ?>
-        <div class="alert">
+        <div class="alert" id="alertMessage">
+            <i class="fas fa-check-circle"></i>
             <?php echo htmlspecialchars($_GET['message']); ?>
         </div>
     <?php endif; ?>
@@ -121,7 +122,12 @@ mysqli_stmt_close($stmt);
             echo '<p>Description: ' . htmlspecialchars($row['job_description']) . '</p>';
             echo '<p>Vacancies: ' . htmlspecialchars($row['vacancy']) . '</p>';
             echo '<div class="button-container">';
-            echo '<button class="vacancy-button"><a href="editjob.php">Edit</a></button>';
+            
+            // Corrected filename to editjob.php
+            echo '<a href="editjob.php?job_id=' . $row['job_id'] . '" class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>';
+            
             echo '<button class="vacancy-button">
                     <a href="deletejob.php?id=' . $row['job_id'] . '&action=deactivate" id="delete">Deactivate</a>
                   </button>';
@@ -165,5 +171,24 @@ mysqli_stmt_close($stmt);
     $stmt->close();
     ?>
 </div>
+    <script>
+        // Auto-hide alert message
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertMessage = document.getElementById('alertMessage');
+            if (alertMessage) {
+                setTimeout(() => {
+                    alertMessage.style.opacity = '0';
+                    alertMessage.style.transition = 'opacity 1.0s ease';
+                    setTimeout(() => {
+                        alertMessage.remove();
+                        // Remove the message parameter from URL
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('message');
+                        window.history.replaceState({}, '', url);
+                    }, 500);
+                }, 5000); // Changed to 5000ms (5 seconds)
+            }
+        });
+    </script>
 </body>
 </html>

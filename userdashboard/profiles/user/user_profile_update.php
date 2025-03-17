@@ -228,11 +228,15 @@
 
         <div class="sidebar" id="sidebar">
             <div class="sidebar-menu">
-                <a href="../../userdashboard.php"><i class="fas fa-list"></i> Job List</a>
-                <a href="../../sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i> Job Grid</a>
-                <a href="../../sidebar/applyjob/applyjob.html"><i class="fas fa-paper-plane"></i> Apply Job</a>
+                <a href="../../userdashboard.php" class="sidebar-link">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <!-- <a href="../../userdashboard.php"><i class="fas fa-list"></i> Job List</a>
+                <a href="../../sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i> Job Grid</a> -->
+                <a href="../../applied.php"><i class="fas fa-paper-plane"></i> Applied Job</a>
                 <!-- <a href="../../sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
-                <a href="../../sidebar/jobcategory/jobcategory.html"><i class="fas fa-tags"></i> Job Category</a>
+                <a href="../../bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="../../sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
                 <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>

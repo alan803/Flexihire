@@ -137,27 +137,53 @@ a
 
 .button-container {
     display: flex;
-    justify-content: flex-end; /* Aligns buttons to the right */
-    gap: 10px; /* Space between buttons */
-    margin-top: 10px; /* Space above the button container */
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    background-color: #9747FF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+    background-color: #8a3ff0;
+    transform: translateY(-2px);
+}
+
+.edit-btn i {
+    font-size: 16px;
 }
 
 .vacancy-button {
-    background-color: #645bff; /* Initial button color */
-    color: white; /* Text color */
-    /*border: 2px solid rgb(255, 242, 0);  Remove border */
-    padding: 10px 15px; /* Padding */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
-    border:none;
+    padding: 8px 15px;
+    background-color: #dc3545;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .vacancy-button:hover {
-    background-color: black; /* Change background on hover */
-    color: white; /* Change text color on hover */
-    border:none;
+    background-color: #c82333;
+    transform: translateY(-2px);
 }
+
+.vacancy-button a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
 #delete
 {
     color:white;
@@ -165,10 +191,18 @@ a
 .alert {
     background-color: #d4edda;
     color: #155724;
-    padding: 10px;
-    margin: 15px 0;
+    padding: 15px 20px;
+    margin-bottom: 20px;
     border: 1px solid #c3e6cb;
-    border-radius: 5px;
-    text-align: center;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 16px;
+    font-weight: 500;
+}
+
+.alert i {
+    font-size: 20px;
+    color: #28a745;
 }

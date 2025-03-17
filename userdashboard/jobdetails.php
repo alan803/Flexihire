@@ -26,12 +26,25 @@
     $job = mysqli_fetch_assoc($result);
 
     //fecth user profile
-    $user_id = $_SESSION['user_id'];
-    echo $user_id;
+    $user_id = $_SESSION['id'] ?? $_SESSION['user_id'];
     $sql_user = "SELECT * FROM tbl_user WHERE user_id = '$user_id'";
     $result_user = mysqli_query($conn, $sql_user);
     $user = mysqli_fetch_assoc($result_user);
     $profile_image = $user['profile_image'];
+
+    // Debug
+    error_log("User ID: " . $user_id . ", Job ID: " . $job_id);
+
+    // Check if job is already bookmarked
+    $check_bookmark_sql = "SELECT * FROM tbl_bookmarks WHERE user_id = ? AND job_id = ?";
+    $check_stmt = mysqli_prepare($conn, $check_bookmark_sql);
+    mysqli_stmt_bind_param($check_stmt, "ii", $user_id, $job_id);
+    mysqli_stmt_execute($check_stmt);
+    $bookmark_result = mysqli_stmt_get_result($check_stmt);
+    $is_bookmarked = mysqli_num_rows($bookmark_result) > 0;
+
+    // Debug
+    error_log("Is Bookmarked: " . ($is_bookmarked ? 'Yes' : 'No'));
 ?>
 
 <!DOCTYPE html>
@@ -46,22 +59,22 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="nav-brand">
-            <img src="logowithoutbcakground.png" alt="Logo" class="logo">
-            <h1>FlexiHire</h1>
+        <div class="nav-left">
+            <!-- <div class="grid-container">
+                <i class="fas fa-bars" id="grid"></i>
+            </div> -->
+            <h1>Job Details</h1>
         </div>
-        
         <div class="nav-right">
             <div class="profile-container">
                 <?php if (!empty($profile_image)): ?>
-                    <img src="../database/profile_picture/<?php echo $profile_image; ?>" class="profile-pic" alt="Profile">
+                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
                 <?php else: ?>
                     <img src="profile.png" class="profile-pic" alt="Profile">
                 <?php endif; ?>
                 <div class="dropdown-menu">
                     <div class="user-info">
-                        <span class="username"><?php echo $_SESSION['username']; ?></span>
-                        <span class="email"><?php echo $_SESSION['email']; ?></span>
+                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
                     </div>
                     <div class="dropdown-divider"></div>
                     <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
@@ -72,25 +85,46 @@
     </nav>
 
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        <!-- Fixed Sidebar -->
+        <div class="sidebar">
             <div class="sidebar-menu">
-                <a href="userdashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="userdashboard.php"><i class="fas fa-list"></i> Job List</a>
-                <a href="sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i> Job Grid</a>
-                <a href="sidebar/applyjob/applyjob.html"><i class="fas fa-paper-plane"></i> Apply Job</a>
-                <a href="jobdetails.php"><i class="fas fa-info-circle"></i> Job Details</a>
-                <a href="sidebar/jobcategory/jobcategory.html"><i class="fas fa-tags"></i> Job Category</a>
-                <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
-                <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                <a href="userdashboard.php" class="sidebar-link">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <!-- <a href="bookmark.php" class="sidebar-link">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmarks</span>
+                </a> -->
+                <a href="applyjob.php" class="sidebar-link">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Apply Job</span>
+                </a>
+                <!-- <a href="jobs/appliedjobs.php" class="sidebar-link">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Applied Jobs</span>
+                </a> -->
+                <a href="bookmark.php" class="sidebar-link">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmarks</span>
+                </a>
+                <a href="sidebar/appointment/appointment.html" class="sidebar-link">
+                    <i class="fas fa-calendar"></i>
+                    <span>Appointments</span>
+                </a>
+                <a href="profiles/user/userprofile.php" class="sidebar-link">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
             </div>
             <div class="logout-container">
                 <div class="sidebar-divider"></div>
                 <a href="../login/logout.php" class="logout-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
                 </a>
             </div>
-        </aside>
+        </div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -146,11 +180,29 @@
                         <div class="requirements-list">
                             <div class="requirement-item">
                                 <i class="fas fa-id-card"></i>
-                                <span>License Required: <?php echo $job['license_required'] ? 'Yes' : 'No'; ?></span>
+                                <span>License Required: <?php if($job['license_required'])
+                                                                {
+                                                                    echo $job['license_required'];
+                                                                }
+                                                                else
+                                                                {
+                                                                    echo 'No';
+                                                                }
+                                                        ?>
+                                </span>
                             </div>
                             <div class="requirement-item">
                                 <i class="fas fa-certificate"></i>
-                                <span>Badge Required: <?php echo $job['badge_required'] ? 'Yes' : 'No'; ?></span>
+                                <span>Badge Required: <?php if($job['badge_required'])
+                                                                {
+                                                                    echo $job['badge_required'];
+                                                                }
+                                                                else
+                                                                {
+                                                                    echo 'No';
+                                                                }
+                                                        ?>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -165,33 +217,151 @@
                             <i class="fas fa-paper-plane"></i>
                             Apply Now
                         </button>
-                        <button class="save-btn">
-                            <i class="far fa-bookmark"></i>
-                            Save Job
+                        <button onclick="toggleBookmark(<?php echo $job_id; ?>)" class="save-btn <?php echo $is_bookmarked ? 'saved' : ''; ?>">
+                            <?php if ($is_bookmarked): ?>
+                                <i class="fas fa-bookmark"></i> Saved
+                            <?php else: ?>
+                                <i class="far fa-bookmark"></i> Save Job
+                            <?php endif; ?>
                         </button>
+                        <a href="report.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="report-link">
+                        <button class="report-btn">
+                            <i class="fas fa-flag"></i> Report
+                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <style>
+    .save-btn {
+        transition: all 0.3s ease;
+    }
+
+    .save-btn.saved {
+        background: #9747FF;
+        color: white;
+        border-color: #9747FF;
+    }
+
+    .save-btn.saved i {
+        color: #FFD700;
+        animation: bookmarkPop 0.3s ease;
+    }
+
+    @keyframes bookmarkPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(151, 71, 255, 0.2);
+    }
+
+    .save-btn.saved:hover {
+        background: #8A2BE2;
+        border-color: #8A2BE2;
+    }
+
+    /* Add animation for initial load if saved */
+    .save-btn.saved i {
+        animation: initialBookmarkPop 0.5s ease;
+    }
+
+    @keyframes initialBookmarkPop {
+        0% { transform: scale(0.8); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .report-btn {
+        background-color: transparent;
+        color: #FF5722;
+        border: 1px solid #FF5722;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .report-btn:hover {
+        background-color: #FF5722;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+    }
+
+    .report-btn i {
+        font-size: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .report-btn:hover i {
+        transform: rotate(20deg);
+    }
+
+    .report-btn:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+    </style>
+
     <script>
-        // Dropdown menu functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const profilePic = document.querySelector('.profile-pic');
-            const dropdownMenu = document.querySelector('.dropdown-menu');
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveBtn = document.querySelector('.save-btn');
+        if (saveBtn.classList.contains('saved')) {
+            saveBtn.querySelector('i').style.animation = 'initialBookmarkPop 0.5s ease';
+        }
+    });
 
-            profilePic.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdownMenu.classList.toggle('show');
-            });
+    function toggleBookmark(jobId) {
+        const formData = new FormData();
+        formData.append('job_id', jobId);
 
-            document.addEventListener('click', function(e) {
-                if (!dropdownMenu.contains(e.target)) {
-                    dropdownMenu.classList.remove('show');
+        // Debug log
+        console.log('Sending job_id:', jobId);
+
+        fetch('bookmarkprocess.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                // Remove Content-Type header to let browser set it with boundary for FormData
+            }
+        })
+        .then(response => {
+            console.log('Raw response:', response); // Debug log
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Debug log
+            if (data.success) {
+                const btn = document.querySelector('.save-btn');
+                if (data.action === 'bookmarked') {
+                    btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                    btn.classList.add('saved');
+                    btn.querySelector('i').style.animation = 'bookmarkPop 0.3s ease';
+                } else if (data.action === 'unbookmarked') {
+                    btn.innerHTML = '<i class="far fa-bookmark"></i> Save Job';
+                    btn.classList.remove('saved');
                 }
-            });
+            } else {
+                console.error('Error:', data.message); // Debug log
+                alert(data.message || 'Error processing bookmark');
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error); // Debug log
+            alert('Error processing bookmark');
         });
+    }
     </script>
 </body>
 </html>
