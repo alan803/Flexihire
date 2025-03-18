@@ -1,6 +1,14 @@
 <?php
     session_start();
 
+    // Message handling
+    if (isset($_SESSION['message'])) {
+        $message = $_SESSION['message'];
+        $message_type = $_SESSION['message_type'] ?? 'info';
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+    }
+
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) 
     {
@@ -172,8 +180,13 @@
     <!-- Add this right after your navbar -->
     <div id="toast" class="toast">
         <div class="toast-content">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="toast-message"></span>
+            <div class="toast-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="toast-message-container">
+                <div class="toast-title"></div>
+                <span id="toast-message"></span>
+            </div>
         </div>
     </div>
 
@@ -188,6 +201,7 @@
                 <!-- <a href="sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
                 <a href="bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">
@@ -261,7 +275,8 @@
                                     </a>
                                     <?php if ($has_applied): ?>
                                         <button class="applied-btn" disabled>
-                                            <i class="fas fa-check-circle"></i> Applied
+                                            <i class="fas fa-check-circle"></i> 
+                                            Applied
                                             <?php if ($application_status): ?>
                                                 (<?php echo htmlspecialchars($application_status); ?>)
                                             <?php endif; ?>
@@ -363,107 +378,166 @@
     }
 
     .toast {
+        visibility: hidden;
         position: fixed;
         top: 20px;
         right: 20px;
-        background: #fff;
-        padding: 15px 25px;
+        min-width: 300px;
+        max-width: 500px;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        display: flex;
-        align-items: center;
-        transform: translateX(150%);
-        transition: transform 0.3s ease-in-out;
         z-index: 1000;
-        border-left: 4px solid #FF4B4B;
+        overflow: hidden;
     }
 
     .toast.show {
-        transform: translateX(0);
+        visibility: visible;
+        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
     }
 
     .toast-content {
         display: flex;
         align-items: center;
+        padding: 16px 20px;
         gap: 12px;
     }
 
-    .toast i {
-        color: #FF4B4B;
-        font-size: 20px;
+    .toast-icon {
+        flex-shrink: 0;
+    }
+
+    .toast-icon i {
+        font-size: 24px;
+    }
+
+    .toast.success .toast-icon i {
+        color: #4CAF50;
+    }
+
+    .toast.error .toast-icon i {
+        color: #f44336;
+    }
+
+    .toast-message-container {
+        flex-grow: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        margin-bottom: 4px;
     }
 
     #toast-message {
-        color: #333;
-        font-weight: 500;
+        color: #666;
     }
 
-    /* Animation keyframes */
-    @keyframes slideIn {
-        from { transform: translateX(150%); }
-        to { transform: translateX(0); }
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
     }
 
-    @keyframes slideOut {
-        from { transform: translateX(0); }
-        to { transform: translateX(150%); }
-    }
-
-    .toast.slide-in {
-        animation: slideIn 0.3s ease-in-out forwards;
-    }
-
-    .toast.slide-out {
-        animation: slideOut 0.3s ease-in-out forwards;
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
     }
 
     .applied-btn {
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        background: #4CAF50;
+        background-color: #4CAF50;
         color: white;
         border: none;
-        display: inline-flex;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
         align-items: center;
         gap: 8px;
         cursor: default;
+        transition: all 0.3s ease;
         opacity: 0.9;
     }
 
     .applied-btn i {
-        font-size: 16px;
         color: #fff;
+        font-size: 16px;
+        animation: checkmark 0.5s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .applied-btn:disabled {
+        opacity: 1;
+        background-color: #4CAF50;
+        cursor: default;
+    }
+
+    .applied-btn:hover {
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
     }
     </style>
 
     <script>
-    function showToast(message) {
+    // Show toast message if exists
+    <?php if (isset($message)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
+        });
+    <?php endif; ?>
+
+    function showToast(message, type = 'info') {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
+        const toastTitle = toast.querySelector('.toast-title');
+        const icon = toast.querySelector('i');
+        
+        // Reset classes
+        toast.className = 'toast';
+        icon.className = 'fas';
+        
+        // Set type-specific properties
+        switch(type) {
+            case 'success':
+                toastTitle.textContent = 'Success';
+                icon.classList.add('fa-check-circle');
+                toast.classList.add('success');
+                break;
+            case 'error':
+                toastTitle.textContent = 'Error';
+                icon.classList.add('fa-exclamation-circle');
+                toast.classList.add('error');
+                break;
+            default:
+                toastTitle.textContent = 'Information';
+                icon.classList.add('fa-info-circle');
+                toast.classList.add('info');
+        }
         
         toastMessage.textContent = message;
-        toast.classList.add('slide-in');
+        toast.classList.add('show');
         
+        // Hide toast after 3 seconds
         setTimeout(() => {
-            toast.classList.remove('slide-in');
-            toast.classList.add('slide-out');
+            toast.classList.remove('show');
         }, 3000);
-        
-        toast.addEventListener('animationend', function(e) {
-            if (e.animationName === 'slideOut') {
-                toast.classList.remove('slide-out');
-            }
-        });
     }
-
-    // Only show toast if there's a message in session
-    <?php if (isset($error_message)): ?>
-    window.addEventListener('DOMContentLoaded', () => {
-        showToast(<?php echo json_encode($error_message); ?>);
-    });
-    <?php endif; ?>
     </script>
 </body>
 </html>

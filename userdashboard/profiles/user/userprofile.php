@@ -97,6 +97,7 @@
                 <!-- <a href="../../sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
                 <a href="../../bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="../../sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="../../reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">

@@ -1,41 +1,16 @@
 <?php
-session_start();
-include '../database/connectdatabase.php';
-$dbname = "project";
-mysqli_select_db($conn, $dbname);
-
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: ../login/loginvalidation.php");
-//     exit();
-// }
-
-// Get user data
-$user_id = $_SESSION['user_id'];
-$sql = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image 
-        FROM tbl_login l
-        INNER JOIN tbl_user u ON l.user_id = u.user_id
-        WHERE l.user_id = ?";
-
-$stmt = mysqli_prepare($conn, $sql);
-mysqli_stmt_bind_param($stmt, "i", $user_id);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-
-if ($result && mysqli_num_rows($result) > 0) {
-    $user_data = mysqli_fetch_assoc($result);
-    $display_name = !empty($user_data['username']) ? $user_data['username'] : 
-                   $user_data['first_name'] . " " . $user_data['last_name'];
-    $profile_image = $user_data['profile_image'];
-}
+    session_start();
+    include '../database/connection.php';
+    $dbname="project";
+    
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bookmarked Jobs</title>
-    <link rel="stylesheet" href="bookmark.css">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="userdashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -174,126 +149,5 @@ if ($result && mysqli_num_rows($result) > 0) {
         </main>
     </div>
 
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toast-message"></span>
-    </div>
-
-    <script src="userdashboard.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const gridIcon = document.getElementById('grid');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            const profileContainer = document.querySelector('.profile-container');
-            const dropdownMenu = document.querySelector('.dropdown-menu');
-
-            // Sidebar toggle
-            gridIcon.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-                overlay.classList.toggle('show');
-            });
-
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            });
-
-            // Profile dropdown toggle
-            profileContainer.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdownMenu.classList.toggle('show');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function() {
-                if (dropdownMenu.classList.contains('show')) {
-                    dropdownMenu.classList.remove('show');
-                }
-            });
-
-            // Remove bookmark functionality
-            document.querySelectorAll('.remove-bookmark').forEach(button => {
-                button.addEventListener('click', function() {
-                    const jobId = this.dataset.jobId;
-                    if (confirm('Are you sure you want to remove this bookmark?')) {
-                        // Send AJAX request to remove bookmark
-                        fetch('remove_bookmark.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `job_id=${jobId}`
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.closest('.job-card').remove();
-                                if (document.querySelectorAll('.job-card').length === 0) {
-                                    document.querySelector('.bookmarks-container').innerHTML = 
-                                        '<div class="no-bookmarks">No bookmarked jobs found.</div>';
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-        });
-
-        function showToast(message, success = true) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            
-            toast.style.background = success ? '#4CAF50' : '#F44336';
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        function toggleBookmark(jobId) {
-            const formData = new FormData();
-            formData.append('job_id', jobId);
-
-            const jobCard = document.querySelector(`.job-card[data-job-id="${jobId}"]`);
-            const btn = jobCard.querySelector('.save-btn');
-            btn.style.pointerEvents = 'none';
-
-            fetch('bookmarkprocess.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.action === 'unbookmarked') {
-                        // Remove the job card with animation
-                        jobCard.style.opacity = '0';
-                        jobCard.style.transform = 'scale(0.9)';
-                        setTimeout(() => {
-                            jobCard.remove();
-                            // Check if there are no more jobs
-                            if (document.querySelectorAll('.job-card').length === 0) {
-                                document.querySelector('.job-listings').innerHTML = 
-                                    '<div class="no-jobs">No bookmarked jobs found.</div>';
-                            }
-                        }, 300);
-                        showToast('Bookmark removed');
-                    }
-                } else {
-                    showToast(data.message || 'Error processing bookmark', false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error processing bookmark', false);
-            })
-            .finally(() => {
-                btn.style.pointerEvents = 'auto';
-            });
-        }
-    </script>
 </body>
 </html>

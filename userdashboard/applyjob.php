@@ -31,14 +31,14 @@
         mysqli_close($conn);
         
         if ($run) {
-            $_SESSION['message'] = "Application submitted successfully!";
+            $_SESSION['message'] = "You have successfully applied for this job!";
             $_SESSION['message_type'] = "success";
-            header('Location: userdashboard.php?success=application_submitted');
+            header('Location: userdashboard.php');
             exit();
         } else {
-            $_SESSION['message'] = "Failed to submit application. Please try again.";
+            $_SESSION['message'] = "Failed to apply for the job. Please try again.";
             $_SESSION['message_type'] = "error";
-            header('Location: userdashboard.php?error=application_failed');
+            header('Location: userdashboard.php');
             exit();
         }
     }

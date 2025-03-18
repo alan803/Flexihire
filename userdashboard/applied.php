@@ -150,6 +150,7 @@
                 <!-- <a href="sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
                 <a href="bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">
@@ -246,7 +247,7 @@
                                         </button>
                                         <a href="cancel_application.php?application_id=<?php echo $row['application_id']; ?>" 
                                            class="details-btn cancel-hover"
-                                           onclick="openModal(<?php echo $row['application_id']; ?>);">
+                                           onclick="openModal(<?php echo $row['application_id']; ?>); return false;">
                                             <i class="fas fa-times-circle"></i> Cancel
                                         </a>
                                     </div>
@@ -519,9 +520,8 @@
             top: 20px;
         }
     }
-    </style>
 
-    <!-- Add this HTML for the modal at the end of the body tag
+    /* Add this modal HTML before closing body tag */
     <div id="confirmationModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -530,29 +530,120 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to cancel this job application?</p>
-                <p class="modal-subtitle">This action cannot be undone.</p>
+                <p class="warning-text">This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
                 <button class="modal-btn cancel-btn-secondary" onclick="closeModal()">No, Keep It</button>
                 <button class="modal-btn confirm-btn" onclick="confirmCancel()">Yes, Cancel Application</button>
             </div>
         </div>
-    </div> -->
+    </div>
+
+    /* Add these styles */
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .warning-icon {
+        color: #ff4b4b;
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .modal-body {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .warning-text {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .modal-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn-secondary {
+        background-color: #fff;
+        color: #666;
+        border: 1px solid #ddd;
+    }
+
+    .confirm-btn {
+        background-color: #ff4b4b;
+        color: white;
+        border: none;
+    }
+
+    .cancel-btn-secondary:hover {
+        background-color: #f5f5f5;
+    }
+
+    .confirm-btn:hover {
+        background-color: #ff3333;
+    }
+    </style>
+    </style>
 
     <!-- Add this JavaScript -->
     <script>
     let currentApplicationId = null;
 
     function openModal(applicationId) {
+        console.log('Opening modal for application:', applicationId); // Debug line
         currentApplicationId = applicationId;
-        document.getElementById('confirmationModal').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById('confirmationModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        } else {
+            console.error('Modal element not found'); // Debug line
+        }
     }
 
     function closeModal() {
-        document.getElementById('confirmationModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        currentApplicationId = null;
+        const modal = document.getElementById('confirmationModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentApplicationId = null;
+        }
     }
 
     function confirmCancel() {
@@ -628,5 +719,104 @@
         <?php endif; ?>
     });
     </script>
+
+    <!-- Add this HTML right before the closing </body> tag -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-circle warning-icon"></i>
+                <h2>Cancel Application</h2>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this job application?</p>
+                <p class="warning-text">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel-btn-secondary" onclick="closeModal()">No, Keep It</button>
+                <button class="modal-btn confirm-btn" onclick="confirmCancel()">Yes, Cancel Application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Make sure this style is present -->
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .warning-icon {
+        color: #ff4b4b;
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .modal-body {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .warning-text {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .modal-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn-secondary {
+        background-color: #fff;
+        color: #666;
+        border: 1px solid #ddd;
+    }
+
+    .confirm-btn {
+        background-color: #ff4b4b;
+        color: white;
+        border: none;
+    }
+
+    .cancel-btn-secondary:hover {
+        background-color: #f5f5f5;
+    }
+
+    .confirm-btn:hover {
+        background-color: #ff3333;
+    }
+    </style>
 </body>
 </html>

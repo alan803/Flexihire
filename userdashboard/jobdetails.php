@@ -84,6 +84,29 @@
         </div>
     </nav>
 
+    <!-- Toast Message Container -->
+    <?php if (isset($_SESSION['message'])): ?>
+        <div class="toast show <?php echo $_SESSION['message_type']; ?>">
+            <div class="toast-content">
+                <div class="toast-icon">
+                    <i class="fas <?php echo $_SESSION['message_type'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
+                </div>
+                <div class="toast-message-container">
+                    <div class="toast-title">
+                        <?php echo $_SESSION['message_type'] === 'success' ? 'Success' : 'Error'; ?>
+                    </div>
+                    <span id="toast-message"><?php echo $_SESSION['message']; ?></span>
+                </div>
+            </div>
+            <div class="toast-progress"></div>
+        </div>
+        <?php 
+        // Clear the message after displaying
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+        ?>
+    <?php endif; ?>
+
     <div class="dashboard-container">
         <!-- Fixed Sidebar -->
         <div class="sidebar">
@@ -111,6 +134,10 @@
                 <a href="sidebar/appointment/appointment.html" class="sidebar-link">
                     <i class="fas fa-calendar"></i>
                     <span>Appointments</span>
+                </a>
+                <a href="reportedjobs.php" class="sidebar-link">
+                    <i class="fas fa-flag"></i>
+                    <span>Reported Jobs</span>
                 </a>
                 <a href="profiles/user/userprofile.php" class="sidebar-link">
                     <i class="fas fa-user"></i>
@@ -224,15 +251,48 @@
                                 <i class="far fa-bookmark"></i> Save Job
                             <?php endif; ?>
                         </button>
-                        <a href="report.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="report-link">
-                        <button class="report-btn">
+                        <button class="report-btn" onclick="openReportModal()">
                             <i class="fas fa-flag"></i> Report
                         </button>
-                        </a>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Add this modal HTML before closing body tag -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-flag"></i>
+                <h2>Report Job</h2>
+                <span class="close" onclick="closeReportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="reportReason">Why do you want to report this job?</label>
+                    <textarea id="reportReason" 
+                             rows="4" 
+                             placeholder="Please explain your reason for reporting (letters and basic punctuation only)..."
+                             onkeyup="validateReport()"
+                             minlength="10"
+                             maxlength="500"></textarea>
+                    <div class="validation-feedback">
+                        <span id="charCount">0/500 characters</span>
+                        <span id="validationMessage" class="error-message"></span>
+                    </div>
+                    <small class="input-help">Only letters, spaces, and basic punctuation (.,!?'"-) are allowed</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" onclick="closeReportModal()">Cancel</button>
+                <a href="report.php?job_id=<?php echo $job_id; ?>&user_id=<?php echo $user_id; ?>&reason=<?php echo urlencode($reportReason); ?></a>" id="reportLink" class="report-link">
+                    <button class="submit-btn" onclick="prepareReport(event)">
+                        <i class="fas fa-flag"></i> Submit Report
+                    </button>
+                </a>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -312,6 +372,280 @@
         transform: translateY(0);
         box-shadow: none;
     }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: #333;
+    }
+
+    .modal-header i {
+        color: #FF5722;
+        font-size: 24px;
+    }
+
+    .close {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #FF5722;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .cancel-btn, .submit-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn {
+        background: #fff;
+        border: 1px solid #ddd;
+        color: #666;
+    }
+
+    .submit-btn {
+        background: #FF5722;
+        border: none;
+        color: white;
+    }
+
+    .cancel-btn:hover {
+        background: #f5f5f5;
+    }
+
+    .submit-btn:hover {
+        background: #F4511E;
+    }
+
+    .validation-feedback {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    #charCount {
+        color: #666;
+    }
+
+    .error-message {
+        color: #f44336;
+        font-size: 12px;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s, opacity 0.2s linear;
+    }
+
+    .error-message.show {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .form-group textarea.invalid {
+        border-color: #f44336;
+        animation: borderPulse 0.3s ease-in-out;
+    }
+
+    @keyframes borderPulse {
+        0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+        70% { box-shadow: 0 0 0 5px rgba(244, 67, 54, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+    }
+
+    .form-group textarea.valid {
+        border-color: #4CAF50;
+    }
+
+    .submit-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .error-message.shake {
+        animation: shake 0.3s ease-in-out;
+    }
+
+    .input-help {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+    }
+
+    .report-link {
+        text-decoration: none;
+    }
+
+    .report-link button {
+        width: 100%;
+    }
+
+    /* Update these styles for single-line toast */
+    .toast {
+        visibility: hidden;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 300px;
+        max-width: 400px;
+        z-index: 1000;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        gap: 12px;
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+    }
+
+    .toast-message-container {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .toast-title {
+        display: inline;
+        margin-right: 8px;
+        font-weight: 500;
+    }
+
+    #toast-message {
+        display: inline;
+    }
+
+    .toast.show {
+        visibility: visible;
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    .toast.success {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .toast.error {
+        background: #f44336;
+        color: white;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .toast-progress::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        animation: progress 3s linear forwards;
+    }
+
+    @keyframes progress {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
     </style>
 
     <script>
@@ -362,6 +696,158 @@
             alert('Error processing bookmark');
         });
     }
+
+    function openReportModal() {
+        document.getElementById('reportModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReportModal() {
+        const textarea = document.getElementById('reportReason');
+        const validationMessage = document.getElementById('validationMessage');
+        const charCount = document.getElementById('charCount');
+        
+        textarea.classList.remove('valid', 'invalid');
+        validationMessage.classList.remove('show');
+        charCount.textContent = '0/500 characters';
+        
+        document.getElementById('reportModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        textarea.value = '';
+    }
+
+    function validateReport() {
+        const textarea = document.getElementById('reportReason');
+        const charCount = document.getElementById('charCount');
+        const validationMessage = document.getElementById('validationMessage');
+        const submitBtn = document.querySelector('.submit-btn');
+        const text = textarea.value.trim();
+        const length = text.length;
+
+        // Update character count
+        charCount.textContent = `${length}/500 characters`;
+
+        // Check for numbers
+        if (/\d/.test(text)) {
+            textarea.classList.remove('valid');
+            textarea.classList.add('invalid');
+            validationMessage.textContent = 'Numbers are not allowed in the report';
+            validationMessage.classList.add('show', 'shake');
+            submitBtn.disabled = true;
+            return false;
+        }
+
+        // Check for special characters (allowing only letters, spaces, and basic punctuation)
+        if (!/^[a-zA-Z\s.,!?'"-]+$/.test(text)) {
+            textarea.classList.remove('valid');
+            textarea.classList.add('invalid');
+            validationMessage.textContent = 'Only letters and basic punctuation (.,!?\'"-)  are allowed';
+            validationMessage.classList.add('show', 'shake');
+            submitBtn.disabled = true;
+            return false;
+        }
+
+        // Validate length
+        if (length < 10) {
+            textarea.classList.remove('valid');
+            textarea.classList.add('invalid');
+            validationMessage.textContent = 'Please provide at least 10 characters';
+            validationMessage.classList.add('show');
+            submitBtn.disabled = true;
+            return false;
+        } 
+        else if (length > 500) {
+            textarea.classList.remove('valid');
+            textarea.classList.add('invalid');
+            validationMessage.textContent = 'Maximum 500 characters allowed';
+            validationMessage.classList.add('show');
+            submitBtn.disabled = true;
+            return false;
+        }
+        // Check for meaningful content (at least 2 words)
+        else if (text.split(/\s+/).filter(word => word.length > 0).length < 2) {
+            textarea.classList.remove('valid');
+            textarea.classList.add('invalid');
+            validationMessage.textContent = 'Please provide a meaningful explanation';
+            validationMessage.classList.add('show');
+            submitBtn.disabled = true;
+            return false;
+        }
+        else {
+            textarea.classList.remove('invalid');
+            textarea.classList.add('valid');
+            validationMessage.classList.remove('show', 'shake');
+            submitBtn.disabled = false;
+            return true;
+        }
+    }
+
+    // Update the input event listener to only validate, not prevent input
+    document.getElementById('reportReason').addEventListener('input', function(e) {
+        validateReport();
+        
+        // Remove shake class after animation
+        const validationMessage = document.getElementById('validationMessage');
+        validationMessage.addEventListener('animationend', function() {
+            validationMessage.classList.remove('shake');
+        });
+    });
+
+    function prepareReport(event) {
+        event.preventDefault();
+        
+        if (!validateReport()) {
+            const validationMessage = document.getElementById('validationMessage');
+            validationMessage.classList.remove('shake');
+            setTimeout(() => validationMessage.classList.add('shake'), 10);
+            return;
+        }
+
+        const reason = document.getElementById('reportReason').value.trim();
+        const reportLink = document.getElementById('reportLink');
+        
+        // Fix: Update parameter names to match report.php expectations
+        const url = `report.php?job_id=<?php echo $job_id; ?>&user_id=<?php echo $user_id; ?>&reason=${encodeURIComponent(reason)}`;
+        
+        // Update the href and trigger the navigation
+        reportLink.href = url;
+        window.location.href = url;
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) 
+    {
+        const modal = document.getElementById('reportModal');
+        if (event.target == modal) {
+            closeReportModal();
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) 
+    {
+        if (event.key === 'Escape') {
+            closeReportModal();
+        }
+    });
+    </script>
+
+    <!-- Add this right after your existing toast container -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if there's a message to display
+        const toast = document.querySelector('.toast.show');
+        if (toast) {
+            // Auto-hide after 3 seconds
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 500);
+            }, 3000);
+        }
+    });
     </script>
 </body>
 </html>
