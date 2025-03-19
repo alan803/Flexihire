@@ -1,23 +1,33 @@
 <?php
     session_start();
-    if(!isset($_SESSION['employer_id']))
-    {
-        header("location:../login/login.php");
+    // Check if user is logged in
+    if (!isset($_SESSION['employer_id'])) {
+        header("Location: ../login/loginvalidation.php");
+        exit();
     }
-    include '../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
-    $employer_id=$_SESSION['employer_id'];
-    $sql="SELECT * FROM tbl_employer WHERE employer_id=$employer_id";
-    $result=mysqli_query($conn,$sql);
-    $row=mysqli_fetch_assoc(mysqli_query($conn,$sql));
-    $company_name=$row['company_name'];
 
-    // selecting email from tbl_user
-    $sql_email="SELECT email from tbl_login WHERE user_id=$employer_id";
-    $result_email=mysqli_query($conn,$sql_email);
-    $row_email=mysqli_fetch_assoc($result_email);
-    $email=$row_email['email'];
+    include '../database/connectdatabase.php';
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
+
+    // Fetch employer data including profile image
+    $employer_id = $_SESSION['employer_id'];
+    $sql = "SELECT e.*, l.email 
+            FROM tbl_employer e 
+            JOIN tbl_login l ON e.employer_id = l.employer_id 
+            WHERE e.employer_id = ?";
+            
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $employer_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        $email = $row['email'];
+        $company_name = $row['company_name'];
+        $profile_image = $row['profile_image'];
+    }
 
     // collecting data from the user throught the form
     if($_SERVER['REQUEST_METHOD']=='POST') {
@@ -144,9 +154,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employer Profile</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="edit_employer_profile.css">
+    <title>Edit Profile | AutoRecruits</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="employerdashboard.css">
+    <style>
+        .main-container {
+            padding: 2rem;
+            margin-left: 250px;
+            background-color: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .content-card {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 16px;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            padding: 28px;
+            margin-bottom: 28px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .section-title {
+            color: #1e293b;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #3b82f6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #1e293b;
+            background-color: #fff;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:hover,
+        .form-group textarea:hover {
+            border-color: #cbd5e1;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .profile-photo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-photo-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #e2e8f0;
+        }
+
+        .profile-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .photo-upload-label:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .submit-btn,
+        .cancel-btn {
+            padding: 14px 36px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .submit-btn:hover,
+        .cancel-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .cancel-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .submit-btn,
+            .cancel-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="notification" class="notification" style="display: none;">
@@ -157,7 +374,13 @@
     </div>
     <div class="sidebar">
         <div class="logo-container">
-            <img src="logo.png" alt="AutoRecruits.in">
+            <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
+                <img src="<?php echo htmlspecialchars($profile_image); ?>" 
+                     alt="<?php echo htmlspecialchars($company_name); ?>"
+                     onerror="this.src='../assets/images/company-logo.png';">
+            <?php else: ?>
+                <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
+            <?php endif; ?>
         </div>
         <div class="company-info">
             <span><?php echo htmlspecialchars($company_name); ?></span>
@@ -192,116 +415,147 @@
         </div>
     </div>
     
-    <div class="main-content">
-        <form method="POST" enctype="multipart/form-data" onsubmit="return check()">
-            <!-- Header Section with Animation -->
-        <div class="profile-header">
-                <div class="header-banner">
-                    <div class="banner-overlay"></div>
-                </div>
-                <div class="profile-info-container">
-                    <div class="profile-photo animate-scale-in">
-                        <img src="<?php echo !empty($row['profile_photo']) ? htmlspecialchars($row['profile_photo']) : 'company-logo.png'; ?>" alt="Company Logo" id="preview-photo">
-                        <div class="photo-upload pulse-animation">
-                            <label for="company-logo"><i class="fas fa-camera"></i></label>
+    <div class="main-container">
+        <div class="header">
+            <h1>Edit Company Profile</h1>
+        </div>
+
+        <div class="content-card">
+            <form method="POST" enctype="multipart/form-data" onsubmit="return check()">
+                <!-- Company Logo Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-image"></i>
+                        Company Logo
+                    </h3>
+                    <div class="profile-photo-section">
+                        <div class="profile-photo-container">
+                            <img src="<?php 
+                                if (!empty($profile_image) && file_exists($profile_image)) {
+                                    echo htmlspecialchars($profile_image);
+                                } else {
+                                    echo '../assets/images/company-logo.png';
+                                }
+                            ?>" 
+                                 alt="Company Logo" 
+                                 id="preview-photo"
+                                 onerror="this.src='../assets/images/company-logo.png';">
+                            <label for="company-logo" class="photo-upload-label">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </label>
                             <input type="file" id="company-logo" name="company_logo" accept="image/*" hidden>
                         </div>
-                        <!-- Error message will be inserted here by JavaScript -->
                     </div>
-                    <div class="profile-details animate-slide-in">
-                        <div class="form-group floating-label">
-                            <input type="text" name="company_name" id="company_name" value="<?php echo htmlspecialchars($row['company_name']); ?>" class="form-input" onkeyup="checkcompanyname()">
-                            <label>Company Name</label>
-                            <span id="company_name_error" class="error-message"></span>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group floating-label">
-                                <label>Company Type</label>
-                                <input type="text" name="company_type" id="company_type" value="<?php echo htmlspecialchars($row['type']); ?>" class="form-input" onkeyup="checkcompanytype()">
-                                <span id="company_type_error" class="error-message"></span>
-                            </div>
-                            <div class="form-group floating-label">
-                                <input type="text" name="registration_number" id="registration_number" value="<?php echo htmlspecialchars($row['registration_number']); ?>" class="form-input" onkeyup="checkregistrationnumber()">
-                                <span id="registration_number_error" class="error-message"></span>
-                                <label>Registration Number</label>
-                            </div>
-                        </div>
                 </div>
-            </div>
-        </div>
 
-            <!-- Main Form Content -->
-            <div class="form-grid">
-                <!-- Company Information Card -->
-                <div class="form-card animate-slide-up">
-                    <div class="card-header">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
                         <i class="fas fa-building"></i>
-                        <h3>Company Information</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group floating-label">
-                                <input type="text" name="location"  id="location" value="<?php echo htmlspecialchars($row['location']); ?>" class="form-input" onkeyup="checklocation()">
-                                <label>Location</label>
-                                <span id="location_error" class="error-message"></span>
-                            </div>
-                            <div class="form-group floating-label">
-                                <input type="number" name="establishment_year" id="establishment_year"  value="<?php echo htmlspecialchars($row['establishment_year']); ?>" class="form-input" min="1900" max="<?php echo date('Y'); ?>" onkeyup="checkestablishmentyear()">
-                                <label>Establishment Year</label>
-                                <span id="establishment_year_error" class="error-message"></span>
-                            </div>
-                    </div>
-                        <div class="form-group floating-label">
-                            <textarea name="company_description" id="company_description" class="form-input" rows="4" onkeyup="checkcompanydescription()"><?php echo htmlspecialchars($row['shop_description']); ?></textarea>
-                            <label>Company Description</label>
-                            <span id="company_description_error" class="error-message"></span>
-                    </div>
+                        Basic Information
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" name="company_name" id="company_name" 
+                                   value="<?php echo htmlspecialchars($row['company_name']); ?>" 
+                                   onkeyup="checkcompanyname()">
+                            <span id="company_name_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Company Type</label>
+                            <input type="text" name="company_type" id="company_type" 
+                                   value="<?php echo htmlspecialchars($row['type']); ?>" 
+                                   onkeyup="checkcompanytype()">
+                            <span id="company_type_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Registration Number</label>
+                            <input type="text" name="registration_number" id="registration_number" 
+                                   value="<?php echo htmlspecialchars($row['registration_number']); ?>" 
+                                   onkeyup="checkregistrationnumber()">
+                            <span id="registration_number_error" class="error"></span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Contact Information Card -->
-                <div class="form-card animate-slide-up" style="animation-delay: 0.2s;">
-                    <div class="card-header">
+                <!-- Contact Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
                         <i class="fas fa-address-card"></i>
-                        <h3>Contact Information</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group floating-label">
-                                <input type="text" name="contact_person" id="contact_person" value="<?php echo htmlspecialchars($row['contact_person']); ?>" class="form-input" onkeyup="checkcontactperson()">
-                                <label>Contact Person</label>
-                                <span id="contact_person_error" class="error-message"></span>
-                            </div>
-                            <div class="form-group floating-label">
-                                <input type="tel" name="phone" id="phone" value="<?php echo htmlspecialchars($row['phone_number']); ?>" class="form-input" onkeyup="checkphonenumber()">
-                                <label>Phone Number</label>
-                                <span id="phone_error" class="error-message"></span>
-            </div>
-                </div>
-                        <div class="form-group floating-label">
-                            <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($row_email['email']); ?>" class="form-input" onkeyup="checkemail()">
+                        Contact Information
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Contact Person</label>
+                            <input type="text" name="contact_person" id="contact_person" 
+                                   value="<?php echo htmlspecialchars($row['contact_person']); ?>" 
+                                   onkeyup="checkcontactperson()">
+                            <span id="contact_person_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" name="phone" id="phone" 
+                                   value="<?php echo htmlspecialchars($row['phone_number']); ?>" 
+                                   onkeyup="checkphonenumber()">
+                            <span id="phone_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
                             <label>Email Address</label>
-                            <span id="email_error" class="error-message"></span>
-                        </div>
-                        <div class="form-group floating-label">
-                            <textarea name="address" id="address" class="form-input" rows="3" onkeyup="checkaddress()"><?php echo htmlspecialchars($row['address']); ?></textarea>
-                            <label>Address</label>
-                            <span id="address_error" class="error-message"></span>
+                            <input type="email" name="email" id="email" 
+                                   value="<?php echo htmlspecialchars($email); ?>" 
+                                   onkeyup="checkemail()">
+                            <span id="email_error" class="error"></span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Form Actions -->
-            <div class="form-actions animate-fade-in">
-                <button type="button" class="cancel-btn" onclick="window.location.href='employer_profile.php'">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="save-btn">
-                    <i class="fas fa-check"></i> Save Changes
-                </button>
+                <!-- Additional Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Additional Information
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" name="location" id="location" 
+                                   value="<?php echo htmlspecialchars($row['location']); ?>" 
+                                   onkeyup="checklocation()">
+                            <span id="location_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Establishment Year</label>
+                            <input type="number" name="establishment_year" id="establishment_year" 
+                                   value="<?php echo htmlspecialchars($row['establishment_year']); ?>" 
+                                   onkeyup="checkestablishmentyear()">
+                            <span id="establishment_year_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Company Description</label>
+                            <textarea name="company_description" id="company_description" 
+                                      onkeyup="checkcompanydescription()" rows="4"><?php echo htmlspecialchars($row['shop_description']); ?></textarea>
+                            <span id="company_description_error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea name="address" id="address" 
+                                      onkeyup="checkaddress()" rows="3"><?php echo htmlspecialchars($row['address']); ?></textarea>
+                            <span id="address_error" class="error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" onclick="window.location.href='employer_profile.php'" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
-        </form>
     </div>
     <script>
         // Animation for elements when they come into view
@@ -570,55 +824,16 @@
         `;
         document.head.appendChild(style);
 
-        // Modified file upload validation code
-        document.getElementById('company-logo').addEventListener('change', function() {
-            const file = this.files[0];
-            const preview = document.getElementById('preview-photo');
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-            const maxSize = 5 * 1024 * 1024; // 5MB
-
-            // Create error message element if it doesn't exist
-            let errorElement = document.getElementById('logo-error');
-            if (!errorElement) {
-                errorElement = document.createElement('span');
-                errorElement.id = 'logo-error';
-                errorElement.className = 'photo-error-message';
-                const profilePhotoDiv = document.querySelector('.profile-photo');
-                profilePhotoDiv.appendChild(errorElement);
+        // Preview uploaded image
+        document.getElementById('company-logo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-photo').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
             }
-
-            // Clear previous error
-            errorElement.textContent = '';
-
-            // Validate file
-            if (!file) {
-                return;
-            }
-
-            // Check file type
-            if (!allowedTypes.includes(file.type)) {
-                errorElement.textContent = 'Only JPG, JPEG, and PNG files are allowed';
-                this.value = ''; // Clear the input
-                preview.src = 'company-logo.png'; // Reset to default image
-                return false;
-            }
-
-            // Check file size
-            if (file.size > maxSize) {
-                errorElement.textContent = 'File size must be less than 5MB';
-                this.value = ''; // Clear the input
-                preview.src = 'company-logo.png'; // Reset to default image
-                return false;
-            }
-
-            // Preview image
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                errorElement.textContent = ''; // Clear error message on success
-            };
-            reader.readAsDataURL(file);
-            return true;
         });
     </script>
 </body>

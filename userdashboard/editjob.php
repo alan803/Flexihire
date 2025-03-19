@@ -164,392 +164,586 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Job</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="postjob.css">
-    <script src="editjob.js"></script>
+    <title>Edit Job</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="employerdashboard.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo-container">
-            <?php 
-            // Fetch profile image
-            $sql_profile = "SELECT profile_image FROM tbl_employer WHERE employer_id = ?";
-            $stmt_profile = mysqli_prepare($conn, $sql_profile);
-            mysqli_stmt_bind_param($stmt_profile, "i", $employer_id);
-            mysqli_stmt_execute($stmt_profile);
-            $result_profile = mysqli_stmt_get_result($stmt_profile);
-            $profile_data = mysqli_fetch_assoc($result_profile);
-            ?>
-            <?php if(!empty($profile_data['profile_image'])): ?>
-                <img src="<?php echo htmlspecialchars($profile_data['profile_image']); ?>" 
-                     alt="<?php echo htmlspecialchars($username); ?>"
-                     onerror="this.src='company-logo.png';">
-            <?php else: ?>
-                <img src="company-logo.png" alt="AutoRecruits.in">
-            <?php endif; ?>
-        </div>
-        <div class="company-info">
-            <span style="position:relative; left:-70px;font-size:15px;"><?php echo htmlspecialchars($username); ?></span>
-        </div>
-        <nav class="nav-menu">
-            <div class="nav-item active">
-                <i class="fas fa-th-large"></i>
-                <a href="employerdashboard.php">Home</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-plus-circle"></i>
-                <a href="postjob.php">Post a Job</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-briefcase"></i>
-                <a href="myjoblist.php">My Jobs</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-calendar-check"></i>
-                <a>Interviews</a>
-            </div>
-        </nav>
-        <div class="settings-section">
-            <div class="nav-item">
-                <i class="fas fa-user"></i>
-                <a>My Profile</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <a href="../login/logout.php">Logout</a>
-            </div>
-        </div>
-    </div>
-    <div class="form-container">
-        <form method="post" id="add_job" onsubmit="return validateForm()">
-            <input type="hidden" name="employer_id" value="<?php echo $employer_id; ?>">
-            <?php if (isset($_GET['message'])): ?>
-                <div class="alert" id="alertMessage">
-                    <i class="fas fa-check-circle"></i>
-                    <?php echo htmlspecialchars($_GET['message']); ?>
-                </div>
-            <?php endif; ?>
-            <select name="category" id="category" onchange="validatecategory()">
-                <option value="">Select Category</option>
-                <option value="Delivery and logistics" <?php echo ($category == "Delivery and logistics") ? "selected" : ""; ?>>Delivery & Logistics</option>
-                <option value="Hospitality and catering" <?php echo ($category == "Hospitality and catering") ? "selected" : ""; ?>>Hospitality & Catering</option>
-                <option value="Housekeeping and cleaning" <?php echo ($category == "Housekeeping and cleaning") ? "selected" : ""; ?>>Housekeeping & Cleaning</option>
-                <option value="Retail and store jobs" <?php echo ($category == "Retail and store jobs") ? "selected" : ""; ?>>Retail & Store Jobs</option>
-                <option value="Warehouse and factory jobs" <?php echo ($category == "Warehouse and factory jobs") ? "selected" : ""; ?>>Warehouse & Factory Jobs</option>
-                <option value="Maintenance" <?php echo ($category == "Maintenance") ? "selected" : ""; ?>>Maintenance</option>
-            </select>
-            <p id="categoryerror" class="error"></p>
-
-            <!-- Add this after the category select -->
-            <div id="delivery-docs" style="display: <?php echo ($category == 'Delivery and logistics') ? 'block' : 'none'; ?>">
-                <div class="upload-container">
-                    <label>Driving License Required:</label>
-                    <select name="license_required" id="license_required" class="doc-select">
-                        <option value="">Select License Type</option>
-                        <option value="two_wheeler" <?php echo ($license == "two_wheeler") ? "selected" : ""; ?>>Two Wheeler License</option>
-                        <option value="four_wheeler" <?php echo ($license == "four_wheeler") ? "selected" : ""; ?>>Four Wheeler License</option>
-                        <option value="both" <?php echo ($license == "both") ? "selected" : ""; ?>>Both Required</option>
-                        <option value="not_required" <?php echo ($license == "not_required") ? "selected" : ""; ?>>Not Required</option>
-                    </select>
-                    <p id="licenseerror" class="error"></p>
-                </div>
-
-                <div class="upload-container">
-                    <label>Badge Required:</label>
-                    <select name="badge_required" id="badge_required" class="doc-select">
-                        <option value="">Select Badge Requirement</option>
-                        <option value="yes" <?php echo ($badge == "yes") ? "selected" : ""; ?>>Yes</option>
-                        <option value="no" <?php echo ($badge == "no") ? "selected" : ""; ?>>No</option>
-                    </select>
-                    <p id="badgeerror" class="error"></p>
-                </div>
-            </div>
-            <label>Job title</label>
-            <input type="text" name="job_title" id="job_title" placeholder="Job title" value="<?php echo $title;?>" onkeyup="validateJobTitle()">
-            <p id="titleerror" class="error"></p>
-
-            <label>Job Description</label>
-            <input type="text" name="job_description" id="job_description" placeholder="Job Description" value="<?php echo $description;?>" onkeyup="validateJobDescription()">
-            <p id="descriptionerror" class="error"></p>
-
-            <label>Location</label>
-            <select name="location" id="location" onchange="showTowns()">
-                <option value="">Select District</option>
-                <?php
-                $districts = [
-                    'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha', 
-                    'Kottayam', 'Idukki', 'Ernakulam', 'Thrissur', 'Palakkad', 
-                    'Malappuram', 'Kozhikode', 'Wayanad', 'Kannur', 'Kasaragod'
-                ];
-                foreach ($districts as $district) {
-                    $selected = ($loc == $district) ? 'selected' : '';
-                    echo "<option value='{$district}' {$selected}>{$district}</option>";
-                }
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <?php 
+                // Fetch profile image
+                $sql_profile = "SELECT profile_image FROM tbl_employer WHERE employer_id = ?";
+                $stmt_profile = mysqli_prepare($conn, $sql_profile);
+                mysqli_stmt_bind_param($stmt_profile, "i", $employer_id);
+                mysqli_stmt_execute($stmt_profile);
+                $result_profile = mysqli_stmt_get_result($stmt_profile);
+                $profile_data = mysqli_fetch_assoc($result_profile);
                 ?>
-            </select>
-            <p id="locationerror" class="error"></p>
-
-            <!-- Town selection -->
-            <label id="townLabel" style="display:none;">Select Town</label>
-            <select name="town" id="tvm_towns" style="display:none;">
-                <option value="">Select Town</option>
-            </select>
-            <p id="townerror" class="error"></p>
-
-            <label>Vacancy date:</label>
-            <input type="date" name="date" id="date" onchange="validateDate()" value="<?php echo $vac_date;?>" >
-            <p id="dateerror" class="error"></p>
-
-            <label>Working hours</label>
-            <div class="time-container">
-                <div class="time-selects">
-                    <select id="start-time" name="start_time" class="time-select">
-                        <option value="">Select Start Time</option>
-                    </select>
-
-                    <span class="separator">to</span>
-
-                    <select id="end-time" name="end_time" class="time-select">
-                        <option value="">Select End Time</option>
-                    </select>
+                <?php if(!empty($profile_data['profile_image'])): ?>
+                    <img src="<?php echo htmlspecialchars($profile_data['profile_image']); ?>" 
+                         alt="<?php echo htmlspecialchars($username); ?>"
+                         onerror="this.src='../assets/images/company-logo.png';">
+                <?php else: ?>
+                    <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
+                <?php endif; ?>
+            </div>
+            <div class="company-info">
+                <span><?php echo htmlspecialchars($username); ?></span>
+                <span style="font-size: 13px; color: var(--light-text);"><?php echo htmlspecialchars($email); ?></span>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <a href="employerdashboard.php">Dashboard</a>
                 </div>
-                <p id="timeerror" class="error"></p>
+                <div class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <a href="postjob.php">Post a Job</a>
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-briefcase"></i>
+                    <a href="myjoblist.php">My Jobs</a>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <a href="applicants.php">Applicants</a>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <a href="interviews.php">Interviews</a>
+                </div>
+            </nav>
+            <div class="settings-section">
+                <div class="nav-item">
+                    <i class="fas fa-user"></i>
+                    <a href="employer_profile.php">My Profile</a>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <a href="../login/logout.php">Logout</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-container">
+            <div class="header">
+                <h1>Edit Job</h1>
             </div>
 
-            <label>Working days</label>
-            <select name="working_days" id="working_days" onchange="validateWorkingDays()">
-                <option value="">Select Working Days</option>
-                <option value="part_time" <?php if($working_days == "part_time") echo "selected"; ?>>Part Time</option>
-                <option value="full_day" <?php if($working_days == "full_day") echo "selected"; ?>>Full day</option>
-                <option value="shift" <?php if($working_days == "shift") echo "selected"; ?>>Shift-based</option>
-            </select>
-            <p id="workingdayserror" class="error"></p>
+            <!-- Form Container -->
+            <div class="content-card">
+                <form method="post" id="add_job" onsubmit="return validateForm()">
+                    <?php if (isset($_GET['message'])): ?>
+                        <div class="alert <?php echo strpos($_GET['message'], 'successfully') !== false ? 'alert-success' : 'alert-error'; ?>">
+                            <?php echo htmlspecialchars($_GET['message']); ?>
+                        </div>
+                    <?php endif; ?>
 
-            <label>Vacancy</label>
-            <input type="text" name="vacancy" id="vacancy" placeholder="No of vacancy" value="<?php echo $vac;?>" onkeyup="validateVacancy()">
-            <p id="vacancyerror" class="error"></p>
+                    <div class="form-container">
+                        <!-- Basic Job Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">Basic Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Job Category</label>
+                                    <select name="category" id="category" onchange="validatecategory()">
+                                        <option value="">Select Category</option>
+                                        <option value="Delivery and logistics" <?php echo ($category == "Delivery and logistics") ? "selected" : ""; ?>>Delivery & Logistics</option>
+                                        <option value="Hospitality and catering" <?php echo ($category == "Hospitality and catering") ? "selected" : ""; ?>>Hospitality & Catering</option>
+                                        <option value="Housekeeping and cleaning" <?php echo ($category == "Housekeeping and cleaning") ? "selected" : ""; ?>>Housekeeping & Cleaning</option>
+                                        <option value="Retail and store jobs" <?php echo ($category == "Retail and store jobs") ? "selected" : ""; ?>>Retail & Store Jobs</option>
+                                        <option value="Warehouse and factory jobs" <?php echo ($category == "Warehouse and factory jobs") ? "selected" : ""; ?>>Warehouse & Factory Jobs</option>
+                                        <option value="Maintenance" <?php echo ($category == "Maintenance") ? "selected" : ""; ?>>Maintenance</option>
+                                    </select>
+                                    <p id="categoryerror" class="error"></p>
+                                </div>
 
-            <label>Salary</label>
-            <input type="text" name="salary" id="salary" placeholder="Salary" value="<?php echo floor($sal);?>" onkeyup="validateSalary()">
-            <p id="salaryerror" class="error"></p>
+                                <div class="form-group">
+                                    <label>Job Title</label>
+                                    <input type="text" name="job_title" id="job_title" placeholder="Enter job title" value="<?php echo $title;?>" onkeyup="validateJobTitle()">
+                                    <p id="titleerror" class="error"></p>
+                                </div>
+                            </div>
+                        </div>
 
-            <label>Application time limit:</label>
-            <input type="date" name="last_date" id="last_date" value="<?php echo $app_deadline;?>" onchange="validateLastDate()">
-            <p id="lastdateerror" class="error"></p>
+                        <!-- Delivery Documents Section -->
+                        <div id="delivery-docs" class="form-section" style="display: <?php echo ($category == 'Delivery and logistics') ? 'block' : 'none'; ?>">
+                            <h3 class="section-title">Required Documents</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Driving License Required</label>
+                                    <select name="license_required" id="license_required">
+                                        <option value="">Select License Type</option>
+                                        <option value="two_wheeler" <?php echo ($license == "two_wheeler") ? "selected" : ""; ?>>Two Wheeler License</option>
+                                        <option value="four_wheeler" <?php echo ($license == "four_wheeler") ? "selected" : ""; ?>>Four Wheeler License</option>
+                                        <option value="both" <?php echo ($license == "both") ? "selected" : ""; ?>>Both Required</option>
+                                        <option value="not_required" <?php echo ($license == "not_required") ? "selected" : ""; ?>>Not Required</option>
+                                    </select>
+                                    <p id="licenseerror" class="error"></p>
+                                </div>
 
-            <label>Contact number</label>
-            <input type="text" id="phone" name="phone"  value ="<?php echo $phone;?>" onkeyup="validatePhone()">
-            <p id="phoneerror" class="error"></p>
-            <div class="form-group">
-                <label for="interview">Interview?</label>
-                <div class="radio-group">
-                    <input type="radio" id="yes" name="interview" value="yes" <?php if ($itrview == "yes") echo "checked"; ?> >
-                    <label id="yess">Yes</label>
+                                <div class="form-group">
+                                    <label>Badge Required</label>
+                                    <select name="badge_required" id="badge_required">
+                                        <option value="">Select Badge Requirement</option>
+                                        <option value="yes" <?php echo ($badge == "yes") ? "selected" : ""; ?>>Yes</option>
+                                        <option value="no" <?php echo ($badge == "no") ? "selected" : ""; ?>>No</option>
+                                    </select>
+                                    <p id="badgeerror" class="error"></p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <input type="radio" id="no" name="interview" value="no" <?php if ($itrview == "no") echo "checked"; ?> >
-                    <label id="noo">No</label>
+                        <!-- Job Description -->
+                        <div class="form-section">
+                            <h3 class="section-title">Job Description</h3>
+                            <div class="form-group">
+                                <textarea name="job_description" id="job_description" placeholder="Enter detailed job description" onkeyup="validateJobDescription()"><?php echo $description;?></textarea>
+                                <p id="descriptionerror" class="error"></p>
+                            </div>
+                        </div>
 
-                </div>
-                <p id="interviewerror" class="error"></p>
+                        <!-- Location Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">Location Details</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>District</label>
+                                    <select name="location" id="location" onchange="showTowns()">
+                                        <option value="">Select District</option>
+                                        <?php
+                                        $districts = [
+                                            'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha', 
+                                            'Kottayam', 'Idukki', 'Ernakulam', 'Thrissur', 'Palakkad', 
+                                            'Malappuram', 'Kozhikode', 'Wayanad', 'Kannur', 'Kasaragod'
+                                        ];
+                                        foreach ($districts as $district) {
+                                            $selected = ($loc == $district) ? 'selected' : '';
+                                            echo "<option value='{$district}' {$selected}>{$district}</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <p id="locationerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label id="townLabel" style="display:<?php echo $town ? 'block' : 'none'; ?>">Town</label>
+                                    <select name="town" id="tvm_towns" style="display:<?php echo $town ? 'block' : 'none'; ?>">
+                                        <option value="">Select Town</option>
+                                    </select>
+                                    <p id="townerror" class="error"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">Work Schedule</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Vacancy Date</label>
+                                    <input type="date" name="date" id="date" value="<?php echo $vac_date;?>" onchange="validateDate()">
+                                    <p id="dateerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Working Hours</label>
+                                    <div class="time-inputs">
+                                        <select id="start-time" name="start_time" class="time-select">
+                                            <option value="">Start Time</option>
+                                        </select>
+                                        <span class="time-separator">to</span>
+                                        <select id="end-time" name="end_time" class="time-select">
+                                            <option value="">End Time</option>
+                                        </select>
+                                    </div>
+                                    <p id="timeerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Working Days</label>
+                                    <select name="working_days" id="working_days" onchange="validateWorkingDays()">
+                                        <option value="">Select Working Days</option>
+                                        <option value="part_time" <?php if($working_days == "part_time") echo "selected"; ?>>Part Time</option>
+                                        <option value="full_day" <?php if($working_days == "full_day") echo "selected"; ?>>Full Day</option>
+                                        <option value="shift" <?php if($working_days == "shift") echo "selected"; ?>>Shift-based</option>
+                                    </select>
+                                    <p id="workingdayserror" class="error"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Details -->
+                        <div class="form-section">
+                            <h3 class="section-title">Additional Details</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Number of Vacancies</label>
+                                    <input type="text" name="vacancy" id="vacancy" placeholder="Enter number of vacancies" value="<?php echo $vac;?>" onkeyup="validateVacancy()">
+                                    <p id="vacancyerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Salary</label>
+                                    <input type="text" name="salary" id="salary" placeholder="Enter salary" value="<?php echo floor($sal);?>" onkeyup="validateSalary()">
+                                    <p id="salaryerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Application Deadline</label>
+                                    <input type="date" name="last_date" id="last_date" value="<?php echo $app_deadline;?>" onchange="validateLastDate()">
+                                    <p id="lastdateerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Contact Number</label>
+                                    <input type="text" name="phone" id="phone" placeholder="Enter contact number" value="<?php echo $phone;?>" onkeyup="validatePhone()">
+                                    <p id="phoneerror" class="error"></p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Interview Required?</label>
+                                    <div class="radio-options">
+                                        <div class="radio-item">
+                                            <input type="radio" id="yes" name="interview" value="yes" <?php if ($itrview == "yes") echo "checked"; ?>>
+                                            <label for="yes">Yes</label>
+                                        </div>
+                                        <div class="radio-item">
+                                            <input type="radio" id="no" name="interview" value="no" <?php if ($itrview == "no") echo "checked"; ?>>
+                                            <label for="no">No</label>
+                                        </div>
+                                    </div>
+                                    <p id="interviewerror" class="error"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="form-section submit-section">
+                            <div class="button-group">
+                                <button type="button" onclick="window.location.href='myjoblist.php'" class="cancel-btn">Cancel</button>
+                                <button type="submit" class="submit-btn">Update Job</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-
-            <button type="button" onclick="window.location.href='myjoblist.php'" id="cancel">Cancel</button>
-            <input type="submit" value="Update">
-        </form>
+        </div>
     </div>
+
+    <!-- Include the same CSS from postjob.php -->
     <style>
-        .error 
-        {
-            color: red;
-            font-size: 14px;
+        /* Professional Form Styling */
+        .content-card {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 16px;
         }
-        #cancel
-        {
-            cursor: pointer;
-            background-color: #1e2a4a;
-            color:white;
-            width:200px;
-            position: relative;
-            left:150px;
+
+        .form-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        input[type="submit"] 
-        {
+
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            padding: 28px;
+            margin-bottom: 28px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .section-title {
+            color: #1e293b;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #1e293b;
+            background-color: #fff;
+            transition: all 0.2s ease;
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: #cbd5e1;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        input::placeholder, select::placeholder, textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .time-inputs select {
+            flex: 1;
+        }
+
+        .time-separator {
+            color: #64748b;
+            font-weight: 500;
+            margin: 0 4px;
+        }
+
+        .radio-group {
+            padding: 12px 0;
+        }
+
+        .radio-options {
+            display: flex;
+            gap: 32px;
+            margin-top: 12px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            background-color: #1e2a4a;
-            color:white;
-            width:200px;
-            position: relative;
-            left:190px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+            border: 2px solid #cbd5e1;
+        }
+
+        .radio-item input[type="radio"]:checked {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+        }
+
+        .radio-item label {
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .submit-section {
+            text-align: center;
+            padding: 20px 0 0;
+            border: none;
+            box-shadow: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .submit-btn, .cancel-btn {
+            padding: 14px 36px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .submit-btn:hover, .cancel-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .cancel-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .submit-btn:active, .cancel-btn:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 28px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-success {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 20px;
+            }
+            
+            .form-container {
+                padding: 10px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .time-inputs {
+                flex-direction: column;
+            }
+            
+            .time-separator {
+                display: none;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .submit-btn, .cancel-btn {
+                width: 100%;
+                padding: 16px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+            border: 3px solid #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
+
+    <!-- Include the same JavaScript for alert auto-hide -->
     <script>
-        // District-Town mapping
-        const districtTowns = {
-            'Thiruvananthapuram': ['Thiruvananthapuram', 'Neyyattinkara', 'Attingal', 'Varkala', 'Nedumangad', 'Kazhakkoottam', 'Kallambalam', 'Kovalam', 'Balaramapuram', 'Pothencode'],
-            'Kollam': ['Kollam', 'Paravur', 'Punalur', 'Karunagappally', 'Kottarakkara', 'Chavara', 'Kundara', 'Anchal', 'Oachira', 'Sasthamkotta'],
-            'Pathanamthitta': ['Pathanamthitta', 'Adoor', 'Thiruvalla', 'Ranni', 'Pandalam', 'Konni', 'Mallappally', 'Kozhencherry', 'Mannarakulanji', 'Seethathode'],
-            'Alappuzha': ['Alappuzha', 'Chengannur', 'Kayamkulam', 'Mavelikkara', 'Haripad', 'Cherthala', 'Ambalappuzha', 'Thakazhi', 'Mannar', 'Edathua'],
-            'Kottayam': ['Kottayam', 'Pala', 'Changanassery', 'Vaikom', 'Ettumanoor', 'Erattupetta', 'Kuravilangad', 'Kanjirappally', 'Pampady', 'Kidangoor'],
-            'Idukki': ['Thodupuzha', 'Munnar', 'Adimali', 'Kumily', 'Kattappana', 'Nedumkandam', 'Vagamon', 'Devikulam', 'Peermade', 'Udumalpettai'],
-            'Ernakulam': ['Kochi', 'Aluva', 'Angamaly', 'Muvattupuzha', 'Perumbavoor', 'Kothamangalam', 'North Paravur', 'Kakkanad', 'Piravom', 'Kaloor'],
-            'Thrissur': ['Thrissur', 'Chalakudy', 'Kodungallur', 'Irinjalakuda', 'Guruvayur', 'Kunnamkulam', 'Wadakkanchery', 'Pavaratty', 'Kecheri', 'Mannuthy'],
-            'Palakkad': ['Palakkad', 'Ottapalam', 'Chittur', 'Pattambi', 'Shoranur', 'Mannarkkad', 'Alathur', 'Nemmara', 'Cherpulassery', 'Kongad'],
-            'Malappuram': ['Malappuram', 'Tirur', 'Ponnani', 'Manjeri', 'Perinthalmanna', 'Nilambur', 'Kottakkal', 'Parappanangadi', 'Edappal', 'Kondotty'],
-            'Kozhikode': ['Kozhikode', 'Vadakara', 'Koyilandy', 'Ramanattukara', 'Feroke', 'Koduvally', 'Balussery', 'Mavoor', 'Chelannur', 'Thamarassery'],
-            'Wayanad': ['Kalpetta', 'Sulthan Bathery', 'Mananthavady', 'Meenangadi', 'Panamaram', 'Vythiri', 'Pulpally', 'Ambalavayal', 'Muttil', 'Thariode'],
-            'Kannur': ['Kannur', 'Thalassery', 'Payyanur', 'Mattannur', 'Iritty', 'Koothuparamba', 'Taliparamba', 'Kuthuparamba', 'Panoor', 'Chirakkal'],
-            'Kasaragod': ['Kasaragod', 'Kanhangad', 'Nileshwar', 'Cheruvathur', 'Uppala', 'Manjeshwar', 'Periya', 'Hosdurg', 'Bekal', 'Mogral Puthur']
-        };
-
-        function showTowns() {
-            console.log('showTowns function called'); // Debug log
-            const selectedDistrict = document.getElementById('location').value;
-            const townSelect = document.getElementById('tvm_towns');
-            const townLabel = document.getElementById('townLabel');
-            const savedTown = '<?php echo $town; ?>';
-            
-            console.log('Selected District:', selectedDistrict); // Debug log
-            console.log('Saved Town:', savedTown); // Debug log
-            
-            // Clear existing options
-            townSelect.innerHTML = '<option value="">Select Town</option>';
-            
-            if (selectedDistrict) {
-                // Show town dropdown and label
-                townSelect.style.display = 'block';
-                townLabel.style.display = 'block';
-                
-                // Get towns for selected district
-                const towns = districtTowns[selectedDistrict] || [];
-                console.log('Available Towns:', towns); // Debug log
-                
-                // Add town options
-                towns.forEach(town => {
-                    const option = document.createElement('option');
-                    option.value = town;
-                    option.textContent = town;
-                    if (town === savedTown) {
-                        option.selected = true;
-                        console.log('Setting selected town:', town); // Debug log
-                    }
-                    townSelect.appendChild(option);
-                });
-            } else {
-                // Hide town dropdown and label if no district is selected
-                townSelect.style.display = 'none';
-                townLabel.style.display = 'none';
-            }
-        }
-
-        // Function to generate time options
-        function generateTimeOptions(selectElement, selectedTime) {
-            console.log('Generating options for time:', selectedTime); // Debug log
-            
-            selectElement.innerHTML = '<option value="">Select Time</option>';
-            
-            // Format the selectedTime to ensure proper comparison
-            let formattedSelectedTime = selectedTime;
-            if (selectedTime && selectedTime.length === 8) { // Handle HH:MM:SS format from database
-                formattedSelectedTime = selectedTime.substring(0, 5); // Extract HH:MM part
-            }
-            
-            console.log('Formatted time for comparison:', formattedSelectedTime); // Debug log
-
-            for (let hour = 0; hour < 24; hour++) {
-                for (let min = 0; min < 60; min += 30) {
-                    let formattedHour = hour.toString().padStart(2, '0');
-                    let formattedMinute = min.toString().padStart(2, '0');
-                    let timeValue = `${formattedHour}:${formattedMinute}`;
-                    let displayHour = hour % 12 || 12;
-                    let amPm = hour < 12 ? "AM" : "PM";
-                    let timeText = `${displayHour}:${formattedMinute} ${amPm}`;
-                    
-                    let option = document.createElement('option');
-                    option.value = timeValue;
-                    option.textContent = timeText;
-                    
-                    // Compare the formatted times
-                    if (timeValue === formattedSelectedTime) {
-                        console.log('Found matching time:', timeValue); // Debug log
-                        option.selected = true;
-                    }
-                    selectElement.appendChild(option);
-                }
-            }
-        }
-
-        // Initialize everything when the page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM Content Loaded'); // Debug log
-            // Initialize time selectors with saved values
-            const startTime = '<?php echo $start_time; ?>'.trim();
-            const endTime = '<?php echo $end_time; ?>'.trim();
-            
-            // Debug log to check the values
-            console.log('Raw Start Time from PHP:', startTime);
-            console.log('Raw End Time from PHP:', endTime);
-            
-            generateTimeOptions(document.getElementById('start-time'), startTime);
-            generateTimeOptions(document.getElementById('end-time'), endTime);
-
-            // Initialize town selection if location is already selected
-            const selectedDistrict = document.getElementById('location').value;
-            if(selectedDistrict) {
-                // Show town dropdown and label
-                document.getElementById('tvm_towns').style.display = 'block';
-                document.getElementById('townLabel').style.display = 'block';
-                showTowns();
-            }
-
-            // Show delivery docs if category is Delivery and logistics
-            if('<?php echo $category; ?>' === 'Delivery and logistics') {
-                document.getElementById('delivery-docs').style.display = 'block';
-            }
-        });
-        // Auto-hide alert message
-        document.addEventListener('DOMContentLoaded', function() {
-            const alertMessage = document.getElementById('alertMessage');
-            if (alertMessage) {
-                setTimeout(() => {
-                    alertMessage.style.opacity = '0';
-                    alertMessage.style.transition = 'opacity 1.0s ease';
-                    setTimeout(() => {
-                        alertMessage.remove();
-                        // Remove the message parameter from URL
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('message');
-                        window.history.replaceState({}, '', url);
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                setTimeout(function() {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
                     }, 500);
-                }, 5000); // Changed to 5000ms (5 seconds)
+                }, 3000);
             }
-        });
-
-        function validatecategory() {
-            const category = document.getElementById('category').value;
-            const deliveryDocs = document.getElementById('delivery-docs');
-            
-            console.log('Selected category:', category); // Debug log
-            
-            if (category === 'Delivery and logistics') {
-                deliveryDocs.style.display = 'block';
-            } else {
-                deliveryDocs.style.display = 'none';
-                // Reset delivery-specific fields
-                if (document.getElementById('license_required')) {
-                    document.getElementById('license_required').value = '';
-                }
-                if (document.getElementById('badge_required')) {
-                    document.getElementById('badge_required').value = '';
-                }
-            }
-        }
-
-        // Call validatecategory on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            validatecategory();
         });
     </script>
+
+    <!-- Keep your existing script includes -->
+    <script src="editjob.js"></script>
 </body>
 </html>
 <?php
