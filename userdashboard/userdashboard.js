@@ -1,103 +1,49 @@
-function filterjobs() 
-{
+// Search filter
+function filterjobs() {
     const search = document.getElementById('search').value.trim().toLowerCase();
     const jobCards = document.querySelectorAll('.job-card');
     let matchFound = false;
 
-    // First remove any existing no-results message
-    const existingMessage = document.querySelector('.no-jobs');
-    if (existingMessage) 
-    {
-        existingMessage.remove();
+    // Remove existing message
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    if (search === '') {
+        // Show all jobs if search is empty
+        jobCards.forEach(card => card.style.display = "block");
+        return;
     }
 
-    jobCards.forEach(card => 
-    {
+    jobCards.forEach(card => {
         const title = card.querySelector('h3').textContent.toLowerCase();
-        
-        if (title.includes(search)) 
-            {
+        if (title.includes(search)) {
             card.style.display = "block";
             matchFound = true;
-        } 
-        else 
-        {
+        } else {
             card.style.display = "none";
         }
     });
 
-    // If no matches found, show the message
-    if (!matchFound && search !== '') 
-        {
-        const jobListings = document.querySelector('.job-listings');
-        jobListings.innerHTML = '<div class="no-jobs">No jobs match your search criteria.</div>';
-        }
+    if (!matchFound) {
+        showNoJobsMessage(`No jobs match your search criteria.`);
+    }
 }
 
-// Add event listener when document loads
-document.addEventListener('DOMContentLoaded', function() 
-{
-    // Add input event listener to search field
-    const searchInput = document.getElementById('search');
-    if (searchInput) 
-    {
-        searchInput.addEventListener('input', filterjobs);
-    }
-});
-//location filter
-function filterlocation() 
-{
+// Location filter
+function filterlocation() {
     const location = document.getElementById('location').value.trim().toLowerCase();
     const jobCards = document.querySelectorAll('.job-card');
     let matchFound = false;
 
-    // First remove any existing no-results message
-    const existingMessage = document.querySelector('.no-jobs');
-    if (existingMessage) 
-    {
-        existingMessage.remove();
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    if (location === '') {
+        jobCards.forEach(card => card.style.display = "block");
+        return;
     }
 
-    jobCards.forEach(card => 
-    {
+    jobCards.forEach(card => {
         const jobLocation = card.querySelector('.location').textContent.toLowerCase();
-        
-        if (jobLocation.includes(location)) 
-        {
-            card.style.display = "block";
-            matchFound = true;
-        } 
-        else 
-        {
-            card.style.display = "none";
-        }
-    });
-
-    // If no matches found, show the message
-    if (!matchFound && location !== '') 
-    {
-        const jobListings = document.querySelector('.job-listings');
-        jobListings.innerHTML = '<div class="no-jobs">No jobs found in location "' + location + '"</div>';
-    }
-}
-
-//salary filter
-function filtermaxsalary()
-{
-    const maxsalary = document.getElementById('maxsalary').value;
-    const jobCards = document.querySelectorAll('.job-card');
-    let matchFound = false;
-
-    // First remove any existing no-results message
-    const existingMessage = document.querySelector('.no-jobs');
-    if (existingMessage) {
-        existingMessage.remove();
-    }
-
-    jobCards.forEach(card => {
-        const salary = card.querySelector('.salary').textContent.replace(/[^0-9]/g,'');
-        
-        if (salary <= maxsalary) {
+        if (jobLocation.includes(location)) {
             card.style.display = "block";
             matchFound = true;
         } else {
@@ -105,28 +51,55 @@ function filtermaxsalary()
         }
     });
 
-    // If no matches found, show the message
-    if (!matchFound && maxsalary !== '') {
-        const jobListings = document.querySelector('.job-listings');
-        jobListings.innerHTML = '<div class="no-jobs">No jobs found with salary below ₹' + maxsalary + '</div>';
+    if (!matchFound) {
+        showNoJobsMessage(`No jobs found in location "${location}"`);
     }
 }
 
+// Salary filter (max)
+function filtermaxsalary() {
+    const maxSalary = parseInt(document.getElementById('maxsalary').value) || 0;
+    const jobCards = document.querySelectorAll('.job-card');
+    let matchFound = false;
+
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    if (!maxSalary) {
+        jobCards.forEach(card => card.style.display = "block");
+        return;
+    }
+
+    jobCards.forEach(card => {
+        const salary = parseInt(card.querySelector('.salary').textContent.replace(/[^0-9]/g, '')) || 0;
+        if (salary <= maxSalary) {
+            card.style.display = "block";
+            matchFound = true;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    if (!matchFound) {
+        showNoJobsMessage(`No jobs found with salary below ₹${maxSalary}`);
+    }
+}
+
+// Salary filter (min)
 function filterminsalary() {
-    const minsalary = document.getElementById('minsalary').value;
+    const minSalary = parseInt(document.getElementById('minsalary').value) || 0;
     const jobCards = document.querySelectorAll('.job-card');
     let matchFound = false;
 
-    // First remove any existing no-results message
-    const existingMessage = document.querySelector('.no-jobs');
-    if (existingMessage) {
-        existingMessage.remove();
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    if (!minSalary) {
+        jobCards.forEach(card => card.style.display = "block");
+        return;
     }
 
     jobCards.forEach(card => {
-        const salary = card.querySelector('.salary').textContent.replace(/[^0-9]/g,'');
-        
-        if (salary >= minsalary) {
+        const salary = parseInt(card.querySelector('.salary').textContent.replace(/[^0-9]/g, '')) || 0;
+        if (salary >= minSalary) {
             card.style.display = "block";
             matchFound = true;
         } else {
@@ -134,21 +107,18 @@ function filterminsalary() {
         }
     });
 
-    // If no matches found, show the message
-    if (!matchFound && minsalary !== '') {
-        const jobListings = document.querySelector('.job-listings');
-        jobListings.innerHTML = '<div class="no-jobs">No jobs found with salary above ₹' + minsalary + '</div>';
+    if (!matchFound) {
+        showNoJobsMessage(`No jobs found with salary above ₹${minSalary}`);
     }
 }
 
+// Date filter
 function filterdate() {
     const date = document.getElementById('date').value;
-    
+
     fetch('userdashboard.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `date=${encodeURIComponent(date)}`
     })
     .then(response => response.text())
@@ -157,40 +127,37 @@ function filterdate() {
     })
     .catch(error => {
         console.error('Error:', error);
-        document.querySelector('.job-listings').innerHTML = 
-            '<div class="no-jobs">Error loading jobs. Please try again.</div>';
+        showNoJobsMessage('Error loading jobs. Please try again.');
     });
 }
 
-// Add event listeners when document loads
+// Function to show "No jobs found" message
+function showNoJobsMessage(message) {
+    const jobListings = document.querySelector('.job-listings');
+    const noJobsMessage = document.createElement('div');
+    noJobsMessage.className = 'no-jobs';
+    noJobsMessage.textContent = message;
+    jobListings.appendChild(noJobsMessage);
+}
+
+// Reset Filters - show all jobs when filters are cleared
+function resetFilters() {
+    const jobCards = document.querySelectorAll('.job-card');
+    jobCards.forEach(card => card.style.display = "block");
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+}
+
+// Add event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Add input event listener to search field
-    const searchInput = document.getElementById('search');
-    if (searchInput) {
-        searchInput.addEventListener('input', filterjobs);
-    }
+    document.getElementById('search').addEventListener('input', filterjobs);
+    document.getElementById('location').addEventListener('input', filterlocation);
+    document.getElementById('maxsalary').addEventListener('input', filtermaxsalary);
+    document.getElementById('minsalary').addEventListener('input', filterminsalary);
+    document.getElementById('date').addEventListener('input', filterdate);
 
-    // Add input event listener to location field
-    const locationInput = document.getElementById('location');
-    if (locationInput) {
-        locationInput.addEventListener('input', filterlocation);
-    }
-
-    // Add minimum salary listener
-    const minSalaryInput = document.getElementById('minsalary');
-    if (minSalaryInput) {
-        minSalaryInput.addEventListener('input', filterminsalary);
-    }
-
-    // Add maximum salary listener
-    const maxSalaryInput = document.getElementById('maxsalary');
-    if (maxSalaryInput) {
-        maxSalaryInput.addEventListener('input', filtermaxsalary);
-    }
-
-    // Add date listener
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        dateInput.addEventListener('input', filterdate);
-    }
+    // **Reset when user clears input**
+    document.getElementById('search').addEventListener('blur', resetFilters);
+    document.getElementById('location').addEventListener('blur', resetFilters);
+    document.getElementById('maxsalary').addEventListener('blur', resetFilters);
+    document.getElementById('minsalary').addEventListener('blur', resetFilters);
 });

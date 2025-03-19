@@ -282,7 +282,7 @@
                                             <?php endif; ?>
                                         </button>
                                     <?php else: ?>
-                                        <a href="applyjob.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="apply-link">
+                                        <a href="#" onclick="checkJobRequirements(<?php echo $job_id; ?>)" class="apply-link">
                                             <button class="apply-btn">
                                                 <i class="fas fa-paper-plane"></i> Apply Now
                                             </button>
@@ -537,6 +537,228 @@
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
+    }
+    </script>
+
+    <!-- Certificate Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="header-content">
+                    <i class="fas fa-file-upload"></i>
+                    <h2>Required Documents</h2>
+                </div>
+                <span class="close" onclick="closeUploadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="requirements-info">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Please upload the required documents to complete your application.</p>
+                </div>
+                <form id="uploadForm" action="process_documents.php" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="job_id" id="upload_job_id">
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+                    
+                    <div class="form-group license-group" style="display: none;">
+                        <label>Driving License <span class="required">*</span></label>
+                        <div class="upload-box">
+                            <input type="file" name="license" id="license" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
+                            <label for="license" class="upload-label">
+                                <i class="fas fa-upload"></i>
+                                <span>Choose License File</span>
+                            </label>
+                            <div class="file-info" id="licenseInfo">No file chosen</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group badge-group" style="display: none;">
+                        <label>Badge Certificate <span class="required">*</span></label>
+                        <div class="upload-box">
+                            <input type="file" name="badge" id="badge" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
+                            <label for="badge" class="upload-label">
+                                <i class="fas fa-upload"></i>
+                                <span>Choose Badge File</span>
+                            </label>
+                            <div class="file-info" id="badgeInfo">No file chosen</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn cancel-btn" onclick="closeUploadModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn submit-btn">
+                            <i class="fas fa-paper-plane"></i> Submit Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: #fff;
+        margin: 5% auto;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        transform: translateY(-20px);
+        opacity: 0;
+        animation: modalSlideIn 0.3s ease forwards;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: #1e2a4a;
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-content i {
+        color: #9747FF;
+        font-size: 24px;
+    }
+
+    .requirements-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #1e2a4a;
+    }
+
+    .upload-box {
+        border: 2px dashed #9747FF;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .upload-box:hover {
+        border-color: #8035e0;
+        background: #f8f9fa;
+    }
+
+    .upload-label {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #9747FF;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-label:hover {
+        background: #8035e0;
+        transform: translateY(-2px);
+    }
+
+    .file-info {
+        margin-top: 10px;
+        color: #666;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn {
+        background: #f1f1f1;
+        color: #666;
+    }
+
+    .submit-btn {
+        background: #9747FF;
+        color: white;
+    }
+
+    .submit-btn:hover {
+        background: #8035e0;
+        transform: translateY(-2px);
+    }
+
+    @keyframes modalSlideIn {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    </style>
+
+    <script>
+    function showUploadModal(jobId, needsLicense, needsBadge) {
+        document.getElementById('upload_job_id').value = jobId;
+        document.querySelector('.license-group').style.display = needsLicense ? 'block' : 'none';
+        document.querySelector('.badge-group').style.display = needsBadge ? 'block' : 'none';
+        document.getElementById('uploadModal').style.display = 'block';
+    }
+
+    function closeUploadModal() {
+        const modal = document.getElementById('uploadModal');
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.style.opacity = '1';
+            document.getElementById('uploadForm').reset();
+            document.getElementById('licenseInfo').textContent = 'No file chosen';
+            document.getElementById('badgeInfo').textContent = 'No file chosen';
+        }, 300);
+    }
+
+    // Update file info when files are selected
+    document.querySelectorAll('.file-input').forEach(input => {
+        input.addEventListener('change', function(e) {
+            const fileName = this.files[0]?.name || 'No file chosen';
+            const infoElement = this.id === 'license' ? 
+                document.getElementById('licenseInfo') : 
+                document.getElementById('badgeInfo');
+            infoElement.textContent = fileName;
+        });
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('uploadModal');
+        if (event.target === modal) {
+            closeUploadModal();
+        }
     }
     </script>
 </body>

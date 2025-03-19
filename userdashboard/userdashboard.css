@@ -407,3 +407,191 @@ input:focus {
     text-decoration: none;
     color: var(--primary-color);
 }
+.job-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .details-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #9747FF;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .details-btn:hover {
+        background: rgba(151, 71, 255, 0.1);
+    }
+
+    .apply-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: #9747FF;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .apply-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(151, 71, 255, 0.2);
+    }
+
+    .apply-btn i {
+        font-size: 16px;
+    }
+
+    .job-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .job-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Add this to ensure no underline on any links */
+    .job-footer a {
+        text-decoration: none !important;
+    }
+
+    .toast {
+        visibility: hidden;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 300px;
+        max-width: 500px;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .toast.show {
+        visibility: visible;
+        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        gap: 12px;
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+    }
+
+    .toast-icon i {
+        font-size: 24px;
+    }
+
+    .toast.success .toast-icon i {
+        color: #4CAF50;
+    }
+
+    .toast.error .toast-icon i {
+        color: #f44336;
+    }
+
+    .toast-message-container {
+        flex-grow: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    #toast-message {
+        color: #666;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    .applied-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: default;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+    }
+
+    .applied-btn i {
+        color: #fff;
+        font-size: 16px;
+        animation: checkmark 0.5s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .applied-btn:disabled {
+        opacity: 1;
+        background-color: #4CAF50;
+        cursor: default;
+    }
+
+    .applied-btn:hover {
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }

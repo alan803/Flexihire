@@ -1,8 +1,13 @@
 <?php
     session_start();
-    include '../database/connection.php';
+    include '../database/connectdatabase.php';
     $dbname="project";
-    
+
+    if(!isset($_SESSION['user_id']))
+    {
+        header("Location: ../login/login.php");
+        exit;
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -95,11 +100,11 @@
                 // Use either id or user_id from session
                 $user_id = isset($_SESSION['id']) ? $_SESSION['id'] : $_SESSION['user_id'];
                 
-                // Fetch bookmarked jobs with error checking
-                $bookmark_sql = "SELECT j.*, b.id 
+                // Fetch reported jobs with error checking
+                $bookmark_sql = "SELECT j.*, r.status as report_status 
                                 FROM tbl_jobs j 
-                                INNER JOIN tbl_bookmarks b ON j.job_id = b.job_id 
-                                WHERE b.user_id = ?";
+                                INNER JOIN tbl_reports r ON j.job_id = r.reported_job_id 
+                                WHERE r.reporter_id = ?";
                 
                 $stmt = mysqli_prepare($conn, $bookmark_sql);
                 if (!$stmt) {
@@ -134,20 +139,93 @@
                         echo '<p class="date"><i class="fas fa-calendar-alt"></i> Posted: ' . date('Y-m-d', strtotime($row['created_at'])) . '</p>';
                         echo '</div>';
                         echo '<div class="job-footer">';
-                        echo '<a href="jobdetails.php?job_id=' . $row['job_id'] . '" class="details-btn"><i class="fas fa-info-circle"></i> Details</a>';
-                        echo '<button onclick="toggleBookmark(' . $row['job_id'] . ')" class="save-btn saved">';
-                        echo '<i class="fas fa-bookmark"></i> Saved';
+                        // Update status button to use report_status
+                        $status_class = strtolower($row['report_status'] ?? 'pending'); // Default to pending if null
+                        echo '<button class="status-btn ' . $status_class . '">';
+                        echo '<i class="fas fa-clock"></i> Status: ' . htmlspecialchars($row['report_status'] ?? 'Pending');
                         echo '</button>';
                         echo '</div>';
                         echo '</div>';
                     }
                 } else {
-                    echo '<div class="no-jobs">No bookmarked jobs found.</div>';
+                    echo '<div class="no-jobs">No reported jobs found.</div>';
                 }
                 ?>
             </div>
         </main>
     </div>
+    <script src="userdashboard.js"></script>
+    <!-- Add these styles -->
+    <style>
+    .status-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: default;
+    }
+
+    .status-btn i {
+        font-size: 16px;
+    }
+
+    /* Status-specific styles */
+    .status-btn.pending {
+        background-color: #FFF3E0;
+        color: #FF9800;
+    }
+
+    .status-btn.reviewing {
+        background-color: #E3F2FD;
+        color: #2196F3;
+    }
+
+    .status-btn.resolved {
+        background-color: #E8F5E9;
+        color: #4CAF50;
+    }
+
+    .status-btn.rejected {
+        background-color: #FFEBEE;
+        color: #F44336;
+    }
+
+    /* Animation for pending status */
+    .status-btn.pending i {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .job-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+        margin-top: 15px;
+    }
+
+    /* Hover effect */
+    .status-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    </style>
 
 </body>
 </html>

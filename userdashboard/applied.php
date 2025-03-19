@@ -321,27 +321,29 @@
         gap: 8px;
         text-decoration: none;
         transition: all 0.3s ease;
-        background: rgba(76, 175, 80, 0.1);  /* Light green background */
-        color: #4CAF50;  /* Green text */
+        background: #4CAF50;  /* Green background */
+        color: white !important;  /* Force white text */
         border: none;
         cursor: not-allowed;
     }
 
-    .applied-btn i {
-        color: #4CAF50;  /* Green icon */
+    /* Ensure text and icons are visible */
+    .applied-btn i,
+    .applied-btn span {
+        color: white !important;  /* Force white text for both icon and text */
     }
 
     /* Status colors within applied button */
     .applied-btn .status-pending {
-        color: #FFA500;
+        color: white !important;
     }
 
     .applied-btn .status-approved {
-        color: #4CAF50;
+        color: white !important;
     }
 
     .applied-btn .status-rejected {
-        color: #FF4B4B;
+        color: white !important;
     }
 
     /* Optional: Add a subtle border */

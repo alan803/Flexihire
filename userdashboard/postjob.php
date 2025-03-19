@@ -32,23 +32,32 @@
     if ($_SERVER['REQUEST_METHOD'] == "POST") 
     {
         $category = $_POST['category'];
-        $license=$_POST['license_required'];
-        $badge=$_POST['badge_required'];
+        
+        // Handle license_required - set to NULL if empty
+        $license = !empty($_POST['license_required']) ? $_POST['license_required'] : NULL;
+        
+        // Handle badge_required - set to NULL if empty
+        $badge = !empty($_POST['badge_required']) ? $_POST['badge_required'] : NULL;
+        
         $job_title = $_POST['job_title'];
         $job_description = $_POST['job_description'];
         $location = $_POST['location'];
-        $town=$_POST['town'];
+        $town = $_POST['town'];
         $vacancy_date = $_POST['date'];
         $start_time = $_POST['start_time'];
         $end_time = $_POST['end_time'];
-        $working_days=$_POST['working_days'];
+        $working_days = $_POST['working_days'];
         $vacancy = $_POST['vacancy'];
         $salary = $_POST['salary'];
         $application_deadline = $_POST['last_date'];
-        $contact=$_POST['phone'];
-        $interview = isset($_POST['interview']) ? $_POST['interview'] : null;
+        $contact = $_POST['phone'];
+        $interview = isset($_POST['interview']) ? $_POST['interview'] : NULL;
+        
+        // Update the SQL statement to handle NULL values
         $stmt = $conn->prepare("INSERT INTO tbl_jobs (category, job_title, location, job_description, vacancy_date, vacancy, salary, application_deadline, interview, employer_id, town, start_time, end_time, working_days, contact_no, license_required, badge_required) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssssssssss", $category, $job_title, $location, $job_description, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id, $town, $start_time, $end_time, $working_days, $contact, $license, $badge);
+        
+        // Use "sssssssssissssss" instead of "sssssssssssssssss" to handle NULL values
+        $stmt->bind_param("sssssssssississss", $category, $job_title, $location, $job_description, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id, $town, $start_time, $end_time, $working_days, $contact, $license, $badge);
         
         if ($stmt->execute()) 
         {
@@ -57,7 +66,7 @@
         } 
         else 
         {
-            header("Location: postjob.php?message=Error posting job.");
+            header("Location: postjob.php?message=Error posting job: " . $stmt->error);
             exit();
         }
 
