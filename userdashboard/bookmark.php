@@ -68,6 +68,161 @@ if ($result && mysqli_num_rows($result) > 0) {
         </div>
     </nav>
 
+    <!-- Add this right after the navbar -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <div class="toast-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="toast-message-container">
+                <div class="toast-title">Success:</div>
+                <div id="toast-message">Operation completed successfully</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Ultra-Compact Toast Message Styling */
+    .toast {
+        visibility: hidden;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 280px; /* Fixed width */
+        max-width: 90%; /* For responsiveness */
+        background-color: lightgreen;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        z-index: 1000;
+        overflow: hidden;
+        border-left: 3px solid #4CAF50;
+        font-family: 'Poppins', sans-serif;
+        height: 60px; /* Increased height */
+    }
+
+    .toast.show {
+        visibility: visible;
+        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        padding: 0 10px; /* Horizontal padding only */
+        gap: 8px;
+        height: 100%; /* Fill the parent height */
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .toast-icon i {
+        font-size: 24px; /* Slightly larger icon */
+    }
+
+    .toast.success {
+        border-left-color: #4CAF50;
+    }
+
+    .toast.error {
+        border-left-color: #f44336;
+    }
+
+    .toast.warning {
+        border-left-color: #ff9800;
+    }
+
+    .toast.info {
+        border-left-color: #2196F3;
+    }
+
+    .toast.success .toast-icon i {
+        color: #4CAF50;
+    }
+
+    .toast.error .toast-icon i {
+        color: #f44336;
+    }
+
+    .toast.warning .toast-icon i {
+        color: #ff9800;
+    }
+
+    .toast.info .toast-icon i {
+        color: #2196F3;
+    }
+
+    .toast-message-container {
+        flex-grow: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        color: #333;
+        font-size: 12px; /* Larger font */
+        margin-right: 4px;
+    }
+
+    #toast-message {
+        color: #666;
+        font-size: 12px; /* Larger font */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .toast {
+            width: 250px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+    }
+    </style>
+
     <!-- Main Content -->
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -82,7 +237,6 @@ if ($result && mysqli_num_rows($result) > 0) {
                 <a href="applied.php"><i class="fas fa-paper-plane"></i> Applied Job</a>
                 <a href="bookmark.php" class="active"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
-                <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">
@@ -174,11 +328,6 @@ if ($result && mysqli_num_rows($result) > 0) {
         </main>
     </div>
 
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toast-message"></span>
-    </div>
-
     <script src="userdashboard.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -240,14 +389,47 @@ if ($result && mysqli_num_rows($result) > 0) {
             });
         });
 
-        function showToast(message, success = true) {
+        function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
+            const toastTitle = toast.querySelector('.toast-title');
+            const icon = toast.querySelector('.toast-icon i');
             
-            toast.style.background = success ? '#4CAF50' : '#F44336';
+            // Reset classes and clear any existing animations
+            toast.className = 'toast';
+            toast.style.animation = 'none';
+            
+            // Force reflow to ensure animation reset
+            void toast.offsetWidth;
+            
+            // Set type-specific properties
+            switch(type) {
+                case 'success':
+                    toastTitle.textContent = 'Success:';
+                    icon.className = 'fas fa-check-circle';
+                    toast.classList.add('success');
+                    break;
+                case 'error':
+                    toastTitle.textContent = 'Error:';
+                    icon.className = 'fas fa-exclamation-circle';
+                    toast.classList.add('error');
+                    break;
+                case 'warning':
+                    toastTitle.textContent = 'Warning:';
+                    icon.className = 'fas fa-exclamation-triangle';
+                    toast.classList.add('warning');
+                    break;
+                default:
+                    toastTitle.textContent = 'Info:';
+                    icon.className = 'fas fa-info-circle';
+                    toast.classList.add('info');
+            }
+            
             toastMessage.textContent = message;
+            toast.style.animation = '';
             toast.classList.add('show');
             
+            // Manually hide after 3 seconds in case animation doesn't work
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -283,12 +465,12 @@ if ($result && mysqli_num_rows($result) > 0) {
                         showToast('Bookmark removed');
                     }
                 } else {
-                    showToast(data.message || 'Error processing bookmark', false);
+                    showToast(data.message || 'Error processing bookmark', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Error processing bookmark', false);
+                showToast('Error processing bookmark', 'error');
             })
             .finally(() => {
                 btn.style.pointerEvents = 'auto';

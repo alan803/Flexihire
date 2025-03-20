@@ -109,7 +109,7 @@
                     <i class="fas fa-th-large"></i>
                     <a href="employerdashboard.php">Dashboard</a>
                 </div>
-                <div class="nav-item active">
+                <div class="nav-item">
                     <i class="fas fa-plus-circle"></i>
                     <a href="postjob.php">Post a Job</a>
                 </div>
@@ -636,6 +636,43 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
+        }
+
+        /* Remove the active element effect in the sidebar */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--light-text);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .nav-item a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Remove the active class styling */
+        .nav-item.active {
+            background-color: transparent;
+            color: var(--light-text);
         }
     </style>
 

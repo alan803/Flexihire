@@ -25,7 +25,9 @@ if (isset($_GET['job_id'], $_GET['user_id'], $_GET['reason'])) {
         if (mysqli_num_rows($check_result) > 0) {
             $_SESSION['message'] = 'You have already reported this job';
             $_SESSION['message_type'] = 'error';
-        } else {
+        } 
+        else 
+        {
             // First get the employer_id from the job
             $job_sql = "SELECT employer_id FROM tbl_jobs WHERE job_id = ?";
             $job_stmt = mysqli_prepare($conn, $job_sql);

@@ -156,12 +156,15 @@
         }
         
         .nav-item {
-            padding: 12px 20px;
             display: flex;
             align-items: center;
-            color: var(--secondary-color);
+            padding: 15px 20px;
+            color: var(--light-text);
             transition: all 0.3s ease;
+            border-radius: 8px;
             margin-bottom: 5px;
+            cursor: pointer;
+            text-decoration: none;
         }
         
         .nav-item:hover {
@@ -169,22 +172,17 @@
             color: var(--primary-color);
         }
         
-        .nav-item.active {
-            background-color: var(--primary-light);
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
-        }
-        
         .nav-item i {
-            margin-right: 10px;
+            margin-right: 15px;
             font-size: 18px;
         }
         
         .nav-item a {
-            text-decoration: none;
             color: inherit;
-            font-size: 14px;
-            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            width: 100%;
         }
         
         .settings-section {
@@ -697,9 +695,9 @@
                 <span style="font-size: 13px; color: var(--light-text);"><?php echo htmlspecialchars($email); ?></span>
             </div>
             <nav class="nav-menu">
-                <div class="nav-item active">
+                <div class="nav-item">
                     <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
+                    <a href="employerdashboard.php">Dashboard</a>
                 </div>
                 <div class="nav-item">
                     <i class="fas fa-plus-circle"></i>

@@ -27,17 +27,37 @@
     $job_result = mysqli_stmt_get_result($stmt);
     $job_details = mysqli_fetch_assoc($job_result);
 
-    // Fetch applicants for this job
-    $sql = "SELECT a.*, u.first_name, u.last_name, u.profile_image, u.phone_number, l.email 
+    // Updated SQL query to include job_id and employer_id
+    $sql = "SELECT 
+                a.id,
+                a.job_id,
+                a.user_id,
+                a.status,
+                a.applied_at,
+                u.first_name, 
+                u.last_name, 
+                u.profile_image, 
+                u.phone_number, 
+                l.email,
+                j.employer_id,
+                CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path
             FROM tbl_applications a 
             JOIN tbl_user u ON a.user_id = u.user_id 
             JOIN tbl_login l ON u.user_id = l.login_id 
+            JOIN tbl_jobs j ON a.job_id = j.job_id
             WHERE a.job_id = ?";
-            
+    
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $job_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
+
+    // Debug output
+    if (mysqli_num_rows($result) > 0) {
+        $debug_applicant = mysqli_fetch_assoc($result);
+        mysqli_data_seek($result, 0); // Reset pointer
+        error_log("Debug - Application ID: " . $debug_applicant['id'] . ", Status: " . $debug_applicant['status']);
+    }
 ?>
 
 <!DOCTYPE html>
@@ -160,22 +180,40 @@
             transition: all 0.2s ease;
         }
 
-        .view-btn {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .view-btn:hover {
-            background-color: #2563eb;
-        }
-
-        .schedule-btn {
+        .accept-btn {
             background-color: #10b981;
             color: white;
         }
 
-        .schedule-btn:hover {
+        .accept-btn:hover {
             background-color: #059669;
+        }
+
+        .reject-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .status-badge {
+            width: 100%;
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status-badge.accepted {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
         }
 
         .application-date {
@@ -210,10 +248,88 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Remove the active element effect in the sidebar */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--light-text);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .nav-item a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Remove the active class styling */
+        .nav-item.active {
+            background-color: transparent;
+            color: var(--light-text);
+        }
     </style>
 </head>
 <body>
-    <!-- Keep existing sidebar -->
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="../assets/images/logo.png" alt="AutoRecruits.in">
+        </div>
+        <div class="company-info">
+            <span>AutoRecruits.in</span>
+            <span style="font-size: 13px; color: var(--light-text);">Employer Dashboard</span>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <a href="employerdashboard.php">Dashboard</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-plus-circle"></i>
+                <a href="postjob.php">Post a Job</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-briefcase"></i>
+                <a href="myjoblist.php">My Jobs</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-users"></i>
+                <a href="applicants.php">Applicants</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calendar-check"></i>
+                <a href="interviews.php">Interviews</a>
+            </div>
+        </nav>
+        <div class="settings-section">
+            <div class="nav-item">
+                <i class="fas fa-user"></i>
+                <a href="employer_profile.php">My Profile</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <a href="../login/logout.php">Logout</a>
+            </div>
+        </div>
+    </div>
 
     <div class="main-container">
         <div class="header">
@@ -230,7 +346,9 @@
                     <div class="applicant-card">
                         <div class="applicant-header">
                             <div class="applicant-photo">
-                                <img src="<?php echo !empty($applicant['profile_image']) ? htmlspecialchars($applicant['profile_image']) : '../assets/images/default-user.png'; ?>" 
+                                <img src="<?php echo !empty($applicant['profile_image']) ? 
+                                              htmlspecialchars($applicant['profile_image_path']) : 
+                                              '../assets/images/default-user.png'; ?>" 
                                      alt="<?php echo htmlspecialchars($applicant['first_name']); ?>"
                                      onerror="this.src='../assets/images/default-user.png';">
                             </div>
@@ -257,20 +375,25 @@
                         </div>
 
                         <div class="action-buttons">
-                            <?php if (!empty($applicant['resume'])): ?>
-                                <a href="<?php echo htmlspecialchars($applicant['resume']); ?>" 
-                                   target="_blank" 
-                                   class="action-btn view-btn">
-                                    <i class="fas fa-file-pdf"></i>
-                                    View Resume
+                            <?php 
+                                $status = strtolower($applicant['status']);
+                                if ($status === 'pending' || is_null($applicant['status']) || $status === ''):
+                            ?>
+                                <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=accepted" 
+                                    class="action-btn accept-btn">
+                                    <i class="fas fa-check"></i>
+                                    Accept
                                 </a>
+                                <a href="updateStatus.php?application_id=<?php echo $applicant['id']; ?>&status=rejected" 
+                                    class="action-btn reject-btn">
+                                    <i class="fas fa-times"></i>
+                                    Reject
+                                </a>
+                            <?php else: ?>
+                                <div class="status-badge <?php echo htmlspecialchars($applicant['status']); ?>">
+                                    <?php echo ucfirst(htmlspecialchars($applicant['status'])); ?>
+                                </div>
                             <?php endif; ?>
-                            
-                            <a href="schedule_interview.php?application_id=<?php echo $applicant['id']; ?>" 
-                               class="action-btn schedule-btn">
-                                <i class="fas fa-calendar-plus"></i>
-                                Schedule Interview
-                            </a>
                         </div>
 
                         <div class="application-date">
@@ -287,5 +410,37 @@
             </div>
         <?php endif; ?>
     </div>
+
+    <script>
+        function updateStatus(applicationId, status) {
+            if (!confirm(`Are you sure you want to ${status} this application?`)) {
+                return;
+            }
+
+            fetch('update_application_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `application_id=${applicationId}&status=${status}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`Application ${status} successfully`, 'success');
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Error updating application', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating application', 'error');
+            });
+        }
+    </script>
 </body>
 </html>

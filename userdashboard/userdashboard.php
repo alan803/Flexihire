@@ -1,21 +1,10 @@
 <?php
     session_start();
 
-    // Debug: Log the session message if it exists
-    if (isset($_SESSION['message'])) {
-        error_log("Message in session: " . $_SESSION['message']);
-        error_log("Message type in session: " . $_SESSION['message_type']);
-    }
-
-    // Store message in variables and clear session
-    $message = '';
-    $message_type = '';
-
+    // Message handling
     if (isset($_SESSION['message'])) {
         $message = $_SESSION['message'];
-        $message_type = $_SESSION['message_type'];
-        
-        // Clear the session messages
+        $message_type = $_SESSION['message_type'] ?? 'info';
         unset($_SESSION['message']);
         unset($_SESSION['message_type']);
     }
@@ -94,8 +83,7 @@
 
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-
-    // If it's an AJAX request, return only the job listings
+// If it's an AJAX request, return only the job listings
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result && mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -144,7 +132,8 @@
         exit();
     }
 
-    // Display message from session if exists and then clear it
+
+// Display message from session if exists and then clear it
     if (isset($_SESSION['error_message'])) {
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
@@ -161,16 +150,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Update the toast container -->
-    <?php if (!empty($message)): ?>
-    <div id="toast-container">
-        <div id="toast" class="toast <?php echo $message_type; ?>">
-            <i class="fas <?php echo $message_type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
-            <span id="toast-message"><?php echo htmlspecialchars($message); ?></span>
-        </div>
-    </div>
-    <?php endif; ?>
-
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-brand">
@@ -233,7 +212,8 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
+
+<!-- Main Content Area -->
         <main class="main-content">
             <!-- Search Bar -->
             <div class="search-container">
@@ -297,13 +277,12 @@
                                     <?php if ($has_applied): ?>
                                         <button class="applied-btn" disabled>
                                             <i class="fas fa-check-circle"></i> 
-                                            Applied
-                                            <?php if ($application_status): ?>
+                                            Applied<?php if ($application_status): ?>
                                                 (<?php echo htmlspecialchars($application_status); ?>)
                                             <?php endif; ?>
                                         </button>
                                     <?php else: ?>
-                                        <a href="applyjob.php?job_id=<?php echo $job_id; ?>" class="apply-link">
+                                        <a href="applyjob.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="apply-link">
                                             <button class="apply-btn">
                                                 <i class="fas fa-paper-plane"></i> Apply Now
                                             </button>
@@ -398,482 +377,165 @@
         text-decoration: none !important;
     }
 
-    /* Updated toast styles with enforced white text */
-    #toast-container {
+    .toast {
+        visibility: hidden;
         position: fixed;
         top: 20px;
         right: 20px;
-        z-index: 9999;
-    }
-
-    .toast {
         min-width: 300px;
-        padding: 16px;
-        border-radius: 8px;
-        margin-bottom: 10px;
+        max-width: 500px;
+        background-color: lightgreen;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        display: flex;
-        align-items: center;
-        animation: slideIn 0.3s ease-out;
+        border-radius: 8px;
+        z-index: 1000;
+        overflow: hidden;
     }
 
-    .toast.success {
-        background-color: #10B981;
-        color: white;
-    }
-
-    .toast.error {
-        background-color: #EF4444;
-        color: white;
+    .toast.show {
+        visibility: visible;
+        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
     }
 
     .toast-content {
         display: flex;
         align-items: center;
+        padding: 16px 20px;
         gap: 12px;
     }
 
-    .toast i {
-        font-size: 20px;
+    .toast-icon {
+        flex-shrink: 0;
     }
 
-    @keyframes slideIn {
+    .toast-icon i {
+        font-size: 24px;
+    }
+
+    .toast.success .toast-icon i {
+        color: #4CAF50;
+    }
+
+    .toast.error .toast-icon i {
+        color: #f44336;
+    }
+
+    .toast-message-container {
+        flex-grow: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    #toast-message {
+        color: #666;
+    }
+
+    @keyframes slideInRight {
         from {
             transform: translateX(100%);
-            opacity: 0;
         }
         to {
             transform: translateX(0);
-            opacity: 1;
         }
     }
 
     @keyframes fadeOut {
-        to {
-            opacity: 0;
-            transform: translateY(-100%);
-        }
-    }
-    </style>
-
-    <script>
-    // Add this script to handle toast animations
-    document.addEventListener('DOMContentLoaded', function() {
-        const toast = document.getElementById('toast');
-        if (toast) {
-            setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.5s ease forwards';
-                setTimeout(() => {
-                    toast.remove();
-                }, 500);
-            }, 3000);
-        }
-    });
-    </script>
-
-    <!-- Updated Upload Modal HTML -->
-    <div id="uploadModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="header-content">
-                    <i class="fas fa-file-upload"></i>
-                    <h2>Required Documents</h2>
-                </div>
-                <span class="close" onclick="closeUploadModal()">
-                    <i class="fas fa-times"></i>
-                </span>
-            </div>
-            <div class="modal-body">
-                <div class="requirements-info">
-                    <i class="fas fa-info-circle"></i>
-                    <p>Please upload the required documents to complete your application.</p>
-                </div>
-                <form id="uploadForm" action="process_documents.php" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="job_id" id="upload_job_id">
-                    
-                    <!-- License Upload Section -->
-                    <div class="form-group license-group">
-                        <div class="upload-container">
-                            <div class="upload-header">
-                                <div class="upload-title">
-                                    <i class="fas fa-id-card"></i>
-                                    <h3>Driving License</h3>
-                                </div>
-                                <span class="required-badge">Required</span>
-                            </div>
-                            <div class="upload-box" id="licenseBox">
-                                <input type="file" name="license" id="license" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
-                                <div class="upload-content">
-                                    <div class="upload-icon">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                    </div>
-                                    <div class="upload-text">
-                                        <span class="primary-text">Click or drag file to upload</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="validation-message" id="licenseValidation"></div>
-                            <div class="upload-help">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Accepted formats: PDF, JPG, PNG (Max size: 5MB)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Badge Upload Section -->
-                    <div class="form-group badge-group">
-                        <div class="upload-container">
-                            <div class="upload-header">
-                                <div class="upload-title">
-                                    <i class="fas fa-certificate"></i>
-                                    <h3>Badge Certificate</h3>
-                                </div>
-                                <span class="required-badge">Required</span>
-                            </div>
-                            <div class="upload-box" id="badgeBox">
-                                <input type="file" name="badge" id="badge" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
-                                <div class="upload-content">
-                                    <div class="upload-icon">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                    </div>
-                                    <div class="upload-text">
-                                        <span class="primary-text">Click or drag file to upload</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="validation-message" id="badgeValidation"></div>
-                            <div class="upload-help">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Accepted formats: PDF, JPG, PNG (Max size: 5MB)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn cancel-btn" onclick="closeUploadModal()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn submit-btn">
-                            <i class="fas fa-paper-plane"></i> Submit Application
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <style>
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(5px);
-    }
-
-    .modal-content {
-        background: #fff;
-        margin: 2% auto;
-        width: 80%;
-        max-width: 400px;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        animation: modalSlideIn 0.3s ease;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 20px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .header-content i {
-        font-size: 24px;
-        color: #9747FF;
-    }
-
-    .header-content h2 {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    .close {
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-
-    .close:hover {
-        background: #f1f5f9;
-    }
-
-    .modal-body {
-        padding: 16px;
-    }
-
-    .requirements-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        background: #f8fafc;
-        border-radius: 12px;
-        margin-bottom: 16px;
-    }
-
-    .requirements-info i {
-        color: #9747FF;
-        font-size: 20px;
-    }
-
-    .upload-container {
-        margin-bottom: 8px;
-        width: 100%;
-    }
-
-    .upload-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    .upload-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .upload-title i {
-        color: #9747FF;
-    }
-
-    .upload-title h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-        color: #1e293b;
-    }
-
-    .required-badge {
-        background: #fee2e2;
-        color: #ef4444;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .upload-box {
-        padding: 8px;
-        height: 100px;
-        width: 90%;
-        margin: 0 auto;
-        border: 2px dashed #e2e8f0;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .upload-box:hover {
-        border-color: #9747FF;
-        background: rgba(151, 71, 255, 0.02);
-    }
-
-    .upload-content {
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-        text-align: center;
-    }
-
-    .upload-text {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-    }
-
-    .primary-text {
-        font-size: 11px;
-        color: #475569;
-    }
-
-    .secondary-text {
-        display: none; /* Remove "or" text */
-    }
-
-    .browse-btn {
-        display: none; /* Remove browse button */
-    }
-
-    .upload-icon i {
-        font-size: 24px;
-        color: #9747FF;
-        margin-bottom: 4px;
-    }
-
-    .file-input {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .file-info {
-        display: none;
-        width: 100%;
-        padding: 12px;
-        background: #f8fafc;
-        border-radius: 8px;
-    }
-
-    .file-info.show {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .file-preview {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .file-preview i {
-        color: #9747FF;
-    }
-
-    .file-size {
-        color: #64748b;
-        font-size: 14px;
-    }
-
-    .upload-help {
-        width: 70%;
-        margin: 4px auto 0;
-        font-size: 9px;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .upload-help i {
-        font-size: 10px;
-        color: #9747FF;
-    }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .btn {
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        border: none;
-    }
-
-    .cancel-btn {
-        background: #f1f5f9;
-        color: #64748b;
-    }
-
-    .cancel-btn:hover {
-        background: #e2e8f0;
-    }
-
-    .submit-btn {
-        background: #9747FF;
-        color: white;
-    }
-
-    .submit-btn:hover {
-        background: #8035e0;
-        transform: translateY(-1px);
-    }
-
-    @keyframes modalSlideIn {
         from {
-            transform: translateY(-20px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
             opacity: 1;
         }
+        to {
+            opacity: 0;
+        }
+    }
+.applied-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: default;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+    }
+
+    .applied-btn i {
+        color: #fff;
+        font-size: 16px;
+        animation: checkmark 0.5s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .applied-btn:disabled {
+        opacity: 1;
+        background-color: #4CAF50;
+        cursor: default;
+    }
+
+    .applied-btn:hover {
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
     }
     </style>
 
     <script>
-    function showUploadModal(jobId, needsLicense, needsBadge) {
-        document.getElementById('upload_job_id').value = jobId;
-        document.querySelector('.license-group').style.display = needsLicense ? 'block' : 'none';
-        document.querySelector('.badge-group').style.display = needsBadge ? 'block' : 'none';
-        document.getElementById('uploadModal').style.display = 'block';
-    }
-
-    function closeUploadModal() {
-        const modal = document.getElementById('uploadModal');
-        modal.style.opacity = '0';
-        setTimeout(() => {
-            modal.style.display = 'none';
-            modal.style.opacity = '1';
-            document.getElementById('uploadForm').reset();
-            document.getElementById('licenseInfo').textContent = 'No file chosen';
-            document.getElementById('badgeInfo').textContent = 'No file chosen';
-        }, 300);
-    }
-
-    // Update file info when files are selected
-    document.querySelectorAll('.file-input').forEach(input => {
-        input.addEventListener('change', function(e) {
-            const fileName = this.files[0]?.name || 'No file chosen';
-            const infoElement = this.id === 'license' ? 
-                document.getElementById('licenseInfo') : 
-                document.getElementById('badgeInfo');
-            infoElement.textContent = fileName;
+    // Show toast message if exists
+    <?php if (isset($message)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
         });
-    });
+    <?php endif; ?>
 
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('uploadModal');
-        if (event.target === modal) {
-            closeUploadModal();
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const toastTitle = toast.querySelector('.toast-title');
+        const icon = toast.querySelector('i');
+        
+        // Reset classes
+        toast.className = 'toast';
+        icon.className = 'fas';
+        
+        // Set type-specific properties
+        switch(type) {
+            case 'success':
+                toastTitle.textContent = 'Success';
+                icon.classList.add('fa-check-circle');
+                toast.classList.add('success');
+                break;
+            case 'error':
+                toastTitle.textContent = 'Error';
+                icon.classList.add('fa-exclamation-circle');
+                toast.classList.add('error');
+                break;
+            default:
+                toastTitle.textContent = 'Information';
+                icon.classList.add('fa-info-circle');
+                toast.classList.add('info');
         }
+        
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        
+        // Hide toast after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     }
     </script>
 </body>

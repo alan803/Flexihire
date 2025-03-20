@@ -51,7 +51,7 @@
             {
                 $_SESSION['message'] = "This job requires a " . $license_required . " license. Please upload it in your profile.";
                 $_SESSION['message_type'] = "error";
-                header('Location: userdashboard.php');
+                header('Location: uploadcertificate.php?user_id=' . $user_id . '&job_id=' . $job_id);
                 exit();
             }
             
@@ -59,7 +59,7 @@
             {
                 $_SESSION['message'] = "This job requires a badge. Please upload it in your profile.";
                 $_SESSION['message_type'] = "error";
-                header('Location: userdashboard.php');
+                header('Location: uploadcertificate.php?user_id=' . $user_id . '&job_id=' . $job_id);
                 exit();
             }
         }

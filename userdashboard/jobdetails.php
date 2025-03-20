@@ -654,6 +654,14 @@
         if (saveBtn.classList.contains('saved')) {
             saveBtn.querySelector('i').style.animation = 'initialBookmarkPop 0.5s ease';
         }
+        
+        // Auto-hide toast after 3 seconds if it exists
+        const toast = document.querySelector('.toast.show');
+        if (toast) {
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
     });
 
     function toggleBookmark(jobId) {
@@ -682,19 +690,91 @@
                     btn.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
                     btn.classList.add('saved');
                     btn.querySelector('i').style.animation = 'bookmarkPop 0.3s ease';
+                    
+                    // Show success toast message
+                    showToast('Job bookmarked successfully!', 'success');
                 } else if (data.action === 'unbookmarked') {
                     btn.innerHTML = '<i class="far fa-bookmark"></i> Save Job';
                     btn.classList.remove('saved');
+                    
+                    // Show info toast message
+                    showToast('Job removed from bookmarks', 'info');
                 }
             } else {
                 console.error('Error:', data.message); // Debug log
-                alert(data.message || 'Error processing bookmark');
+                showToast(data.message || 'Error processing bookmark', 'error');
             }
         })
         .catch(error => {
             console.error('Fetch error:', error); // Debug log
-            alert('Error processing bookmark');
+            showToast('Error processing bookmark', 'error');
         });
+    }
+
+    // Add this function to show toast messages
+    function showToast(message, type = 'info') {
+        // Check if toast container exists, if not create it
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <div class="toast-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="toast-message-container">
+                        <div class="toast-title">Info:</div>
+                        <div id="toast-message"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+        }
+
+        const toastMessage = document.getElementById('toast-message');
+        const toastTitle = toast.querySelector('.toast-title');
+        const icon = toast.querySelector('.toast-icon i');
+        
+        // Reset classes and clear any existing animations
+        toast.className = 'toast';
+        toast.style.animation = 'none';
+        
+        // Force reflow to ensure animation reset
+        void toast.offsetWidth;
+        
+        // Set type-specific properties
+        switch(type) {
+            case 'success':
+                toastTitle.textContent = 'Success:';
+                icon.className = 'fas fa-check-circle';
+                toast.classList.add('success');
+                break;
+            case 'error':
+                toastTitle.textContent = 'Error:';
+                icon.className = 'fas fa-exclamation-circle';
+                toast.classList.add('error');
+                break;
+            case 'warning':
+                toastTitle.textContent = 'Warning:';
+                icon.className = 'fas fa-exclamation-triangle';
+                toast.classList.add('warning');
+                break;
+            default:
+                toastTitle.textContent = 'Info:';
+                icon.className = 'fas fa-info-circle';
+                toast.classList.add('info');
+        }
+        
+        toastMessage.textContent = message;
+        toast.style.animation = '';
+        toast.classList.add('show');
+        
+        // Manually hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     }
 
     function openReportModal() {

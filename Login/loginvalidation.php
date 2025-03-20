@@ -15,49 +15,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    $checkemail = "SELECT * FROM tbl_login WHERE email='$email'";
-    $checkemailresult = mysqli_query($conn, $checkemail);
+    // Basic validation
+    if(empty($email) || empty($password)) {
+        $errorUserNotFound = "Please enter both email and password";
+    } else {
+        // Check email exists
+        $checkemail = "SELECT * FROM tbl_login WHERE email=?";
+        $stmt = mysqli_prepare($conn, $checkemail);
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        $checkemailresult = mysqli_stmt_get_result($stmt);
 
-    if ($checkemailresult && mysqli_num_rows($checkemailresult) > 0) 
-    {
-        $userdata = mysqli_fetch_assoc($checkemailresult);
-        
-        if (password_verify($password, $userdata['password'])) 
+        if ($checkemailresult && mysqli_num_rows($checkemailresult) > 0) 
         {
-            $_SESSION['email'] = $email;
-            $_SESSION['user_id'] = $userdata['login_id'];
-            $_SESSION['role'] = $userdata['role'];
-            $val=$_SESSION['user_id'];
-            $_SESSION['employer_id']=$userdata['employer_id'];
-            echo $_SESSION['employer_id']."<br>";
-            echo $_SESSION['role'];
-            // if (!isset($_SESSION['user_id'])) {
-            // echo "User ID not set in session.";
-            // } // Ensure 'login_id' exists in DB
-            // Redirect based on role
-            switch ($userdata['role']) 
+            $userdata = mysqli_fetch_assoc($checkemailresult);
+            
+            // Verify password
+            if (password_verify($password, $userdata['password'])) 
             {
-                case 1:
-                    header("Location: ../userdashboard/userdashboard.php");
-                    exit();
-                case 2:
-                    header("Location: ../userdashboard/employerdashboard.php");
-                    exit();
-                case 3:
-                    header("Location: ../userdashboard/admindashboard.html");
-                    exit();
-                default:
-                    die("Invalid role: " . htmlspecialchars($userdata['role']));
+                // Set session variables
+                $_SESSION['email'] = $email;
+                $_SESSION['user_id'] = $userdata['login_id'];
+                $_SESSION['role'] = $userdata['role'];
+                $_SESSION['employer_id'] = $userdata['employer_id'];
+
+                // Redirect based on role
+                switch ($userdata['role']) 
+                {
+                    case 1:
+                        header("Location: ../userdashboard/userdashboard.php");
+                        break;
+                    case 2:
+                        header("Location: ../userdashboard/employerdashboard.php");
+                        break;
+                    case 3:
+                        header("Location: ../userdashboard/admindashboard.html");
+                        break;
+                    default:
+                        die("Invalid role");
+                }
+                exit();
+            } 
+            else 
+            {
+                $errorIncorrectPassword = "Incorrect password";
             }
         } 
         else 
         {
-            $errorIncorrectPassword = "Incorrect password";
+            $errorUserNotFound = "User not found";
         }
-    } 
-    else 
-    {
-        $errorUserNotFound = "User not found";
     }
 }
 
