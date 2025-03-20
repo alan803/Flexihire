@@ -20,30 +20,36 @@ if (!isset($_GET['application_id']) || empty($_GET['application_id'])) {
 
 $application_id = (int)$_GET['application_id'];
 
-$delete_sql = "DELETE FROM tbl_applications WHERE id = ? AND user_id = ?";
-$delete_stmt = mysqli_prepare($conn, $delete_sql);
+// Start transaction
+mysqli_begin_transaction($conn);
 
-if ($delete_stmt) {
-    mysqli_stmt_bind_param($delete_stmt, "ii", $application_id, $user_id);
+try {
+    // First delete certificates
+    $delete_certs_sql = "DELETE FROM tbl_certificates WHERE application_id = ? AND user_id = ?";
+    $delete_certs_stmt = mysqli_prepare($conn, $delete_certs_sql);
+    mysqli_stmt_bind_param($delete_certs_stmt, "ii", $application_id, $user_id);
+    mysqli_stmt_execute($delete_certs_stmt);
+    mysqli_stmt_close($delete_certs_stmt);
+
+    // Then delete application
+    $delete_app_sql = "DELETE FROM tbl_applications WHERE id = ? AND user_id = ?";
+    $delete_app_stmt = mysqli_prepare($conn, $delete_app_sql);
+    mysqli_stmt_bind_param($delete_app_stmt, "ii", $application_id, $user_id);
+    mysqli_stmt_execute($delete_app_stmt);
     
-    if (mysqli_stmt_execute($delete_stmt)) {
-        $affected_rows = mysqli_stmt_affected_rows($delete_stmt);
-        mysqli_stmt_close($delete_stmt);
-        
-        if ($affected_rows > 0) {
-            $_SESSION['message'] = "Your job application has been successfully cancelled.";
-            $_SESSION['message_type'] = "success";
-        } else {
-            $_SESSION['message'] = "Application not found or already cancelled.";
-            $_SESSION['message_type'] = "error";
-        }
+    $affected_rows = mysqli_stmt_affected_rows($delete_app_stmt);
+    mysqli_stmt_close($delete_app_stmt);
+
+    if ($affected_rows > 0) {
+        mysqli_commit($conn);
+        $_SESSION['message'] = "Your job application has been successfully cancelled.";
+        $_SESSION['message_type'] = "success";
     } else {
-        mysqli_stmt_close($delete_stmt);
-        $_SESSION['message'] = "Failed to cancel application. Please try again later.";
-        $_SESSION['message_type'] = "error";
+        throw new Exception("Application not found or already cancelled.");
     }
-} else {
-    $_SESSION['message'] = "System error. Please contact support if this persists.";
+} catch (Exception $e) {
+    mysqli_rollback($conn);
+    $_SESSION['message'] = $e->getMessage();
     $_SESSION['message_type'] = "error";
 }
 

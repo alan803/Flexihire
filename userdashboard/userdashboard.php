@@ -1,10 +1,21 @@
 <?php
     session_start();
 
-    // Message handling
+    // Debug: Log the session message if it exists
+    if (isset($_SESSION['message'])) {
+        error_log("Message in session: " . $_SESSION['message']);
+        error_log("Message type in session: " . $_SESSION['message_type']);
+    }
+
+    // Store message in variables and clear session
+    $message = '';
+    $message_type = '';
+
     if (isset($_SESSION['message'])) {
         $message = $_SESSION['message'];
-        $message_type = $_SESSION['message_type'] ?? 'info';
+        $message_type = $_SESSION['message_type'];
+        
+        // Clear the session messages
         unset($_SESSION['message']);
         unset($_SESSION['message_type']);
     }
@@ -150,6 +161,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- Update the toast container -->
+    <?php if (!empty($message)): ?>
+    <div id="toast-container">
+        <div id="toast" class="toast <?php echo $message_type; ?>">
+            <i class="fas <?php echo $message_type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
+            <span id="toast-message"><?php echo htmlspecialchars($message); ?></span>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-brand">
@@ -282,7 +303,7 @@
                                             <?php endif; ?>
                                         </button>
                                     <?php else: ?>
-                                        <a href="#" onclick="checkJobRequirements(<?php echo $job_id; ?>)" class="apply-link">
+                                        <a href="applyjob.php?job_id=<?php echo $job_id; ?>" class="apply-link">
                                             <button class="apply-btn">
                                                 <i class="fas fa-paper-plane"></i> Apply Now
                                             </button>
@@ -377,170 +398,80 @@
         text-decoration: none !important;
     }
 
-    .toast {
-        visibility: hidden;
+    /* Updated toast styles with enforced white text */
+    #toast-container {
         position: fixed;
         top: 20px;
         right: 20px;
-        min-width: 300px;
-        max-width: 500px;
-        background-color: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border-radius: 8px;
-        z-index: 1000;
-        overflow: hidden;
+        z-index: 9999;
     }
 
-    .toast.show {
-        visibility: visible;
-        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
+    .toast {
+        min-width: 300px;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .toast.success {
+        background-color: #10B981;
+        color: white;
+    }
+
+    .toast.error {
+        background-color: #EF4444;
+        color: white;
     }
 
     .toast-content {
         display: flex;
         align-items: center;
-        padding: 16px 20px;
         gap: 12px;
     }
 
-    .toast-icon {
-        flex-shrink: 0;
+    .toast i {
+        font-size: 20px;
     }
 
-    .toast-icon i {
-        font-size: 24px;
-    }
-
-    .toast.success .toast-icon i {
-        color: #4CAF50;
-    }
-
-    .toast.error .toast-icon i {
-        color: #f44336;
-    }
-
-    .toast-message-container {
-        flex-grow: 1;
-    }
-
-    .toast-title {
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-
-    #toast-message {
-        color: #666;
-    }
-
-    @keyframes slideInRight {
+    @keyframes slideIn {
         from {
             transform: translateX(100%);
+            opacity: 0;
         }
         to {
             transform: translateX(0);
+            opacity: 1;
         }
     }
 
     @keyframes fadeOut {
-        from {
-            opacity: 1;
-        }
         to {
             opacity: 0;
+            transform: translateY(-100%);
         }
-    }
-
-    .applied-btn {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: default;
-        transition: all 0.3s ease;
-        opacity: 0.9;
-    }
-
-    .applied-btn i {
-        color: #fff;
-        font-size: 16px;
-        animation: checkmark 0.5s ease-in-out;
-    }
-
-    @keyframes checkmark {
-        0% {
-            transform: scale(0);
-        }
-        50% {
-            transform: scale(1.2);
-        }
-        100% {
-            transform: scale(1);
-        }
-    }
-
-    .applied-btn:disabled {
-        opacity: 1;
-        background-color: #4CAF50;
-        cursor: default;
-    }
-
-    .applied-btn:hover {
-        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
     }
     </style>
 
     <script>
-    // Show toast message if exists
-    <?php if (isset($message)): ?>
-        document.addEventListener('DOMContentLoaded', function() {
-            showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
-        });
-    <?php endif; ?>
-
-    function showToast(message, type = 'info') {
+    // Add this script to handle toast animations
+    document.addEventListener('DOMContentLoaded', function() {
         const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastTitle = toast.querySelector('.toast-title');
-        const icon = toast.querySelector('i');
-        
-        // Reset classes
-        toast.className = 'toast';
-        icon.className = 'fas';
-        
-        // Set type-specific properties
-        switch(type) {
-            case 'success':
-                toastTitle.textContent = 'Success';
-                icon.classList.add('fa-check-circle');
-                toast.classList.add('success');
-                break;
-            case 'error':
-                toastTitle.textContent = 'Error';
-                icon.classList.add('fa-exclamation-circle');
-                toast.classList.add('error');
-                break;
-            default:
-                toastTitle.textContent = 'Information';
-                icon.classList.add('fa-info-circle');
-                toast.classList.add('info');
+        if (toast) {
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 3000);
         }
-        
-        toastMessage.textContent = message;
-        toast.classList.add('show');
-        
-        // Hide toast after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
+    });
     </script>
 
-    <!-- Certificate Upload Modal -->
+    <!-- Updated Upload Modal HTML -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -548,7 +479,9 @@
                     <i class="fas fa-file-upload"></i>
                     <h2>Required Documents</h2>
                 </div>
-                <span class="close" onclick="closeUploadModal()">&times;</span>
+                <span class="close" onclick="closeUploadModal()">
+                    <i class="fas fa-times"></i>
+                </span>
             </div>
             <div class="modal-body">
                 <div class="requirements-info">
@@ -557,29 +490,62 @@
                 </div>
                 <form id="uploadForm" action="process_documents.php" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="job_id" id="upload_job_id">
-                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
                     
-                    <div class="form-group license-group" style="display: none;">
-                        <label>Driving License <span class="required">*</span></label>
-                        <div class="upload-box">
-                            <input type="file" name="license" id="license" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
-                            <label for="license" class="upload-label">
-                                <i class="fas fa-upload"></i>
-                                <span>Choose License File</span>
-                            </label>
-                            <div class="file-info" id="licenseInfo">No file chosen</div>
+                    <!-- License Upload Section -->
+                    <div class="form-group license-group">
+                        <div class="upload-container">
+                            <div class="upload-header">
+                                <div class="upload-title">
+                                    <i class="fas fa-id-card"></i>
+                                    <h3>Driving License</h3>
+                                </div>
+                                <span class="required-badge">Required</span>
+                            </div>
+                            <div class="upload-box" id="licenseBox">
+                                <input type="file" name="license" id="license" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
+                                <div class="upload-content">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <span class="primary-text">Click or drag file to upload</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="validation-message" id="licenseValidation"></div>
+                            <div class="upload-help">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Accepted formats: PDF, JPG, PNG (Max size: 5MB)</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group badge-group" style="display: none;">
-                        <label>Badge Certificate <span class="required">*</span></label>
-                        <div class="upload-box">
-                            <input type="file" name="badge" id="badge" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
-                            <label for="badge" class="upload-label">
-                                <i class="fas fa-upload"></i>
-                                <span>Choose Badge File</span>
-                            </label>
-                            <div class="file-info" id="badgeInfo">No file chosen</div>
+                    <!-- Badge Upload Section -->
+                    <div class="form-group badge-group">
+                        <div class="upload-container">
+                            <div class="upload-header">
+                                <div class="upload-title">
+                                    <i class="fas fa-certificate"></i>
+                                    <h3>Badge Certificate</h3>
+                                </div>
+                                <span class="required-badge">Required</span>
+                            </div>
+                            <div class="upload-box" id="badgeBox">
+                                <input type="file" name="badge" id="badge" accept=".pdf,.jpg,.jpeg,.png" class="file-input">
+                                <div class="upload-content">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <span class="primary-text">Click or drag file to upload</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="validation-message" id="badgeValidation"></div>
+                            <div class="upload-help">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Accepted formats: PDF, JPG, PNG (Max size: 5MB)</span>
+                            </div>
                         </div>
                     </div>
 
@@ -612,24 +578,22 @@
 
     .modal-content {
         background: #fff;
-        margin: 5% auto;
-        width: 90%;
-        max-width: 500px;
-        border-radius: 12px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        transform: translateY(-20px);
-        opacity: 0;
-        animation: modalSlideIn 0.3s ease forwards;
+        margin: 2% auto;
+        width: 80%;
+        max-width: 400px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        animation: modalSlideIn 0.3s ease;
+        max-height: 90vh;
+        overflow-y: auto;
     }
 
     .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 20px;
-        background: #1e2a4a;
-        color: white;
-        border-radius: 12px 12px 0 0;
+        padding: 12px 20px;
+        border-bottom: 1px solid #e5e7eb;
     }
 
     .header-content {
@@ -639,69 +603,216 @@
     }
 
     .header-content i {
-        color: #9747FF;
         font-size: 24px;
+        color: #9747FF;
+    }
+
+    .header-content h2 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .close {
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .close:hover {
+        background: #f1f5f9;
+    }
+
+    .modal-body {
+        padding: 16px;
     }
 
     .requirements-info {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        color: #1e2a4a;
+        gap: 12px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .requirements-info i {
+        color: #9747FF;
+        font-size: 20px;
+    }
+
+    .upload-container {
+        margin-bottom: 8px;
+        width: 100%;
+    }
+
+    .upload-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .upload-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .upload-title i {
+        color: #9747FF;
+    }
+
+    .upload-title h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        color: #1e293b;
+    }
+
+    .required-badge {
+        background: #fee2e2;
+        color: #ef4444;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
     }
 
     .upload-box {
-        border: 2px dashed #9747FF;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
+        padding: 8px;
+        height: 100px;
+        width: 90%;
+        margin: 0 auto;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
     .upload-box:hover {
-        border-color: #8035e0;
-        background: #f8f9fa;
+        border-color: #9747FF;
+        background: rgba(151, 71, 255, 0.02);
     }
 
-    .upload-label {
-        display: inline-block;
-        padding: 12px 24px;
-        background: #9747FF;
-        color: white;
-        border-radius: 8px;
+    .upload-content {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .upload-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .primary-text {
+        font-size: 11px;
+        color: #475569;
+    }
+
+    .secondary-text {
+        display: none; /* Remove "or" text */
+    }
+
+    .browse-btn {
+        display: none; /* Remove browse button */
+    }
+
+    .upload-icon i {
+        font-size: 24px;
+        color: #9747FF;
+        margin-bottom: 4px;
+    }
+
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
         cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .upload-label:hover {
-        background: #8035e0;
-        transform: translateY(-2px);
     }
 
     .file-info {
-        margin-top: 10px;
-        color: #666;
+        display: none;
+        width: 100%;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+
+    .file-info.show {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .file-preview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .file-preview i {
+        color: #9747FF;
+    }
+
+    .file-size {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .upload-help {
+        width: 70%;
+        margin: 4px auto 0;
+        font-size: 9px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .upload-help i {
+        font-size: 10px;
+        color: #9747FF;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
     }
 
     .btn {
-        padding: 10px 20px;
+        padding: 8px 16px;
         border-radius: 8px;
-        border: none;
         font-weight: 500;
-        cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
         transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
     }
 
     .cancel-btn {
-        background: #f1f1f1;
-        color: #666;
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .cancel-btn:hover {
+        background: #e2e8f0;
     }
 
     .submit-btn {
@@ -711,10 +822,14 @@
 
     .submit-btn:hover {
         background: #8035e0;
-        transform: translateY(-2px);
+        transform: translateY(-1px);
     }
 
     @keyframes modalSlideIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
         to {
             transform: translateY(0);
             opacity: 1;
