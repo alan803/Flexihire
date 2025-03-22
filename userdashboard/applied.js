@@ -60,7 +60,35 @@ function filterlocation() {
 
 // Salary filter (max)
 function filtermaxsalary() {
-    applySalaryFilter();
+    const maxSalary = parseInt(document.getElementById('maxsalary').value) || Infinity;
+    const jobCards = document.querySelectorAll('.job-card');
+    let matchFound = false;
+
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    jobCards.forEach(card => {
+        const salaryText = card.querySelector('.salary').textContent;
+        // Remove the ₹ symbol and any commas, then convert to number
+        const salary = parseInt(salaryText.replace(/[₹,]/g, '')) || 0;
+        
+        // Debug log
+        console.log('Job salary:', salary, 'Max:', maxSalary);
+        
+        if (salary <= maxSalary) {
+            card.style.display = "block";
+            matchFound = true;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    if (!matchFound) {
+        let message = 'No jobs found';
+        if (maxSalary < Infinity) {
+            message = `No jobs found with salary below ₹${maxSalary.toLocaleString()}`;
+        }
+        showNoJobsMessage(message);
+    }
 }
 
 // Salary filter (min)
@@ -146,145 +174,164 @@ function filterdate() {
 // Function to show "No jobs found" message
 function showNoJobsMessage(message) {
     // Remove any existing "No jobs found" messages
-    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+    const existingMessages = document.querySelectorAll('.no-jobs');
+    existingMessages.forEach(msg => msg.remove());
 
-    const jobListings = document.querySelector('.job-listings');
+    // Get the jobs section container
+    const jobsSection = document.querySelector('.jobs-section');
+    
+    // Create the message element
     const noJobsMessage = document.createElement('div');
     noJobsMessage.className = 'no-jobs';
-    
     noJobsMessage.innerHTML = `
         <div class="no-jobs-content">
-            <div class="search-icon">
-                <i class="fas fa-search"></i>
-            </div>
-            <h2>No Jobs Found</h2>
+            <i class="fas fa-search"></i>
+            <h3>No Jobs Found</h3>
             <p>${message}</p>
-            <button class="reset-filters-btn" onclick="resetFilters()">
+            <button class="reset-button" onclick="resetFilters()">
                 <i class="fas fa-undo"></i> Reset Filters
             </button>
         </div>
     `;
     
-    jobListings.appendChild(noJobsMessage);
-
-    // Add styles dynamically
-    const style = document.createElement('style');
-    style.textContent = `
-        .no-jobs {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-            text-align: center;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
-        }
-
-        .no-jobs-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            max-width: 400px;
-        }
-
-        .search-icon {
-            width: 64px;
-            height: 64px;
-            background: #f0e6ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-
-        .search-icon i {
-            font-size: 32px;
-            color: #9747FF;
-        }
-
-        .no-jobs h2 {
-            font-size: 24px;
-            color: #333;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .no-jobs p {
-            color: #666;
-            margin: 0;
-            font-size: 16px;
-        }
-
-        .reset-filters-btn {
-            background: #9747FF;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            margin-top: 8px;
-        }
-
-        .reset-filters-btn:hover {
-            background: #8034ff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(151, 71, 255, 0.2);
-        }
-
-        .reset-filters-btn i {
-            font-size: 16px;
-        }
-    `;
-
-    // Only add the style tag if it hasn't been added before
-    if (!document.querySelector('style[data-no-jobs-style]')) {
-        style.setAttribute('data-no-jobs-style', '');
-        document.head.appendChild(style);
-    }
+    // Add the message to the jobs section
+    jobsSection.appendChild(noJobsMessage);
 }
 
-// Reset Filters - show all jobs when filters are cleared
+// Add these styles to your CSS
+const style = document.createElement('style');
+style.textContent = `
+    .no-jobs {
+        width: 100%;
+        padding: 40px 20px;
+        text-align: center;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
+    }
+
+    .no-jobs-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .no-jobs-content i {
+        font-size: 48px;
+        color: #9747FF;
+        margin-bottom: 10px;
+    }
+
+    .no-jobs-content h3 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+    }
+
+    .no-jobs-content p {
+        font-size: 16px;
+        color: #666;
+        margin: 0;
+    }
+
+    .no-jobs .reset-button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: #9747FF;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .no-jobs .reset-button:hover {
+        background: #7c3aed;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(151, 71, 255, 0.2);
+    }
+
+    .no-jobs .reset-button i {
+        font-size: 16px;
+        color: white;
+        margin: 0;
+    }
+`;
+document.head.appendChild(style);
+
+// Reset Filters - show all applied jobs when filters are cleared
 function resetFilters() {
-    // Clear all input values
+    // Reset all input fields
     document.getElementById('search').value = '';
     document.getElementById('location').value = '';
     document.getElementById('minsalary').value = '';
     document.getElementById('maxsalary').value = '';
     document.getElementById('date').value = '';
 
-    // Remove any "No jobs found" messages
-    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
-
-    // Reload all jobs with updated status
-    fetch('userdashboard.php', {
+    // Fetch all jobs
+    fetch('applied.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'reset=1'  // Add a flag to indicate reset
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'reset=1'
     })
-    .then(response => response.text())
+    .then(response => response.json())
     .then(data => {
-        // Update the job listings container
-        document.querySelector('.job-listings').innerHTML = data;
-        
-        // Show all job cards
-        const jobCards = document.querySelectorAll('.job-card');
-        jobCards.forEach(card => {
-            card.style.display = "block";
-        });
+        const jobsSection = document.querySelector('.jobs-section');
+        if (data.success) {
+            let html = '';
+            data.jobs.forEach(job => {
+                html += `
+                    <div class="job-card" data-application-id="${job.application_id}">
+                        <div class="job-header">
+                            <h3 class="job_title">${job.job_title}</h3>
+                            <span class="salary">₹${job.salary}</span>
+                        </div>
+                        <div class="job-body">
+                            <p class="description">${job.job_description}</p>
+                            <p class="location">
+                                <i class="fas fa-map-marker-alt"></i> 
+                                ${job.location}, ${job.town}
+                            </p>
+                            <p class="date">
+                                <i class="fas fa-calendar-plus"></i> 
+                                Posted: ${job.created_at}
+                            </p>
+                            <p class="date">
+                                <i class="fas fa-calendar-alt"></i> 
+                                Vacancy Date: ${job.vacancy_date}
+                            </p>
+                        </div>
+                        <div class="job-footer">
+                            <div class="button-group">
+                                <button class="applied-btn" disabled>
+                                    <i class="fas fa-check-circle"></i> Applied
+                                    (${job.status})
+                                </button>
+                                <a href="cancel_application.php?application_id=${job.application_id}" 
+                                   class="details-btn cancel-hover"
+                                   onclick="openModal(${job.application_id}); return false;">
+                                    <i class="fas fa-times-circle"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            jobsSection.innerHTML = html;
+        } else {
+            jobsSection.innerHTML = '<div class="no-jobs">You haven\'t applied to any jobs yet.</div>';
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNoJobsMessage('Error loading jobs. Please try again.');
     });
 }
 

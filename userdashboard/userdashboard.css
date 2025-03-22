@@ -194,17 +194,24 @@ body {
     border-radius: 8px;
     box-shadow: var(--shadow);
     margin-bottom: 2rem;
+    width: 100%;
 }
 
 .search-box {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border: 1px solid rgba(186, 166, 227, 0.3);
     background: var(--white);
     border-radius: 6px;
     margin-bottom: 1rem;
+    width: 100%;
+}
+
+.search-box i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
 }
 
 .search-box input {
@@ -212,25 +219,70 @@ body {
     border: none;
     outline: none;
     font-size: 1rem;
+    width: 100%;
 }
 
 .filter-box {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+    width: 100%;
+    align-items: end;
 }
 
 .filter-box input {
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid rgba(186, 166, 227, 0.3);
     background: var(--white);
     border-radius: 6px;
     outline: none;
+    width: 100%;
+    font-size: 0.95rem;
 }
 
 .salary-range {
     display: flex;
     gap: 0.5rem;
+    width: 100%;
+}
+
+.salary-range input {
+    flex: 1;
+}
+
+/* Reset Button Styles */
+.reset-button {
+    padding: 0.75rem 1.5rem;
+    background: #FF6B6B;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    height: 45px;
+}
+
+.reset-button:hover {
+    background: #FF5252;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.reset-button i {
+    font-size: 1rem;
+}
+
+/* Add focus styles for better UX */
+.search-box input:focus,
+.filter-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(138, 108, 224, 0.1);
 }
 
 /* Job Listings Styles */
@@ -273,7 +325,10 @@ body {
 }
 
 .job-body {
-    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
 }
 
 .job-body p {
@@ -310,9 +365,20 @@ body {
 }
 
 .apply-btn {
-    background: var(--primary-color);
-    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: #9747FF;
+    color: white;
     border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+    justify-content: center;
 }
 
 .details-btn {
@@ -326,9 +392,8 @@ body {
 }
 
 .apply-btn:hover {
-    background: #7857D1;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(138, 108, 224, 0.3);
+    box-shadow: 0 5px 15px rgba(151, 71, 255, 0.2);
 }
 
 .details-btn:hover {
@@ -392,10 +457,23 @@ input:focus {
         grid-template-columns: 1fr;
     }
 
+    .salary-range {
+        flex-direction: column;
+    }
+
+    .search-container {
+        padding: 1rem;
+    }
+
     .navbar,
     .search-container,
     .job-card {
         backdrop-filter: blur(8px);
+    }
+
+    .reset-button {
+        width: 100%;
+        margin-top: 1rem;
     }
 }
 
@@ -565,13 +643,24 @@ input:focus {
         gap: 8px;
         cursor: default;
         transition: all 0.3s ease;
-        opacity: 0.9;
+        min-width: 140px;
+        justify-content: center;
     }
 
     .applied-btn i {
         color: #fff;
         font-size: 16px;
         animation: checkmark 0.5s ease-in-out;
+    }
+
+    .applied-btn:disabled {
+        opacity: 1;
+        background-color: #4CAF50;
+        cursor: default;
+    }
+
+    .applied-btn:hover {
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
     }
 
     @keyframes checkmark {
@@ -586,12 +675,29 @@ input:focus {
         }
     }
 
-    .applied-btn:disabled {
-        opacity: 1;
-        background-color: #4CAF50;
-        cursor: default;
-    }
+/* Job Status Styles */
+.status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
 
-    .applied-btn:hover {
-        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-    }
+.status.applied {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.status.not-applied {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.status i {
+    font-size: 1rem;
+}

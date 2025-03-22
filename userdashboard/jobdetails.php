@@ -1,7 +1,7 @@
 <?php
     session_start();
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ../login/login.php");
+    if (!isset($_SESSION['user_id']) && !isset($_SESSION['id'])) {
+        header("Location: ../login/loginvalidation.php");
         exit();
     }
 
@@ -17,6 +17,9 @@
         exit();
     }
 
+    // Get user ID from session
+    $user_id = $_SESSION['id'] ?? $_SESSION['user_id'];
+
     // Fetch job details
     $sql = "SELECT * FROM tbl_jobs WHERE job_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
@@ -25,12 +28,40 @@
     $result = mysqli_stmt_get_result($stmt);
     $job = mysqli_fetch_assoc($result);
 
-    //fecth user profile
-    $user_id = $_SESSION['id'] ?? $_SESSION['user_id'];
-    $sql_user = "SELECT * FROM tbl_user WHERE user_id = '$user_id'";
-    $result_user = mysqli_query($conn, $sql_user);
-    $user = mysqli_fetch_assoc($result_user);
-    $profile_image = $user['profile_image'];
+    // Fetch user profile
+    $sql_user = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image 
+                 FROM tbl_login l
+                 INNER JOIN tbl_user u ON l.user_id = u.user_id
+                 WHERE l.user_id = ?";
+
+    $stmt_user = mysqli_prepare($conn, $sql_user);
+    if ($stmt_user) {
+        mysqli_stmt_bind_param($stmt_user, "i", $user_id);
+        mysqli_stmt_execute($stmt_user);
+        $result_user = mysqli_stmt_get_result($stmt_user);
+        
+        if ($result_user && mysqli_num_rows($result_user) > 0) {
+            $user = mysqli_fetch_assoc($result_user);
+            $profile_image = $user['profile_image'];
+            
+            // Set display name based on available data
+            if (!empty($user['username'])) {
+                $display_name = $user['username'];
+            } else {
+                $display_name = $user['first_name'] . " " . $user['last_name'];
+            }
+        } else {
+            // Set default values if no user data found
+            $profile_image = "";
+            $display_name = "User";
+        }
+        mysqli_stmt_close($stmt_user);
+    } else {
+        // Handle prepare statement error
+        $profile_image = "";
+        $display_name = "User";
+        error_log("Failed to prepare user fetch statement: " . mysqli_error($conn));
+    }
 
     // Debug
     error_log("User ID: " . $user_id . ", Job ID: " . $job_id);
@@ -45,6 +76,9 @@
 
     // Debug
     error_log("Is Bookmarked: " . ($is_bookmarked ? 'Yes' : 'No'));
+
+    // Same user data fetching code as above
+    // Add it right after session_start() and database connection
 ?>
 
 <!DOCTYPE html>
@@ -60,25 +94,22 @@
 <body>
     <nav class="navbar">
         <div class="nav-left">
-            <!-- <div class="grid-container">
-                <i class="fas fa-bars" id="grid"></i>
-            </div> -->
             <h1>Job Details</h1>
         </div>
+        
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
+            <div class="profile-info">
+                <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -119,14 +150,10 @@
                     <i class="fas fa-bookmark"></i>
                     <span>Bookmarks</span>
                 </a> -->
-                <a href="applyjob.php" class="sidebar-link">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Apply Job</span>
-                </a>
-                <!-- <a href="jobs/appliedjobs.php" class="sidebar-link">
+                <a href="applied.php" class="sidebar-link">
                     <i class="fas fa-check-circle"></i>
                     <span>Applied Jobs</span>
-                </a> -->
+                </a>
                 <a href="bookmark.php" class="sidebar-link">
                     <i class="fas fa-bookmark"></i>
                     <span>Bookmarks</span>
@@ -645,6 +672,70 @@
     @keyframes progress {
         from { width: 100%; }
         to { width: 0%; }
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-username {
+        color: #333;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .profile-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: none;
+        outline: none;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .profile-container:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
     }
     </style>
 

@@ -4,13 +4,24 @@ include '../database/connectdatabase.php';
 $dbname = "project";
 mysqli_select_db($conn, $dbname);
 
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: ../login/loginvalidation.php");
-//     exit();
-// }
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../login/loginvalidation.php");
+    exit();
+}
 
-// Get user data
+// Get user data with proper error handling
 $user_id = $_SESSION['user_id'];
+
+// Validate user_id
+if (!$user_id || !is_numeric($user_id)) {
+    // Log the error
+    error_log("Invalid or missing user_id in session. Session data: " . print_r($_SESSION, true));
+    // Redirect to login
+    header("Location: ../login/loginvalidation.php");
+    exit();
+}
+
 $sql = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image 
         FROM tbl_login l
         INNER JOIN tbl_user u ON l.user_id = u.user_id
@@ -26,6 +37,12 @@ if ($result && mysqli_num_rows($result) > 0) {
     $display_name = !empty($user_data['username']) ? $user_data['username'] : 
                    $user_data['first_name'] . " " . $user_data['last_name'];
     $profile_image = $user_data['profile_image'];
+} else {
+    // Log the error
+    error_log("User not found in database for ID: $user_id");
+    // Redirect to login
+    header("Location: ../login/loginvalidation.php");
+    exit();
 }
 ?>
 
@@ -49,20 +66,18 @@ if ($result && mysqli_num_rows($result) > 0) {
         </div>
         
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
-                        <!-- <span class="email"><?php echo $email; ?></span> -->
+            <div class="profile-info">
+                <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -221,6 +236,70 @@ if ($result && mysqli_num_rows($result) > 0) {
             }
         }
     }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-username {
+        color: #333;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .profile-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: none;
+        outline: none;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .profile-container:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
+    }
     </style>
 
     <!-- Main Content -->
@@ -228,15 +307,11 @@ if ($result && mysqli_num_rows($result) > 0) {
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-menu">
-                <a href="userdashboard.php" class="sidebar-link">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <!-- <a href="userdashboard.php"><i class="fas fa-list"></i> Job List</a> -->
-                <!-- <a href="sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i>Job Grid</a> -->
+                <a href="userdashboard.php"><i class="fas fa-home"></i> Home</a>
                 <a href="applied.php"><i class="fas fa-paper-plane"></i> Applied Job</a>
                 <a href="bookmark.php" class="active"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">
@@ -253,7 +328,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             <div class="search-container" style="margin-top: 0px;">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search jobs..." id="search" name="search" oninput="filterjobs()">
+                    <input type="text" placeholder="Search bookmarked jobs..." id="search" name="search" oninput="filterjobs()">
                 </div>
                 <div class="filter-box">
                     <input type="text" placeholder="Location" id="location" name="location" oninput="filterlocation()">
@@ -262,17 +337,20 @@ if ($result && mysqli_num_rows($result) > 0) {
                         <input type="number" placeholder="Max Salary" id="maxsalary" name="maxsalary" oninput="filtermaxsalary()">
                     </div>
                     <input type="date" id="date" name="date" oninput="filterdate()">
+                    <button class="reset-button" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i> Reset Filters
+                    </button>
                 </div>
             </div>
 
             <!-- Job Listings -->
             <div class="job-listings">
                 <?php
-                // Debug statements
-                error_log("Session ID: " . print_r($_SESSION, true));
-                
-                // Use either id or user_id from session
-                $user_id = isset($_SESSION['id']) ? $_SESSION['id'] : $_SESSION['user_id'];
+                // Use the already validated user_id from session
+                if (!isset($user_id) || !$user_id) {
+                    echo '<div class="no-jobs">Session expired. Please login again.</div>';
+                    exit();
+                }
                 
                 // Fetch bookmarked jobs with error checking
                 $bookmark_sql = "SELECT j.*, b.id 
@@ -305,7 +383,7 @@ if ($result && mysqli_num_rows($result) > 0) {
                         echo '<div class="job-card" data-job-id="' . $row['job_id'] . '">';
                         echo '<div class="job-header">';
                         echo '<h3 class="job_title">' . htmlspecialchars($row['job_title']) . '</h3>';
-                        echo '<span class="salary">₹' . htmlspecialchars($row['salary']) . '</span>';
+                        echo '<span class="salary">₹' . number_format($row['salary']) . '</span>';
                         echo '</div>';
                         echo '<div class="job-body">';
                         echo '<p class="description">' . htmlspecialchars($row['job_description']) . '</p>';
@@ -328,7 +406,8 @@ if ($result && mysqli_num_rows($result) > 0) {
         </main>
     </div>
 
-    <script src="userdashboard.js"></script>
+    <!-- <script src="shared-search.js"></script> -->
+    <script src="bookmark.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const gridIcon = document.getElementById('grid');

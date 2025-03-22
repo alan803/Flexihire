@@ -1,49 +1,55 @@
 <?php
     session_start();
     //checking if user id set or not
-    if (!isset($_SESSION['user_id'])) 
-    {
+    if (!isset($_SESSION['user_id'])) {
         header("Location: ../../../login/login.php");
         exit();
     }
+
     include '../../../database/connectdatabase.php';
-    $dbname="project";
-    mysqli_select_db($conn,$dbname);
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
 
     // retriving data from session
-    $user_id=$_SESSION['user_id'];
-    $sql = "SELECT u.username, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.username 
-        FROM tbl_login l
-        JOIN tbl_user u ON l.user_id = u.user_id
-        WHERE l.login_id = '$user_id'";
-    $result=mysqli_query($conn,$sql);
-    $user_data = mysqli_fetch_assoc($result);
-
-    // storing data to variables
-    $username = $user_data['username'];
-    $email=$user_data['email'];
-    $new_username=$user_data['username'];
-    $phone=$user_data['phone_number'];
-    $address=$user_data['address'];
-
-    // Get the profile image path for web access
-    $profile_image_path = !empty($user_data['profile_image']) 
-        ? '/mini project/database/profile_picture/' . $user_data['profile_image']
-        : '';
-
-    // At the top of the file after session_start()
-    require_once '../../../database/connectdatabase.php';
-
-    // Get the current user's ID from session
     $user_id = $_SESSION['user_id'];
-
-    // Fetch the latest user data from database
+    
+    // Debug session
+    error_log("Session user_id: " . $user_id);
+    
+    // First, get the email from tbl_login directly
+    $sql = "SELECT email FROM tbl_login WHERE  user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $email_result = mysqli_stmt_get_result($stmt);
+    $email_data = mysqli_fetch_assoc($email_result);
+    
+    // Then get user details
     $sql = "SELECT * FROM tbl_user WHERE user_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-    $user = mysqli_fetch_assoc($result);
+    $user_data = mysqli_fetch_assoc($result);
+
+    // Debug information
+    error_log("Email from tbl_login: " . ($email_data['email'] ?? 'No email found'));
+    error_log("User data: " . print_r($user_data, true));
+
+    // Initialize variables with empty strings instead of showing warnings
+    $username = !empty($user_data['username']) ? $user_data['username'] : '';
+    $email = !empty($email_data['email']) ? $email_data['email'] : '';
+    $phone = !empty($user_data['phone_number']) ? $user_data['phone_number'] : '';
+    $address = !empty($user_data['address']) ? $user_data['address'] : '';
+    $new_username = $username;
+
+    // Get the profile image path
+    $profile_image_path = !empty($user_data['profile_image']) 
+        ? '/mini project/database/profile_picture/' . $user_data['profile_image']
+        : 'profile.png';
+
+    // Store user data for later use
+    $user = $user_data;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,30 +60,63 @@
     <link rel="stylesheet" href="userprofile.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-username {
+            color: #333;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .profile-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: none;
+            outline: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-brand">
-            <img src="../../logowithoutbcakground.png" alt="Logo" class="logo">
+        
+        <img src="/mini%20project/userdashboard/logowithoutbcakground.png" alt="Logo" class="logo">
             <h1>FlexiHire</h1>
         </div>
         
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($user_data['profile_image'])): ?>
-                    <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($user['first_name']); ?></span>
-                        <span class="email"><?php echo $email; ?></span>
+            <div class="profile-info">
+                <span class="nav-username"><?php echo htmlspecialchars($user['first_name']); ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($user_data['profile_image'])): ?>
+                        <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="../../userdashboard/profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>

@@ -12,18 +12,14 @@
     mysqli_select_db($conn, $dbname);
     $user_id = $_SESSION['user_id'];//getting user id from session
 
-    $sql = "SELECT u.username, u.last_name, l.email, u.profile_image, u.address, u.phone_number, u.user_id 
-            FROM tbl_login l
-            JOIN tbl_user u ON l.user_id = u.user_id
-            WHERE l.login_id = '$user_id'";
-
-    $result = mysqli_query($conn, $sql);
-
-    if (!$result) 
-    {
-        die("Database query failed: " . mysqli_error($conn)); // checking db 
-    }
-
+    $sql = "SELECT u.*, l.email 
+            FROM tbl_user u 
+            LEFT JOIN tbl_login l ON l.login_id = u.user_id 
+            WHERE u.user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
     $user_data = mysqli_fetch_assoc($result);
 
     if (!$user_data) 
@@ -201,24 +197,88 @@
         </div>
         
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo $new_username ?? $username; ?></span>
-                        <span class="email"><?php echo $email; ?></span>
+            <div class="profile-info">
+                <span class="nav-username"><?php echo $new_username ?? $username; ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="../../../database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="../../profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
     </nav>
+
+    <style>
+    .nav-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-username {
+        color: #333;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .profile-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: none;
+        outline: none;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .profile-container:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
+    }
+    </style>
 
     <div class="dashboard-container">
         <!-- Sidebar section -->

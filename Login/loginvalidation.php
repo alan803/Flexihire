@@ -1,76 +1,84 @@
 <?php
-ob_start();
 session_start();
-session_regenerate_id(true); // Ensures a fresh session
+session_regenerate_id(true); // Regenerate session ID for security
 
 include '../database/connectdatabase.php';
 $dbname = "project";
 mysqli_select_db($conn, $dbname);
 
-$errorUserNotFound = "";
-$errorIncorrectPassword = "";
+$errorMessage = "";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') 
-{
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
-
-    // Basic validation
-    if(empty($email) || empty($password)) {
-        $errorUserNotFound = "Please enter both email and password";
-    } else {
-        // Check email exists
-        $checkemail = "SELECT * FROM tbl_login WHERE email=?";
-        $stmt = mysqli_prepare($conn, $checkemail);
-        mysqli_stmt_bind_param($stmt, "s", $email);
-        mysqli_stmt_execute($stmt);
-        $checkemailresult = mysqli_stmt_get_result($stmt);
-
-        if ($checkemailresult && mysqli_num_rows($checkemailresult) > 0) 
-        {
-            $userdata = mysqli_fetch_assoc($checkemailresult);
+    
+    // Check login credentials with all necessary fields
+    $sql = "SELECT login_id, email, password, role, user_id, employer_id FROM tbl_login WHERE email = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if ($row = mysqli_fetch_assoc($result)) {
+        if (password_verify($password, $row['password'])) {
+            // Clear any existing session data
+            session_unset();
             
-            // Verify password
-            if (password_verify($password, $userdata['password'])) 
-            {
-                // Set session variables
-                $_SESSION['email'] = $email;
-                $_SESSION['user_id'] = $userdata['login_id'];
-                $_SESSION['role'] = $userdata['role'];
-                $_SESSION['employer_id'] = $userdata['employer_id'];
-
-                // Redirect based on role
-                switch ($userdata['role']) 
-                {
-                    case 1:
-                        header("Location: ../userdashboard/userdashboard.php");
-                        break;
-                    case 2:
-                        header("Location: ../userdashboard/employerdashboard.php");
-                        break;
-                    case 3:
-                        header("Location: ../userdashboard/admindashboard.html");
-                        break;
-                    default:
-                        die("Invalid role");
-                }
-                exit();
-            } 
-            else 
-            {
-                $errorIncorrectPassword = "Incorrect password";
+            // Set common session variables
+            $_SESSION['logged_in'] = true;
+            $_SESSION['email'] = $row['email'];
+            $_SESSION['login_id'] = $row['login_id'];
+            $_SESSION['role'] = $row['role'];
+            
+            switch ($row['role']) {
+                case 1:  // User
+                    $_SESSION['user_type'] = 'user';
+                    $_SESSION['user_id'] = $row['user_id'];
+                    header("Location: ../userdashboard/userdashboard.php");
+                    break;
+                    
+                case 2:  // Employer
+                    $_SESSION['user_type'] = 'employer';
+                    $_SESSION['employer_id'] = $row['employer_id'];
+                    header("Location: ../userdashboard/employerdashboard.php");
+                    break;
+                    
+                case 3:  // Admin
+                    $_SESSION['user_type'] = 'admin';
+                    $_SESSION['admin_id'] = $row['login_id'];
+                    header("Location: ../userdashboard/admindashboard.html");
+                    break;
+                    
+                default:
+                    $errorMessage = "Invalid user role";
+                    session_destroy();
+                    break;
             }
-        } 
-        else 
-        {
-            $errorUserNotFound = "User not found";
+            
+            if (empty($errorMessage)) {
+                // Set session cookie parameters for better security
+                $params = session_get_cookie_params();
+                setcookie(session_name(), session_id(), [
+                    'expires' => time() + 3600, // 1 hour
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => true,
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
+                
+                exit();
+            }
+        } else {
+            $errorMessage = "Invalid password";
         }
+    } else {
+        $errorMessage = "Email not found";
     }
 }
 
-ob_end_flush();
+// If not POST request or login failed, show the login form
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -80,42 +88,32 @@ ob_end_flush();
     <title>Login</title>
     <link rel="stylesheet" href="loginvalidation.css">
     <script>
-        function validateEmail() 
-        {
+        function validateEmail() {
             const email = document.getElementById("email").value;
             const emailError = document.getElementById("email-error");
 
-            // Check if email is empty
-            if (!email) 
-            {
+            if (!email) {
                 emailError.textContent = "E-mail is required.";
                 return false;
             }
 
-            // Check if email starts with a space
-            if (email[0] === " ") 
-            {
+            if (email[0] === " ") {
                 emailError.textContent = "E-mail must not start with a space.";
                 return false;
             }
 
-            // Email validation regex
             const emailRegex = /^[a-zA-Z0-9][^\s@]*@(gmail\.com|yahoo\.com|hotmail\.com|amaljyothi\.ac\.in|mca\.ajce\.in)$/;
 
-            // Check email format
-            if (!emailRegex.test(email)) 
-            {
+            if (!emailRegex.test(email)) {
                 emailError.textContent = "Invalid email format.";
                 return false;
             }
 
-            // Clear error message if email is valid
             emailError.textContent = "";
             return true;
         }
 
-        function validateForm() 
-        {
+        function validateForm() {
             return validateEmail();
         }
     </script>
@@ -124,35 +122,28 @@ ob_end_flush();
     <div class="container">
         <div class="image-container">
             <a href="../homepage/homepage.html" class="back-to-website">
-                <span class="arrow-circle">←</span> Back to website
+                <span class="arrow-circle">←</span> Return to Homepage
             </a>
         </div>
 
         <div class="form-container">
-            <h1><span id="wel">Welcome back<br></span><span id="log">Log in</span></h1>
+            <h1><span id="wel">Welcome Back<br></span><span id="log">Sign In</span></h1>
 
-            <!-- Display PHP Error Messages -->
-            <?php if(!empty($errorUserNotFound)): ?>
-                <div class="error-message"><?php echo $errorUserNotFound; ?></div>
-            <?php endif; ?>
-
-            <?php if(!empty($errorIncorrectPassword)): ?>
-                <div class="error-message"><?php echo $errorIncorrectPassword; ?></div>
-                <div class="forgot-text">
-                    <p id="forgot">Forgot password? <a href="forgotpassword.php">Reset</a></p>
-                </div>
+            <?php if(!empty($errorMessage)): ?>
+                <div class="error-message"><?php echo $errorMessage; ?></div>
             <?php endif; ?>
 
             <form method="POST" id="form" onsubmit="return validateForm()">
-                <input type="email" id="email" name="email" placeholder="Email" onkeyup="validateEmail()" required>
+                <input type="email" id="email" name="email" placeholder="Enter your email address" onkeyup="validateEmail()" required>
                 <p class="error" id="email-error"></p>
 
-                <input type="password" name="password" placeholder="Password" required>
-
-                <input type="submit" value="Log in">
+                <input type="password" name="password" placeholder="Enter your password" required>
+                
+                <input type="submit" value="Sign In">
             </form>
 
-            <p id="register">Don't have an account? <a href="../Signup/signup.php">Register</a></p>
+            <p id="register">New to our platform? <a href="../Signup/signup.php">Create an Account</a></p>
+            <p class="forgot-password">Forgot Password? <a href="forgotpassword.php">Reset Password</a></p>
         </div>
     </div>
 </body>

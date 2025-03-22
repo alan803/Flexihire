@@ -1,10 +1,13 @@
 body 
 {
   background-image: url('background8.jpg');
-  background-size: 100%;
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   overflow-x: hidden;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 /*.belownav
 {
@@ -27,13 +30,33 @@ body
 }
 #logo 
 {
-  border-radius: 2px;
-  width: 20%;
+  width: 180px;
+  height: auto;
+  position: relative;
+  top: 15px;
+  left: 30px;
+  z-index: 1000;
+}
+#logo:hover 
+{
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+#logo::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(151, 71, 255, 0.1);
+  pointer-events: none;
 }
 @keyframes slideUp 
 {
   from {
-      transform: translateY(100%);
+      transform: translateY(30px);
       opacity: 0;
   }
   to {
@@ -51,33 +74,36 @@ body
 #para 
 {
   font-size: 55px;
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   margin-bottom: 0;
   animation: slideUp 1s ease-out forwards;
+  color: #2d3748;
+  letter-spacing: 1px;
 }
 
 #para1
 {
   font-size: 35px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-weight: 600;
   position: relative;
-  top:-50px;
-  color:white;
+  top: -50px;
+  color: #2d3748;
   animation: slideUp 1s ease-out forwards;
 }
 #quote
 {
   font-size: 20px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
   margin-top: 0;
   position: absolute;
-  top:180px;
-  color: white;/*background8.6 color #2D3436 */
+  top: 180px;
+  color: #4a5568;
   animation: slideUp 1s ease-out forwards;
+  max-width: 500px;
 }
 .highlight 
 {
-  color: gold;
+  color: #9747FF;
   font-weight: bold;
   font-size: 55px;
   animation: slideUp 1s ease-out forwards;
@@ -89,13 +115,14 @@ body
   top: 230px;
   left: 30px;
   animation: slideUp 1s ease-out forwards;
+  max-width: 600px;
 }
 
 a 
 {
   text-decoration: none;
-  color:white; /* Default text color for the link */
-  transition: color 0.3s ease; /* Smooth transition for text color */
+  color: #2d3748;
+  transition: color 0.3s ease;
   animation: slideUp 1s ease-out forwards;
   overflow: hidden; /* To hide the background fill */
 }
@@ -104,23 +131,37 @@ a
 {
   border: none;
   display: flex;
-  align-items: center; /* Vertically center the text and arrow */
-  justify-content: center; /* Center content horizontally */
-  gap: 8px; /* Space between text and arrow */
-  font-size: 1.125rem; /* Text size: 18px */
-  background-color: white; /* Initial button  for background8.6 color background-color: #707678;*/
-  backdrop-filter: blur(10px);
-  font-weight: 600; /* lg:font-semibold */
-  position: relative;
-  padding: 0.5rem 1rem; /* px-4 py-2 */
-  overflow: hidden;
-  border-radius: 9999px; /* rounded-full */
-  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.125rem;
+  background-color: #9747FF;
+  font-weight: 600;
   position: absolute;
   top: 505px;
   left: 25px;
-  width: 138px;
+  width: 150px;
+  height: 45px;
   animation: slideUp 1s ease-out forwards;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(151, 71, 255, 0.2);
+}
+
+#signup:hover 
+{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(151, 71, 255, 0.3);
+  background-color: #8034ff;
+}
+
+#sign
+{
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 #signup::before 
@@ -131,52 +172,42 @@ a
   left: -100%;
   width: 100%;
   height: 100%;
-  background-color: black; /* Background color on hover */
-  border-radius: 9999px;
-  z-index: -10;
-  transition: all 0.7s;
-  transform: scale(1);
+  background-color: #8034ff;
+  border-radius: 30px;
+  z-index: -1;
+  transition: all 0.5s ease;
 }
-#sign
-{
-  color:black;
-}
+
 #signup:hover::before 
 {
   left: 0;
-  transform: scale(1.5); /* Scale effect on hover */
 }
 
-#signup:hover 
+#signup:hover #sign 
 {
-  color: white; /* Text color on hover */
-}
-
-#signup:hover a 
-{
-  color: white; /* Link text color on hover */
+  color: white;
 }
 
 /* Styles for the arrow inside a circle */
 .arrow-circle 
 {
-  display: inline-flex; /* Ensure the circle stays inline with the text */
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 24px; /* Circle size */
-  height: 24px; /* Circle size */
-  background-color: black; /* Circle background color */
-  border-radius: 50%; /* Make it a circle */
-  color: white; /* Arrow color */
-  font-size: 16px; /* Arrow size */
-  margin-left: 8px; /* Space between text and circle */
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+  width: 28px;
+  height: 28px;
+  background-color: white;
+  border-radius: 50%;
+  color: #9747FF;
+  font-size: 18px;
+  margin-left: 8px;
+  transition: all 0.3s ease;
 }
 #signup:hover .arrow-circle 
 {
-  background-color: white; /* Circle background color on hover */
-  color: black; /* Arrow color on hover */
-  transform: rotate(-50deg); /* Rotate arrow on hover */
+  background-color: white;
+  color: #8034ff;
+  transform: rotate(-45deg);
 }
 li
 {
@@ -185,10 +216,10 @@ li
 .navbar 
 {
   list-style-type: none;
-  display: flex; /* Use flexbox to make items horizontal */
-  gap: 20px;/*space between list elements*/
-  padding: 20px; /* Optional: Add padding */
-  animation: none;
+  display: flex;
+  gap: 30px;
+  padding: 20px;
+  margin: 0;
 }
 .nav
 {
@@ -196,26 +227,64 @@ li
   right:30px;
   top:10px;
   justify-content: center;
+  z-index: 1000;
 }
 #login
 {
   border-radius: 30px;
-  border:none;
-  background-color:white;
-  justify-content: center;
-  width:100px;
-  height:28px;
-  top:50px;
+  border: none;
+  background-color: #9747FF;
+  color: white;
+  font-weight: 600;
+  width: 100px;
+  height: 35px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(151, 71, 255, 0.2);
+}
+#login:hover 
+{
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(151, 71, 255, 0.3);
+  background-color: #8034ff;
 }
 #loginlink
 {
   font-size: 16px;
-  color:black;
+  color: white;
+  text-decoration: none;
 }
 #list
 {
-  font-size: 20px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  position: relative;
+}
+#list a {
+  color: #2d3748;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+#list a:hover {
+  background-color: rgba(151, 71, 255, 0.1);
+  transform: translateY(-2px);
+  color: #9747FF;
+}
+#list a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #9747FF;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+#list a:hover::after {
+  width: 80%;
 }
 /*
 .img {
@@ -256,6 +325,7 @@ li
 {
   position: relative;
   top:-90px;
+  padding: 0 30px;
 }
 .signup-container {
   position: relative;
@@ -286,4 +356,69 @@ li
 
 .show {
   display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar {
+    gap: 15px;
+    padding: 15px;
+  }
+
+  #list {
+    font-size: 16px;
+  }
+
+  #para {
+    font-size: 40px;
+  }
+
+  #para1 {
+    font-size: 28px;
+    top: -40px;
+  }
+
+  #quote {
+    font-size: 18px;
+    top: 160px;
+  }
+
+  .highlight {
+    font-size: 40px;
+  }
+
+  #signup {
+    width: 130px;
+    height: 40px;
+    top: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  #list {
+    font-size: 14px;
+  }
+
+  #para {
+    font-size: 32px;
+  }
+
+  #para1 {
+    font-size: 24px;
+    top: -30px;
+  }
+
+  #quote {
+    font-size: 16px;
+    top: 140px;
+  }
+
+  .highlight {
+    font-size: 32px;
+  }
 }

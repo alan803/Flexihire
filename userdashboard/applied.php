@@ -11,13 +11,13 @@
     }
 
     // Check if user is logged in
-    if (!isset($_SESSION['user_id'])) 
+    if (!isset($_SESSION['user_id']) && !isset($_SESSION['id'])) 
     {
         header("Location: ../login/loginvalidation.php");
         exit();
     }
 
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'] ?? $_SESSION['user_id'];
 
     // Get user profile info
     $sql = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image 
@@ -82,6 +82,46 @@
         header("Location: applied.php");
         exit();
     }
+
+    // Handle reset request
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset']) && $_POST['reset'] == 1) {
+        //fetching applied jobs with job details
+        $applied = "SELECT a.id as application_id, a.status, a.applied_at, 
+                   j.job_id, j.job_title, j.job_description, j.salary, 
+                   j.location, j.town, j.created_at, j.vacancy_date 
+                   FROM tbl_applications a
+                   INNER JOIN tbl_jobs j ON a.job_id = j.job_id
+                   WHERE a.user_id = ?
+                   ORDER BY a.applied_at DESC";
+        
+        $stmt = mysqli_prepare($conn, $applied);
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        $result_applied = mysqli_stmt_get_result($stmt);
+
+        header('Content-Type: application/json'); // Change to JSON response
+        $jobs = array();
+
+        if ($result_applied && mysqli_num_rows($result_applied) > 0) {
+            while ($row = mysqli_fetch_assoc($result_applied)) {
+                $jobs[] = array(
+                    'application_id' => $row['application_id'],
+                    'job_title' => $row['job_title'],
+                    'salary' => $row['salary'],
+                    'job_description' => $row['job_description'],
+                    'location' => $row['location'],
+                    'town' => $row['town'],
+                    'created_at' => date('Y-m-d', strtotime($row['created_at'])),
+                    'vacancy_date' => date('Y-m-d', strtotime($row['vacancy_date'])),
+                    'status' => $row['status']
+                );
+            }
+            echo json_encode(['success' => true, 'jobs' => $jobs]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No jobs found']);
+        }
+        exit();
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -103,20 +143,18 @@
         </div>
         
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
-                        <!-- <span class="email"><?php echo $email; ?></span> -->
+            <div class="profile-info">
+                <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -144,10 +182,8 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-menu">
-                <a href="userdashboard.php" class="active"><i class="fas fa-home"></i> Home</a>
-                <!-- <a href="sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i>Job Grid</a> -->
-                <a href="applied.php"><i class="fas fa-paper-plane"></i> Applied Job</a>
-                <!-- <a href="sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
+                <a href="userdashboard.php"><i class="fas fa-home"></i> Home</a>
+                <a href="applied.php" class="active"><i class="fas fa-paper-plane"></i> Applied Job</a>
                 <a href="bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
                 <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
@@ -165,20 +201,21 @@
             <!-- Search Container -->
             <div class="content-wrapper">
                 <div class="search-section">
-                    <!-- <h2 class="page-title">Applied Jobs</h2> -->
-                    
                     <div class="search-container">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search applied jobs..." id="search" name="search">
+                            <input type="text" placeholder="Search applied jobs..." id="search" name="search" oninput="filterjobs()">
                         </div>
                         <div class="filter-box">
-                            <input type="text" placeholder="Location" id="location" name="location">
+                            <input type="text" placeholder="Location" id="location" name="location" oninput="filterlocation()">
                             <div class="salary-range">
-                                <input type="number" placeholder="Min Salary" id="minsalary" name="minsalary">
-                                <input type="number" placeholder="Max Salary" id="maxsalary" name="maxsalary">
+                                <input type="number" placeholder="Min Salary" id="minsalary" name="minsalary" oninput="filterminsalary()">
+                                <input type="number" placeholder="Max Salary" id="maxsalary" name="maxsalary" oninput="filtermaxsalary()">
                             </div>
-                            <input type="date" id="date" name="date">
+                            <input type="date" id="date" name="date" oninput="filterdate()">
+                            <button class="reset-button" onclick="resetFilters()">
+                                <i class="fas fa-undo"></i> Reset Filters
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -217,7 +254,7 @@
                             <div class="job-card" data-application-id="<?php echo $row['application_id']; ?>">
                                 <div class="job-header">
                                     <h3 class="job_title"><?php echo htmlspecialchars($row['job_title']); ?></h3>
-                                    <span class="salary">₹<?php echo htmlspecialchars($row['salary']); ?></span>
+                                    <span class="salary">₹<?php echo number_format($row['salary']); ?></span>
                                 </div>
                                 <div class="job-body">
                                     <p class="description"><?php echo htmlspecialchars($row['job_description']); ?></p>
@@ -263,7 +300,7 @@
             </div>
         </main>
     </div>
-    <script src="userdashboard.js"></script>
+    <script src="applied.js"></script>
     <style>
     /* Add these styles for the cancel button */
     .cancel-btn {
@@ -818,6 +855,70 @@
 
     .confirm-btn:hover {
         background-color: #ff3333;
+    }
+    </style>
+
+    <style>
+    .nav-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-username {
+        color: #333;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .profile-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .profile-container:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
     }
     </style>
 </body>

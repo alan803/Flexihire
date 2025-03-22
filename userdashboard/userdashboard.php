@@ -66,6 +66,7 @@
 
     // Fetch active jobs based on selected date
     $date_filter = isset($_POST['date']) ? $_POST['date'] : null;
+    $is_reset = isset($_POST['reset']) && $_POST['reset'] == 1;
 
     $sql_fetch = "SELECT job_id, job_title, job_description, location, town, salary, vacancy_date, created_at 
                 FROM tbl_jobs 
@@ -83,10 +84,22 @@
 
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-// If it's an AJAX request, return only the job listings
+
+    // If it's an AJAX request, return only the job listings
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result && mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
+                $job_id = $row['job_id'];
+                
+                // Check if user has already applied for this job
+                $check_sql = "SELECT status FROM tbl_applications WHERE user_id = ? AND job_id = ?";
+                $check_stmt = mysqli_prepare($conn, $check_sql);
+                mysqli_stmt_bind_param($check_stmt, "ii", $user_id, $job_id);
+                mysqli_stmt_execute($check_stmt);
+                $application_result = mysqli_stmt_get_result($check_stmt);
+                $has_applied = mysqli_num_rows($application_result) > 0;
+                $application_status = $has_applied ? mysqli_fetch_assoc($application_result)['status'] : null;
+                
                 echo '<div class="job-card">';
                 echo '<div class="job-header">';
                 echo '<h3 class="job_title">' . htmlspecialchars($row['job_title']) . '</h3>';
@@ -99,13 +112,21 @@
                 echo '<p class="date"><i class="fas fa-calendar-alt"></i> Vacancy Date: ' . date('Y-m-d', strtotime($row['vacancy_date'])) . '</p>';
                 echo '</div>';
                 echo '<div class="job-footer">';
-                echo '<a href="jobdetails.php?job_id=' . $row['job_id'] . '" class="details-btn"><i class="fas fa-info-circle"></i> Details</a>';
-                echo '<button class="apply-btn"><i class="fas fa-paper-plane"></i> Apply Now</button>';
+                echo '<div class="button-group">';
+                echo '<a href="jobdetails.php?job_id=' . $job_id . '" class="details-btn"><i class="fas fa-info-circle"></i> Details</a>';
+                if ($has_applied) {
+                    echo '<button class="applied-btn" disabled><i class="fas fa-check-circle"></i> ' . htmlspecialchars($application_status) . '</button>';
+                } else {
+                    echo '<a href="applyjob.php?user_id=' . $user_id . '&job_id=' . $job_id . '" class="apply-link">';
+                    echo '<button class="apply-btn"><i class="fas fa-paper-plane"></i> Apply Now</button>';
+                    echo '</a>';
+                }
+                echo '</div>';
                 echo '</div>';
                 echo '</div>';
             }
         } else {
-            echo '<div class="no-jobs">No jobs available on this date.</div>';
+            echo '<div class="no-jobs">No jobs available.</div>';
         }
         exit();
     }
@@ -158,20 +179,18 @@
         </div>
         
         <div class="nav-right">
-            <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
-                <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
-                <?php endif; ?>
-                <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
-                        <!-- <span class="email"><?php echo $email; ?></span> -->
+            <div class="profile-info">
+                <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
+                <div class="profile-container">
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                    <?php else: ?>
+                        <img src="profile.png" class="profile-pic" alt="Profile">
+                    <?php endif; ?>
+                    <div class="dropdown-menu">
+                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -228,6 +247,9 @@
                         <input type="number" placeholder="Max Salary" id="maxsalary" name="maxsalary" oninput="filtermaxsalary()">
                     </div>
                     <input type="date" id="date" name="date" oninput="filterdate()">
+                    <button class="reset-button" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i> Reset Filters
+                    </button>
                 </div>
             </div>
 
@@ -277,9 +299,7 @@
                                     <?php if ($has_applied): ?>
                                         <button class="applied-btn" disabled>
                                             <i class="fas fa-check-circle"></i> 
-                                            Applied<?php if ($application_status): ?>
-                                                (<?php echo htmlspecialchars($application_status); ?>)
-                                            <?php endif; ?>
+                                            <?php echo htmlspecialchars($application_status); ?>
                                         </button>
                                     <?php else: ?>
                                         <a href="applyjob.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="apply-link">
@@ -301,6 +321,7 @@
         </main>
     </div>
 
+    <script src="shared-search.js"></script>
     <script src="userdashboard.js"></script>
 
     <style>
@@ -490,6 +511,68 @@
 
     .applied-btn:hover {
         box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-username {
+        color: #333;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .profile-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .profile-container:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
     }
     </style>
 

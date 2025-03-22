@@ -60,12 +60,68 @@ function filterlocation() {
 
 // Salary filter (max)
 function filtermaxsalary() {
-    applySalaryFilter();
+    const maxSalary = parseInt(document.getElementById('maxsalary').value) || Infinity;
+    const jobCards = document.querySelectorAll('.job-card');
+    let matchFound = false;
+
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    jobCards.forEach(card => {
+        const salaryText = card.querySelector('.salary').textContent;
+        // Remove the ₹ symbol and any commas, then convert to number
+        const salary = parseInt(salaryText.replace(/[₹,]/g, '')) || 0;
+        
+        // Debug log
+        console.log('Job salary:', salary, 'Max:', maxSalary);
+        
+        if (salary <= maxSalary) {
+            card.style.display = "block";
+            matchFound = true;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    if (!matchFound) {
+        let message = 'No jobs found';
+        if (maxSalary < Infinity) {
+            message = `No jobs found with salary below ₹${maxSalary.toLocaleString()}`;
+        }
+        showNoJobsMessage(message);
+    }
 }
 
 // Salary filter (min)
 function filterminsalary() {
-    applySalaryFilter();
+    const minSalary = parseInt(document.getElementById('minsalary').value) || 0;
+    const jobCards = document.querySelectorAll('.job-card');
+    let matchFound = false;
+
+    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+    jobCards.forEach(card => {
+        const salaryText = card.querySelector('.salary').textContent;
+        // Remove the ₹ symbol and any commas, then convert to number
+        const salary = parseInt(salaryText.replace(/[₹,]/g, '')) || 0;
+        
+        // Debug log
+        console.log('Job salary:', salary, 'Min:', minSalary);
+        
+        if (salary >= minSalary) {
+            card.style.display = "block";
+            matchFound = true;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    if (!matchFound) {
+        let message = 'No jobs found';
+        if (minSalary > 0) {
+            message = `No jobs found with salary above ₹${minSalary.toLocaleString()}`;
+        }
+        showNoJobsMessage(message);
+    }
 }
 
 // Combined salary filter function
@@ -253,7 +309,7 @@ function showNoJobsMessage(message) {
     }
 }
 
-// Reset Filters - show all jobs when filters are cleared
+// Reset Filters - show all bookmarked jobs when filters are cleared
 function resetFilters() {
     // Clear all input values
     document.getElementById('search').value = '';
@@ -263,28 +319,43 @@ function resetFilters() {
     document.getElementById('date').value = '';
 
     // Remove any "No jobs found" messages
-    document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+    const noJobsMessages = document.querySelectorAll('.no-jobs');
+    noJobsMessages.forEach(msg => msg.remove());
 
-    // Reload all jobs with updated status
-    fetch('userdashboard.php', {
+    // Get the current page URL to determine which page we're on
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Make a fetch request to reload the bookmarked jobs
+    fetch(currentPage, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'reset=1'  // Add a flag to indicate reset
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'reset=1'
     })
     .then(response => response.text())
-    .then(data => {
-        // Update the job listings container
-        document.querySelector('.job-listings').innerHTML = data;
+    .then(html => {
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
         
-        // Show all job cards
-        const jobCards = document.querySelectorAll('.job-card');
-        jobCards.forEach(card => {
-            card.style.display = "block";
-        });
+        // Find the job listings container in the response
+        const newJobListings = tempDiv.querySelector('.job-listings');
+        
+        if (newJobListings) {
+            // Update the job listings container
+            document.querySelector('.job-listings').innerHTML = newJobListings.innerHTML;
+            
+            // Show all job cards
+            const jobCards = document.querySelectorAll('.job-card');
+            jobCards.forEach(card => {
+                card.style.display = 'block';
+            });
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNoJobsMessage('Error loading jobs. Please try again.');
+        showNoJobsMessage('Error loading bookmarked jobs. Please try again.');
     });
 }
 
