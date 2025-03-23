@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         <!-- Main Content -->
         <div class="main-container">
             <div class="header">
-                <h1>Edit Job</h1>
+                <h1>Edit Job - <?php echo htmlspecialchars($username); ?></h1>
             </div>
 
             <!-- Form Container -->

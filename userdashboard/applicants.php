@@ -10,6 +10,45 @@
     $dbname = "project";
     mysqli_select_db($conn, $dbname);
 
+    // Debug: Check employer_id
+    $employer_id = $_SESSION['employer_id'];
+    echo "<!-- Debug: employer_id = " . $employer_id . " -->";
+
+    // Fetch employer details with error checking
+    $sql = "SELECT e.*, l.email 
+            FROM tbl_employer e 
+            JOIN tbl_login l ON e.employer_id = l.employer_id 
+            WHERE e.employer_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    if (!$stmt) {
+        echo "<!-- Debug: Prepare failed: " . mysqli_error($conn) . " -->";
+    }
+    mysqli_stmt_bind_param($stmt, "i", $employer_id);
+    if (!mysqli_stmt_execute($stmt)) {
+        echo "<!-- Debug: Execute failed: " . mysqli_stmt_error($stmt) . " -->";
+    }
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+
+    // Debug: Print row data
+    echo "<!-- Debug: Row data = " . print_r($row, true) . " -->";
+
+    // Get company name and email with default values
+    $company_name = $row['company_name'] ?? 'Company Name Not Set';
+    $email = $row['email'] ?? '';
+
+    // Display error or success messages from accept.php
+    if (isset($_GET['error']) && $_GET['error'] === 'vacancy_full') {
+        $error_message = "<div id='error-message' style='color: red; padding: 10px; border: 1px solid red; margin: 10px; background-color: #ffe6e6;'>
+                            Error: Cannot accept more applicants - the vacancy limit for this job has been reached!
+                          </div>";
+    }
+    if (isset($_GET['success']) && $_GET['success'] === 'status_updated') {
+        $success_message = "<div id='success-message' style='color: green; padding: 10px; border: 1px solid green; margin: 10px; background-color: #e6ffe6;'>
+                              Application status updated successfully!
+                            </div>";
+    }
+
     // Get job_id from URL
     $job_id = isset($_GET['job_id']) ? $_GET['job_id'] : null;
     
@@ -19,15 +58,15 @@
         exit();
     }
 
-    // Fetch job details
-    $job_sql = "SELECT job_title FROM tbl_jobs WHERE job_id = ?";
+    // Fetch job details including license requirement
+    $job_sql = "SELECT job_title, license_required FROM tbl_jobs WHERE job_id = ?";
     $stmt = mysqli_prepare($conn, $job_sql);
     mysqli_stmt_bind_param($stmt, "i", $job_id);
     mysqli_stmt_execute($stmt);
     $job_result = mysqli_stmt_get_result($stmt);
     $job_details = mysqli_fetch_assoc($job_result);
 
-    // Updated SQL query to include job_id and employer_id
+    // Updated SQL query to include both license_required and badge_required
     $sql = "SELECT 
                 a.id,
                 a.job_id,
@@ -40,6 +79,9 @@
                 u.phone_number, 
                 l.email,
                 j.employer_id,
+                j.license_required,
+                j.badge_required,
+                j.interview,
                 CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path
             FROM tbl_applications a 
             JOIN tbl_user u ON a.user_id = u.user_id 
@@ -53,7 +95,8 @@
     $result = mysqli_stmt_get_result($stmt);
 
     // Debug output
-    if (mysqli_num_rows($result) > 0) {
+    if (mysqli_num_rows($result) > 0) 
+    {
         $debug_applicant = mysqli_fetch_assoc($result);
         mysqli_data_seek($result, 0); // Reset pointer
         error_log("Debug - Application ID: " . $debug_applicant['id'] . ", Status: " . $debug_applicant['status']);
@@ -65,7 +108,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Applicants | AutoRecruits</title>
+    <title>Job Applicants</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="employerdashboard.css">
@@ -291,11 +334,21 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo-container">
-            <img src="../assets/images/logo.png" alt="AutoRecruits.in">
+            <?php if(!empty($row['profile_image'])): ?>
+                <img src="<?php echo htmlspecialchars($row['profile_image']); ?>" 
+                     alt="<?php echo htmlspecialchars($company_name); ?>"
+                     onerror="this.src='../assets/images/company-logo.png';">
+            <?php else: ?>
+                <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
+            <?php endif; ?>
         </div>
         <div class="company-info">
-            <span>AutoRecruits.in</span>
-            <span style="font-size: 13px; color: var(--light-text);">Employer Dashboard</span>
+            <span style="font-weight: 600; font-size: 16px; display: block; margin-bottom: 5px;">
+                <?php echo htmlspecialchars($company_name); ?>
+            </span>
+            <span style="font-size: 13px; color: var(--light-text);">
+                <?php echo htmlspecialchars($email); ?>
+            </span>
         </div>
         <nav class="nav-menu">
             <div class="nav-item">
@@ -332,11 +385,20 @@
     </div>
 
     <div class="main-container">
+        <?php 
+            // Display error or success messages before the header
+            if (isset($error_message)) {
+                echo $error_message;
+            }
+            if (isset($success_message)) {
+                echo $success_message;
+            }
+        ?>
         <div class="header">
             <h1>Job Applicants</h1>
             <div class="job-title">
                 <i class="fas fa-briefcase"></i>
-                <?php echo htmlspecialchars($job_details['job_title']); ?>
+                <?php echo htmlspecialchars($job_details['job_title'] ?? 'Unknown Job'); ?>
             </div>
         </div>
 
@@ -370,30 +432,56 @@
                             </div>
                             <div class="info-item">
                                 <i class="fas fa-clock"></i>
-                                Status: <?php echo ucfirst(htmlspecialchars($applicant['status'])); ?>
+                                Status: <?php echo ucfirst(htmlspecialchars($applicant['status'] ?? 'Pending')); ?>
                             </div>
                         </div>
 
                         <div class="action-buttons">
                             <?php 
-                                $status = strtolower($applicant['status']);
-                                if ($status === 'pending' || is_null($applicant['status']) || $status === ''):
+                                $status = strtolower($applicant['status'] ?? '');
+                                if ($status === 'pending' || empty($status)):
+                                    if ($applicant['license_required'] == 'two_wheeler' || 
+                                        $applicant['license_required'] == 'four_wheeler' || 
+                                        $applicant['badge_required'] == 'yes'): 
                             ?>
-                                <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=accepted" 
-                                    class="action-btn accept-btn">
-                                    <i class="fas fa-check"></i>
-                                    Accept
-                                </a>
-                                <a href="updateStatus.php?application_id=<?php echo $applicant['id']; ?>&status=rejected" 
-                                    class="action-btn reject-btn">
-                                    <i class="fas fa-times"></i>
-                                    Reject
-                                </a>
-                            <?php else: ?>
-                                <div class="status-badge <?php echo htmlspecialchars($applicant['status']); ?>">
-                                    <?php echo ucfirst(htmlspecialchars($applicant['status'])); ?>
-                                </div>
-                            <?php endif; ?>
+                                    <a href="view_certificates.php?application_id=<?php echo $applicant['id']; ?>" 
+                                        class="action-btn" 
+                                        style="background-color: #3b82f6; color: white;">
+                                        <i class="fas fa-certificate"></i>
+                                        View Certificates
+                                    </a>
+                            <?php 
+                                    // Check if interview is required for this job
+                                    elseif ($applicant['interview'] == 'yes'): 
+                            ?>
+                                    <a href="schedule_interview.php?job_id=<?php echo $applicant['job_id']; ?>&application_id=<?php echo $applicant['id']; ?>" 
+                                        class="action-btn interview-btn">
+                                        <i class="fas fa-calendar-check"></i>
+                                        Schedule Interview
+                                    </a>
+                            <?php 
+                                    else: 
+                            ?>
+                                    <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=accepted" 
+                                        class="action-btn accept-btn">
+                                        <i class="fas fa-check"></i>
+                                        Accept
+                                    </a>
+                                    <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=rejected" 
+                                        class="action-btn reject-btn">
+                                        <i class="fas fa-times"></i>
+                                        Reject
+                                    </a>
+                            <?php 
+                                    endif; 
+                                else: 
+                            ?>
+                                    <div class="status-badge <?php echo htmlspecialchars($applicant['status']); ?>">
+                                        <?php echo ucfirst(htmlspecialchars($applicant['status'])); ?>
+                                    </div>
+                            <?php 
+                                endif; 
+                            ?>
                         </div>
 
                         <div class="application-date">
@@ -412,6 +500,33 @@
     </div>
 
     <script>
+        // Function to remove messages after 4 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            if (errorMessage) {
+                setTimeout(() => {
+                    errorMessage.style.transition = 'opacity 0.5s ease';
+                    errorMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMessage.remove();
+                    }, 500); // Remove after fade out
+                }, 4000); // 4 seconds
+            }
+
+            if (successMessage) {
+                setTimeout(() => {
+                    successMessage.style.transition = 'opacity 0.5s ease';
+                    successMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 500); // Remove after fade out
+                }, 4000); // 4 seconds
+            }
+        });
+
+        // Optional: Existing updateStatus function (unchanged)
         function updateStatus(applicationId, status) {
             if (!confirm(`Are you sure you want to ${status} this application?`)) {
                 return;
@@ -428,7 +543,6 @@
             .then(data => {
                 if (data.success) {
                     showToast(`Application ${status} successfully`, 'success');
-                    // Reload the page after a short delay
                     setTimeout(() => {
                         location.reload();
                     }, 1500);

@@ -1,37 +1,62 @@
 <?php
 session_start();
-include '../database/connectdatabase.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['employer_id'])) {
     header("Location: ../login/loginvalidation.php");
     exit();
 }
 
+include '../database/connectdatabase.php';
+
+// Get employer_id from session
 $employer_id = $_SESSION['employer_id'];
-$dbname = "project";
-mysqli_select_db($conn, $dbname);
+
+// Debug the session and connection
+echo "<!-- Debug: Session employer_id = " . $_SESSION['employer_id'] . " -->";
 
 // Fetch employer details
-$sql = "SELECT u.company_name, l.email 
-        FROM tbl_login AS l
-        JOIN tbl_employer AS u ON l.employer_id = u.employer_id
-        WHERE u.employer_id = ?";
-
+$sql = "SELECT * FROM tbl_employer WHERE employer_id = ?";
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, "i", $employer_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
+$row = mysqli_fetch_assoc($result);
 
-$username = "Unknown"; // Default value
-$email = "Not Available";
+// Debug: Check if file exists
+$image_path = $row['profile_image'];
+$full_path = __DIR__ . '/' . $image_path; // Get full server path
+echo "<!-- 
+Debug Info:
+Image Path from DB: " . $image_path . "
+Full Server Path: " . $full_path . "
+File Exists: " . (file_exists($full_path) ? 'Yes' : 'No') . "
+File Permissions: " . (file_exists($full_path) ? decoct(fileperms($full_path) & 0777) : 'N/A') . "
+-->";
 
-if ($result && mysqli_num_rows($result) > 0) {
-    $employer_data = mysqli_fetch_assoc($result);
-    $email = $employer_data['email'];
-    $username = $employer_data['company_name'];
-}
+// Fetch email from tbl_login
+$sql_email = "SELECT email FROM tbl_login WHERE employer_id = ?";
+$stmt_email = mysqli_prepare($conn, $sql_email);
+mysqli_stmt_bind_param($stmt_email, "i", $employer_id);
+mysqli_stmt_execute($stmt_email);
+$result_email = mysqli_stmt_get_result($stmt_email);
+$row_email = mysqli_fetch_assoc($result_email);
+$email = $row_email['email'] ?? '';
+
+// Get company name
+$company_name = $row['company_name'] ?? 'Company Name Not Set';
+
+// Debug output
+echo "<!-- 
+Debug Info:
+Employer ID: " . $employer_id . "
+Company Name: " . $company_name . "
+Email: " . $email . "
+Profile Image: " . ($row['profile_image'] ?? 'Not set') . "
+-->";
 
 mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_email);
 
 // fetching data from tbl_jobs
 $sql_fetch="SELECT * FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
@@ -54,13 +79,29 @@ if ($row = mysqli_fetch_assoc($result_count)) {
 }
 
 mysqli_stmt_close($stmt_count);
+
+// Add this after the existing count query
+$sql_deactivated_count = "SELECT COUNT(*) AS deactivated_jobs FROM tbl_jobs WHERE employer_id=? AND is_deleted=1";
+$stmt_deactivated_count = mysqli_prepare($conn, $sql_deactivated_count);
+mysqli_stmt_bind_param($stmt_deactivated_count, "i", $employer_id);
+mysqli_stmt_execute($stmt_deactivated_count);
+$result_deactivated_count = mysqli_stmt_get_result($stmt_deactivated_count);
+$deactivated_jobs = 0;
+
+if ($row = mysqli_fetch_assoc($result_deactivated_count)) {
+    $deactivated_jobs = $row['deactivated_jobs'];
+}
+mysqli_stmt_close($stmt_deactivated_count);
+
+// Get current status from URL parameter, default to 'all'
+$current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Jobs | AutoRecruits</title>
+    <title>My Jobs | <?php echo htmlspecialchars($company_name); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="employerdashboard.css">
@@ -160,6 +201,35 @@ mysqli_stmt_close($stmt_count);
             background-color: transparent;
             color: var(--light-text);
         }
+
+        /* Sidebar Logo Container and Profile Picture Styles */
+        .logo-container {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+
+        .company-info {
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .company-info span:first-child {
+            font-weight: 600;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -168,24 +238,25 @@ mysqli_stmt_close($stmt_count);
         <div class="sidebar">
             <div class="logo-container">
                 <?php 
-                // Fetch profile image
-                $sql_profile = "SELECT profile_image FROM tbl_employer WHERE employer_id = ?";
-                $stmt_profile = mysqli_prepare($conn, $sql_profile);
-                mysqli_stmt_bind_param($stmt_profile, "i", $employer_id);
-                mysqli_stmt_execute($stmt_profile);
-                $result_profile = mysqli_stmt_get_result($stmt_profile);
-                $profile_data = mysqli_fetch_assoc($result_profile);
+                if(!empty($row['profile_image']) && file_exists($full_path)): 
+                    // Debug: Output the HTML being generated
+                    echo "<!-- Generated img tag with src: " . htmlspecialchars($image_path) . " -->";
                 ?>
-                <?php if(!empty($profile_data['profile_image'])): ?>
-                    <img src="<?php echo htmlspecialchars($profile_data['profile_image']); ?>" 
-                         alt="<?php echo htmlspecialchars($username); ?>"
-                         onerror="this.src='../assets/images/company-logo.png';">
-                <?php else: ?>
-                    <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
+                    <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                         alt="<?php echo htmlspecialchars($company_name); ?>"
+                         onerror="this.src='../assets/images/company-logo.png';"
+                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                <?php else: 
+                    echo "<!-- Using default image because: " . 
+                         (empty($row['profile_image']) ? "No image path in DB" : "File not found") . " -->";
+                ?>
+                    <img src="../assets/images/company-logo.png" 
+                         alt="AutoRecruits.in"
+                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
                 <?php endif; ?>
             </div>
             <div class="company-info">
-                <span><?php echo htmlspecialchars($username); ?></span>
+                <span><?php echo htmlspecialchars($company_name); ?></span>
                 <span style="font-size: 13px; color: var(--light-text);"><?php echo htmlspecialchars($email); ?></span>
             </div>
             <nav class="nav-menu">
@@ -227,7 +298,7 @@ mysqli_stmt_close($stmt_count);
             <!-- Main Content -->
             <div class="main-content">
                 <div class="header">
-                    <h1>My Jobs</h1>
+                    <h1>My Jobs - <?php echo htmlspecialchars($company_name); ?></h1>
                     <div style="display: flex; gap: 15px;">
                         <button id="applicantsToggle" class="toggle-sidebar-btn">
                             <i class="fas fa-users"></i>
@@ -242,10 +313,14 @@ mysqli_stmt_close($stmt_count);
 
                 <!-- Job Filters -->
                 <div class="job-filters">
-                    <button class="filter-btn active">All Jobs (<?php echo $active_jobs; ?>)</button>
-                    <button class="filter-btn">Active</button>
-                    <button class="filter-btn">Closed</button>
-                    <button class="filter-btn">Draft</button>
+                    <button class="filter-btn <?php echo ($current_status === 'all' || $current_status === '') ? 'active' : ''; ?>" 
+                            data-status="all">
+                        All Active Jobs (<?php echo $active_jobs; ?>)
+                    </button>
+                    <button class="filter-btn <?php echo $current_status === 'deactivated' ? 'active' : ''; ?>" 
+                            data-status="deactivated">
+                        Deactivated (<?php echo $deactivated_jobs; ?>)
+                    </button>
                 </div>
 
                 <!-- Search Bar -->
@@ -263,90 +338,122 @@ mysqli_stmt_close($stmt_count);
                 
                 <!-- Job Listings -->
                 <div class="job-card-container">
-                    <?php if(mysqli_num_rows($result_fetch) > 0): ?>
-                        <?php while ($job_data = mysqli_fetch_array($result_fetch)): ?>
-                            <div class="job-card">
-                                <div class="job-info">
-                                    <div class="company-logo">
-                                        <i class="fas fa-briefcase"></i>
-                                    </div>
-                                    <div class="job-details">
-                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                            <h3><?php echo htmlspecialchars($job_data['job_title']); ?></h3>
-                                            <span class="job-status status-active">Active</span>
-                                        </div>
-                                        <div class="job-meta">
-                                            <div class="job-meta-item">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                                <?php echo htmlspecialchars($job_data['location']); ?>
-                                            </div>
-                                            <div class="job-meta-item">
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <?php echo htmlspecialchars($job_data['vacancy_date']); ?>
-                                            </div>
-                                            <div class="job-meta-item">
-                                                ₹
-                                                <?php echo htmlspecialchars($job_data['salary']); ?>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Additional job details -->
-                                        <div class="job-description" style="margin-top: 15px; font-size: 14px; color: var(--light-text);">
-                                            <?php 
-                                                // Truncate description to 150 characters
-                                                $description = htmlspecialchars($job_data['job_description']);
-                                                echo (strlen($description) > 150) ? substr($description, 0, 150) . '...' : $description; 
-                                            ?>
-                                        </div>
-                                        
-                                        <!-- Job stats -->
-                                        <div class="job-stats" style="display: flex; gap: 15px; margin-top: 15px;">
-                                            <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--primary-color);">
-                                                <i class="fas fa-users" style="margin-right: 5px;"></i>
-                                                <span>12 Applicants</span>
-                                            </div>
-                                            <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--primary-color);">
-                                                <i class="fas fa-eye" style="margin-right: 5px;"></i>
-                                                <span>48 Views</span>
-                                            </div>
-                                            <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--success-color);">
-                                                <i class="fas fa-clock" style="margin-right: 5px;"></i>
-                                                <span>Posted 3 days ago</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <?php 
+                    $status = isset($_GET['status']) ? $_GET['status'] : 'all';
+                    $is_deleted = ($status === 'deactivated') ? 1 : 0;
+
+                    $sql_fetch = "SELECT *, 
+                                  CASE 
+                                    WHEN is_deleted = 1 THEN 'deactivated'
+                                    ELSE 'active'
+                                  END as status 
+                                  FROM tbl_jobs 
+                                  WHERE employer_id = ? AND is_deleted = ?";
+
+                    $stmt_fetch = mysqli_prepare($conn, $sql_fetch);
+                    mysqli_stmt_bind_param($stmt_fetch, "ii", $employer_id, $is_deleted);
+                    mysqli_stmt_execute($stmt_fetch);
+                    $result_fetch = mysqli_stmt_get_result($stmt_fetch);
+
+                    if(mysqli_num_rows($result_fetch) > 0): 
+                        while ($job_data = mysqli_fetch_array($result_fetch)): 
+                    ?>
+                        <div class="job-card" data-status="<?php echo $job_data['status']; ?>">
+                            <div class="job-info">
+                                <div class="company-logo">
+                                    <i class="fas fa-briefcase"></i>
                                 </div>
-                                
-                                <!-- Action buttons -->
-                                <div class="job-actions">
-                                    <a href="applicants.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn view-btn" style="background-color: var(--primary-light); color: var(--primary-color); padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center;">
-                                        <i class="fas fa-users" style="margin-right: 5px;"></i>
-                                        Applicants
-                                    </a>
-                                    <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn" style="background-color: var(--warning-color); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center;">
-                                        <i class="fas fa-edit" style="margin-right: 5px;"></i>
-                                        Edit
-                                    </a>
-                                    <a href="delete_job.php?job_id=<?php echo $job_data['job_id']; ?>" onclick="return confirm('Are you sure you want to delete this job?')" class="action-btn delete-btn" style="background-color: var(--danger-color); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center;">
-                                        <i class="fas fa-trash-alt" style="margin-right: 5px;"></i>
-                                        Delete
-                                    </a>
+                                <div class="job-details">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                        <h3><?php echo htmlspecialchars($job_data['job_title']); ?></h3>
+                                        <span class="job-status <?php echo $job_data['status'] == 'deactivated' ? 'status-deactivated' : 'status-active'; ?>">
+                                            <?php echo ucfirst($job_data['status']); ?>
+                                        </span>
+                                    </div>
+                                    <div class="job-meta">
+                                        <div class="job-meta-item">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <?php echo htmlspecialchars($job_data['location']); ?>
+                                        </div>
+                                        <div class="job-meta-item">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <?php echo htmlspecialchars($job_data['vacancy_date']); ?>
+                                        </div>
+                                        <div class="job-meta-item">
+                                            ₹<?php echo htmlspecialchars($job_data['salary']); ?>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="job-description" style="margin-top: 15px; font-size: 14px; color: var(--light-text);">
+                                        <?php 
+                                            $description = htmlspecialchars($job_data['job_description']);
+                                            echo (strlen($description) > 150) ? substr($description, 0, 150) . '...' : $description; 
+                                        ?>
+                                    </div>
+                                    
+                                    <div class="job-stats" style="display: flex; gap: 15px; margin-top: 15px;">
+                                        <?php
+                                        $sql_applicants = "SELECT COUNT(*) as applicant_count FROM tbl_applications WHERE job_id = ?";
+                                        $stmt_applicants = mysqli_prepare($conn, $sql_applicants);
+                                        mysqli_stmt_bind_param($stmt_applicants, "i", $job_data['job_id']);
+                                        mysqli_stmt_execute($stmt_applicants);
+                                        $result_applicants = mysqli_stmt_get_result($stmt_applicants);
+                                        $applicant_count = mysqli_fetch_assoc($result_applicants)['applicant_count'];
+                                        mysqli_stmt_close($stmt_applicants);
+                                        ?>
+                                        <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--primary-color);">
+                                            <i class="fas fa-users" style="margin-right: 5px;"></i>
+                                            <span><?php echo $applicant_count; ?> Applicant<?php echo $applicant_count != 1 ? 's' : ''; ?></span>
+                                        </div>
+                                        <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--primary-color);">
+                                            <i class="fas fa-eye" style="margin-right: 5px;"></i>
+                                            <span>48 Views</span>
+                                        </div>
+                                        <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--success-color);">
+                                            <i class="fas fa-clock" style="margin-right: 5px;"></i>
+                                            <span>Posted 3 days ago</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <div style="text-align: center; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                            <i class="fas fa-briefcase" style="font-size: 48px; color: #e2e8f0; margin-bottom: 20px;"></i>
-                            <h3>No jobs posted yet</h3>
-                            <p style="color: var(--light-text); margin-top: 10px; margin-bottom: 20px;">
-                                Start by posting your first job opening
-                            </p>
-                            <button class="post-job-btn" style="margin: 0 auto; display: inline-flex;">
-                                <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
-                                <a href="postjob.php">Post a Job</a>
-                            </button>
+                            
+                            <div class="job-actions">
+                                <?php if($job_data['status'] != 'deactivated'): ?>
+                                    <a href="applicants.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn view-btn">
+                                        <i class="fas fa-users"></i> Applicants
+                                    </a>
+                                    <a href="schedule_interview.php?job_id=<?php echo $job_data['job_id']; ?>" 
+                                       class="action-btn interview-btn">
+                                        <i class="fas fa-calendar-check"></i> Schedule Interview
+                                    </a>
+                                    <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="deletejob.php?id=<?php echo $job_data['job_id']; ?>" 
+                                       onclick="return confirm('Are you sure you want to deactivate this job?')" 
+                                       class="action-btn delete-btn">
+                                        <i class="fas fa-trash-alt"></i> Deactivate
+                                    </a>
+                                <?php else: ?>
+                                    <a href="restore_job.php?job_id=<?php echo $job_data['job_id']; ?>" 
+                                       onclick="return confirm('Are you sure you want to reactivate this job?')" 
+                                       class="action-btn reactivate-btn">
+                                        <i class="fas fa-redo"></i> Restore
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    <?php endif; ?>
+                    <?php 
+                        endwhile; 
+                    else: 
+                    ?>
+                        <div style="text-align: center; padding: 20px;">
+                            <p>No <?php echo $status === 'deactivated' ? 'deactivated' : 'active'; ?> jobs found.</p>
+                        </div>
+                    <?php 
+                    endif; 
+                    mysqli_stmt_close($stmt_fetch);
+                    ?>
                 </div>
             </div>
         </div>
@@ -464,9 +571,13 @@ mysqli_stmt_close($stmt_count);
             const filterButtons = document.querySelectorAll('.filter-btn');
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
+                    // Remove active class from all buttons
                     filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
                     this.classList.add('active');
-                    // Add filter functionality here
+
+                    const status = this.dataset.status;
+                    window.location.href = `myjoblist.php?status=${status}`;
                 });
             });
         });

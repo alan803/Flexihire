@@ -158,7 +158,7 @@
                     <i class="fas fa-bookmark"></i>
                     <span>Bookmarks</span>
                 </a>
-                <a href="sidebar/appointment/appointment.html" class="sidebar-link">
+                <a href="appointment.php" class="sidebar-link">
                     <i class="fas fa-calendar"></i>
                     <span>Appointments</span>
                 </a>
@@ -166,6 +166,7 @@
                     <i class="fas fa-flag"></i>
                     <span>Reported Jobs</span>
                 </a>
+                <a href="reviews.php"><i class="fas fa-star"></i> Reviews</a>
                 <a href="profiles/user/userprofile.php" class="sidebar-link">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>

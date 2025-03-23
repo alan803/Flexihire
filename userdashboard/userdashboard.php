@@ -68,20 +68,15 @@
     $date_filter = isset($_POST['date']) ? $_POST['date'] : null;
     $is_reset = isset($_POST['reset']) && $_POST['reset'] == 1;
 
-    $sql_fetch = "SELECT job_id, job_title, job_description, location, town, salary, vacancy_date, created_at 
-                FROM tbl_jobs 
-                WHERE is_deleted = 0";
-
-    if (!empty($date_filter)) {
-        $sql_fetch .= " AND DATE(vacancy_date) = ?";
-    }
+    $sql_fetch = "SELECT j.*, e.company_name, e.profile_image,
+                  (SELECT COUNT(*) FROM tbl_applications WHERE job_id = j.job_id AND status = 'accepted') AS total_accepted,
+                  (SELECT status FROM tbl_applications WHERE job_id = j.job_id AND user_id = ? LIMIT 1) AS application_status
+              FROM tbl_jobs j 
+              JOIN tbl_employer e ON j.employer_id = e.employer_id
+              ORDER BY j.created_at DESC";
 
     $stmt = mysqli_prepare($conn, $sql_fetch);
-
-    if (!empty($date_filter)) {
-        mysqli_stmt_bind_param($stmt, "s", $date_filter);
-    }
-
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
@@ -114,7 +109,7 @@
                 echo '<div class="job-footer">';
                 echo '<div class="button-group">';
                 echo '<a href="jobdetails.php?job_id=' . $job_id . '" class="details-btn"><i class="fas fa-info-circle"></i> Details</a>';
-                if ($has_applied) {
+                if ($application_status) {
                     echo '<button class="applied-btn" disabled><i class="fas fa-check-circle"></i> ' . htmlspecialchars($application_status) . '</button>';
                 } else {
                     echo '<a href="applyjob.php?user_id=' . $user_id . '&job_id=' . $job_id . '" class="apply-link">';
@@ -153,11 +148,26 @@
         exit();
     }
 
-
-// Display message from session if exists and then clear it
+    // Display message from session if exists and then clear it
     if (isset($_SESSION['error_message'])) {
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
+    }
+
+    // Function to check if vacancy is filled
+    function isVacancyFilled($conn, $job_id) {
+        $sql = "SELECT j.vacancy, 
+                (SELECT COUNT(*) FROM tbl_applications WHERE job_id = ? AND status = 'accepted') AS total_accepted 
+                FROM tbl_jobs j 
+                WHERE j.job_id = ?";
+
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "ii", $job_id, $job_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($result);
+
+        return $row['total_accepted'] >= $row['vacancy'];
     }
 ?>
 <!DOCTYPE html>
@@ -196,7 +206,7 @@
         </div>
     </nav>
 
-    <!-- Add this right after your navbar -->
+    <!-- Toast Notification -->
     <div id="toast" class="toast">
         <div class="toast-content">
             <div class="toast-icon">
@@ -215,11 +225,9 @@
         <aside class="sidebar">
             <div class="sidebar-menu">
                 <a href="userdashboard.php" class="active"><i class="fas fa-home"></i> Home</a>
-                <!-- <a href="sidebar/jobgrid/jobgrid.html"><i class="fas fa-th"></i>Job Grid</a> -->
                 <a href="applied.php"><i class="fas fa-paper-plane"></i> Applied Job</a>
-                <!-- <a href="sidebar/jobdetails/jobdetails.html"><i class="fas fa-info-circle"></i> Job Details</a> -->
                 <a href="bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
-                <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
+                <a href="appointment.php"><i class="fas fa-calendar"></i> Appointments</a>
                 <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
                 <a href="reviews.php"><i class="fas fa-star"></i> Reviews</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
@@ -232,8 +240,7 @@
             </div>
         </aside>
 
-
-<!-- Main Content Area -->
+        <!-- Main Content Area -->
         <main class="main-content">
             <!-- Search Bar -->
             <div class="search-container">
@@ -297,17 +304,23 @@
                                     <a href="jobdetails.php?job_id=<?php echo $job_id; ?>" class="details-btn">
                                         <i class="fas fa-info-circle"></i> Details
                                     </a>
-                                    <?php if ($has_applied): ?>
-                                        <button class="applied-btn" disabled>
-                                            <i class="fas fa-check-circle"></i> 
-                                            <?php echo htmlspecialchars($application_status); ?>
-                                        </button>
+                                    <?php if (isVacancyFilled($conn, $job_id)): ?>
+                                        <div class="job-closed">
+                                            <i class="fas fa-user-check"></i> Positions Filled
+                                        </div>
                                     <?php else: ?>
-                                        <a href="applyjob.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="apply-link">
-                                            <button class="apply-btn">
-                                                <i class="fas fa-paper-plane"></i> Apply Now
+                                        <?php if ($has_applied): ?>
+                                            <button class="applied-btn" disabled>
+                                                <i class="fas fa-check-circle"></i> 
+                                                <?php echo htmlspecialchars(ucfirst($application_status)); ?>
                                             </button>
-                                        </a>
+                                        <?php else: ?>
+                                            <a href="applyjob.php?user_id=<?php echo $user_id; ?>&job_id=<?php echo $job_id; ?>" class="apply-link">
+                                                <button class="apply-btn">
+                                                    <i class="fas fa-paper-plane"></i> Apply Now
+                                                </button>
+                                            </a>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -394,7 +407,6 @@
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
-    /* Add this to ensure no underline on any links */
     .job-footer a {
         text-decoration: none !important;
     }
@@ -471,7 +483,8 @@
             opacity: 0;
         }
     }
-.applied-btn {
+
+    .applied-btn {
         background-color: #4CAF50;
         color: white;
         border: none;

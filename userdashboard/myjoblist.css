@@ -49,35 +49,35 @@ body
 }
 
 .logo-container {
-    padding: 15px;
-}
-
-.logo-container img {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    margin: 0 auto;
-    display: block;
-    background-color: #ffffff;
-    margin-left: 0px;
+    overflow: hidden;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 3px solid var(--border-color);
 }
 
-.logo-container img:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+.logo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* This ensures the image covers the container properly */
+    display: block; /* Removes any unwanted spacing */
 }
 
 .company-info {
     text-align: center;
-    padding: 10px;
-    color: #ffffff;
-    font-size: 14px;
-    margin-bottom: 24px;
-    word-break: break-word;
+    margin-bottom: 30px;
+    padding: 0 15px;
+}
+
+.company-info span {
+    display: block;
+    margin-bottom: 5px;
+    word-wrap: break-word; /* Ensures long text wraps properly */
 }
 
 .nav-menu {
@@ -113,26 +113,139 @@ a
     color:white;
 }
 .job_list {
-    width: 70%; /* Adjusted width for job list */
-    margin: 50px auto; /* Centers the div */
+    width: 70%;
+    margin: 50px auto;
     padding: 20px;
-    border: 1px solid #ccc; /* Optional: adds a border */
-    border-radius: 8px; /* Optional: rounds the corners */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow */
-    margin-right: 170px; /* Align job items to the left */
-    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-right: 170px;
+    background-color: #f8fafc; /* Light gray background */
 }
 
 .job-item {
-    width: 95%; /* Adjusted width for card */
-    margin: 10px 0; /* Margin for spacing between items */
-    text-align: left; /* Align text to the left */
-    padding: 15px; /* Padding inside each job item */
-    border: 1px solid #ddd; /* Border around each job item */
-    border-radius: 8px; /* Rounded corners */
-    background-color: #f9f9f9; /* Background color */
-    margin-left: 0px; /* Align job items to the left */
+    width: 95%;
+    margin: 16px 0;
+    text-align: left;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.job-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+
+/* Add a subtle accent border */
+.job-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+    border-radius: 4px 0 0 4px;
+}
+
+/* Job title and description styling */
+.job-item h3 {
+    color: #1e293b;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.job-item p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+/* Job metadata styling */
+.job-metadata {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.metadata-item i {
+    color: #3b82f6;
+    font-size: 1rem;
+}
+
+/* Status indicator */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.status-active {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.status-inactive {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* Job actions container */
+.job-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .job_list {
+        width: 85%;
+        margin-right: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .job_list {
+        width: 95%;
+        margin: 20px auto;
+        padding: 15px;
+    }
+
+    .job-item {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .job-metadata {
+        flex-direction: column;
+        gap: 8px;
+    }
 }
 
 .button-container {
@@ -141,53 +254,100 @@ a
     margin-top: 15px;
 }
 
-.edit-btn {
+/* Action Buttons Styling */
+.action-buttons-group {
+    display: flex;
+    gap: 25px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 8px 15px;
-    background-color: #9747FF;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.action-btn:first-child {
+    margin-left: 0;
+}
+
+.action-btn i {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.action-btn:hover i {
+    transform: scale(1.1);
+}
+
+/* Edit Button */
+.edit-btn {
+    background: linear-gradient(145deg, #f97316, #ea580c);
     color: white;
     border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 14px;
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
 }
 
 .edit-btn:hover {
-    background-color: #8a3ff0;
-    transform: translateY(-2px);
+    background: linear-gradient(145deg, #ea580c, #c2410c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(234, 88, 12, 0.3);
 }
 
-.edit-btn i {
-    font-size: 16px;
-}
-
-.vacancy-button {
-    padding: 8px 15px;
-    background-color: #dc3545;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.vacancy-button:hover {
-    background-color: #c82333;
-    transform: translateY(-2px);
-}
-
-.vacancy-button a {
+/* Delete/Deactivate Button */
+.delete-btn {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
     color: white;
-    text-decoration: none;
-    font-size: 14px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
 
-#delete
-{
-    color:white;
+.delete-btn:hover {
+    background: linear-gradient(145deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
 }
+
+/* Restore/Reactivate Button */
+.reactivate-btn {
+    background-color: var(--success-color);
+    color: white;
+    min-width: 120px; /* Made consistent with other buttons */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reactivate-btn:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Job Card Status */
+.job-card[data-status="deactivated"] {
+    opacity: 0.8;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.job-card[data-status="deactivated"]:hover {
+    opacity: 1;
+    border-color: var(--success-color);
+}
+
+.status-deactivated {
+    background-color: rgba(156, 163, 175, 0.1);
+    color: #6B7280;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
 .alert {
     background-color: #d4edda;
     color: #155724;
@@ -205,4 +365,69 @@ a
 .alert i {
     font-size: 20px;
     color: #28a745;
+}
+
+.status-deactivated {
+    background-color: rgba(156, 163, 175, 0.1);
+    color: #6B7280;
+}
+
+.reactivate-btn {
+    background-color: #10B981;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.reactivate-btn:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+}
+
+.job-card[data-status="deactivated"] {
+    opacity: 0.8;
+}
+
+.job-card[data-status="deactivated"]:hover {
+    opacity: 1;
+}
+
+/* Applicants button styling */
+.view-btn {
+    background: linear-gradient(145deg, #0ea5e9, #0284c7);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+}
+
+.view-btn:hover {
+    background: linear-gradient(145deg, #0284c7, #0369a1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(2, 132, 199, 0.3);
+}
+
+/* Interview button styling - make it more specific */
+.action-btn.interview-btn {
+    background: linear-gradient(145deg, #a855f7, #9333ea);
+    background-color: #a855f7;  /* Fallback */
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(147, 51, 234, 0.2);
+}
+
+.action-btn.interview-btn:hover {
+    background: linear-gradient(145deg, #9333ea, #7e22ce);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(147, 51, 234, 0.3);
+}
+
+/* Make sure this style comes after any other .interview-btn styles */
+.interview-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state for all buttons */
+.action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

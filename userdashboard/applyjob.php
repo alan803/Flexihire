@@ -16,6 +16,31 @@
     $user_id = $_SESSION['user_id'];
     $job_id = $_GET['job_id'];
     
+    // Function to check if vacancy is filled
+    function isVacancyFilled($conn, $job_id) {
+        $sql = "SELECT j.vacancy, 
+                       (SELECT COUNT(*) FROM tbl_applications WHERE job_id = ? AND status = 'accepted') AS total_accepted 
+                FROM tbl_jobs j 
+                WHERE j.job_id = ?";
+
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "ii", $job_id, $job_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($result);
+
+        return $row['total_accepted'] >= $row['vacancy'];
+    }
+
+    // First check if vacancy is filled
+    if (isVacancyFilled($conn, $job_id)) {
+        mysqli_close($conn);
+        $_SESSION['message'] = "This job has already reached its hiring limit. You cannot apply.";
+        $_SESSION['message_type'] = "error";
+        header('Location: userdashboard.php');
+        exit();
+    }
+
     // Checking if the user has already applied for the job
     $check = "SELECT * FROM tbl_applications WHERE user_id = ? AND job_id = ?";
     $check_stmt = mysqli_prepare($conn, $check);

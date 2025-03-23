@@ -1,20 +1,87 @@
+:root {
+    --primary-color: #8A6CE0;
+    --secondary-color: #BAA6E3;
+    --background-gradient: linear-gradient(135deg, #BAA6E3 0%, #E3D8FC 50%, #FFD6E3 100%);
+    --text-color: #2D1F54;
+    --gray-light: #E3D8FC;
+    --white: #ffffff;
+    --shadow: 0 8px 16px rgba(186, 166, 227, 0.2);
+    --card-bg: rgba(255, 255, 255, 0.9);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f7fafc;
-    color: #2d3748;
-    line-height: 1.6;
+    background: var(--background-gradient);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+/* Navbar Override Styles */
+.navbar {
+    padding: 0.4rem 1rem;
+    height: 54px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-brand h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    line-height: 1;
+}
+
+.logo {
+    height: 30px;
+    width: auto;
+    display: block;
+}
+
+.profile-pic {
+    width: 35px;
+    height: 35px;
+}
+
+.nav-username {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+}
+
+.profile-container {
+    display: flex;
+    align-items: center;
+}
+
+/* Adjust main content to account for navbar height */
+.main-content {
+    margin-top: 0;
 }
 
 .container {
     max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    margin: 0 auto;
+    padding: 1rem;
 }
 
 h1 {
@@ -27,24 +94,27 @@ h1 {
 .employers-list {
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    padding: 1rem;
 }
 
 .employer-card {
-    background: white;
-    border-radius: 10px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    border: 1px solid rgba(186, 166, 227, 0.2);
 }
 
 .employer-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(186, 166, 227, 0.3);
 }
 
 .employer-image {
@@ -79,63 +149,65 @@ h1 {
     color: #a0aec0;
 }
 
+.employer-info {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
 .employer-info h3 {
-    color: #2d3748;
-    margin-bottom: 0.5rem;
+    color: var(--text-color);
     font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .employer-id {
-    color: #718096;
+    color: var(--secondary-color);
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .employer-actions {
-    margin-top: 1rem;
-    width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 0.8rem;
+    width: 100%;
+}
+
+.view-details-btn, .add-review-btn {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    width: 100%;
+    font-weight: 500;
 }
 
 .view-details-btn {
-    background-color: #4a5568;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    font-size: 0.9rem;
+    background-color: var(--primary-color);
+    color: var(--white);
 }
 
 .view-details-btn:hover {
-    background-color: #2d3748;
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 .add-review-btn {
-    background-color: #9747FF;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    background-color: var(--primary-color);
+    color: var(--white);
 }
 
 .add-review-btn:hover {
-    background-color: #8034ff;
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 .add-review-btn i {
@@ -144,11 +216,13 @@ h1 {
 
 /* Review Form Styles */
 .review-form-container {
-    background: white;
-    border-radius: 10px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
     padding: 1.5rem;
     margin-top: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(186, 166, 227, 0.2);
 }
 
 .review-form {
@@ -164,7 +238,7 @@ h1 {
 }
 
 .form-group label {
-    color: #4a5568;
+    color: var(--text-color);
     font-weight: 500;
 }
 
@@ -180,32 +254,35 @@ h1 {
 }
 
 .rating-input label {
-    font-size: 30px;
-    cursor: pointer;
+    font-size: 1.5rem;
     color: #ccc;
-    transition: color 0.3s;
+    cursor: pointer;
+    transition: color 0.3s ease;
 }
 
-.rating-input input:checked ~ label,
+/* Fix hover effect to color stars properly */
 .rating-input label:hover,
-.rating-input label:hover ~ label {
-    color: gold;
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #FFD700; /* Bright gold color for stars */
 }
 
 textarea {
     width: 100%;
     min-height: 100px;
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
+    border: 1px solid rgba(186, 166, 227, 0.3);
+    border-radius: 8px;
     resize: vertical;
     font-family: inherit;
+    background: var(--white);
+    transition: all 0.3s ease;
 }
 
 textarea:focus {
     outline: none;
-    border-color: #9747FF;
-    box-shadow: 0 0 0 2px rgba(151, 71, 255, 0.2);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(138, 108, 224, 0.1);
 }
 
 .form-actions {
@@ -215,59 +292,68 @@ textarea:focus {
 }
 
 .submit-btn, .cancel-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .submit-btn {
-    background-color: #9747FF;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
 }
 
 .submit-btn:hover {
-    background-color: #8034ff;
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 .cancel-btn {
-    background-color: #e2e8f0;
-    color: #4a5568;
+    background-color: var(--gray-light);
+    color: var(--text-color);
     border: none;
 }
 
 .cancel-btn:hover {
-    background-color: #cbd5e0;
+    background-color: var(--secondary-color);
+    color: var(--white);
+    transform: translateY(-2px);
 }
 
 .no-employers {
     text-align: center;
     padding: 3rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(186, 166, 227, 0.2);
 }
 
 .no-employers i {
     font-size: 3rem;
-    color: #cbd5e0;
+    color: var(--secondary-color);
     margin-bottom: 1rem;
 }
 
 .no-employers p {
-    color: #718096;
+    color: var(--text-color);
     font-size: 1.1rem;
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {
     .container {
-        margin: 1rem auto;
+        padding: 0.5rem;
     }
 
     .employers-list {
         grid-template-columns: 1fr;
+        padding: 0.5rem;
     }
 
     .employer-card {
@@ -301,4 +387,56 @@ textarea:focus {
 
 .employer-rating .rating-text {
     color: #666;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: flex;
+    min-height: calc(100vh - 54px);
+    margin-top: 54px;
+    position: relative;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    box-shadow: var(--shadow);
+    height: calc(100vh - 54px);
+    position: fixed;
+    top: 54px;
+    left: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Content Adjustment */
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 1rem 1.5rem;
+    height: calc(100vh - 54px);
+    overflow-y: auto;
+}
+
+.already-rated {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    background-color: #e2e8f0;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 100%;
+}
+
+.already-rated i {
+    color: #48bb78;
+    font-size: 1rem;
 }

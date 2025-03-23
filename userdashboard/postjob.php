@@ -141,7 +141,7 @@
         <!-- Main Content -->
         <div class="main-container">
             <div class="header">
-                <h1>Post a New Job</h1>
+                <h1>Post a New Job - <?php echo htmlspecialchars($username); ?></h1>
             </div>
 
             <!-- Form Container -->

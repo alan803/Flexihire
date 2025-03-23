@@ -399,6 +399,10 @@
                 <a href="myjoblist.php">My Jobs</a>
             </div>
             <div class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <a href="applicants.php">Applicants</a>
+                </div>
+            <div class="nav-item">
                 <i class="fas fa-calendar-check"></i>
                 <a>Interviews</a>
             </div>

@@ -7,8 +7,8 @@ if (!isset($_SESSION['employer_id'])) {
     exit();
 }
 
-if (isset($_GET['id'])) {
-    $job_id = $_GET['id'];
+if (isset($_GET['job_id'])) {
+    $job_id = $_GET['job_id'];
     $employer_id = $_SESSION['employer_id'];
 
     // Restore the job (set is_deleted = 0)

@@ -48,31 +48,33 @@
 
         if (mysqli_stmt_execute($stmt)) 
         {
-            // Update employer's average rating and review count
-            $updateEmployerSQL = "UPDATE tbl_user 
-                                SET avg_rating = (
-                                    SELECT AVG(r.rating) 
-                                    FROM tbl_job_ratings r 
-                                    JOIN tbl_jobs j ON r.job_id = j.job_id 
-                                    WHERE j.employer_id = ?
-                                ),
-                                total_reviews = (
-                                    SELECT COUNT(r.rating_id) 
-                                    FROM tbl_job_ratings r 
-                                    JOIN tbl_jobs j ON r.job_id = j.job_id 
-                                    WHERE j.employer_id = ?
-                                )
+            // First, let's verify the data we're trying to update
+            $verify_sql = "SELECT AVG(r.rating) as avg_rating, COUNT(r.rating_id) as total_reviews 
+                          FROM tbl_job_ratings r 
+                          JOIN tbl_jobs j ON r.job_id = j.job_id 
+                          WHERE j.employer_id = ?";
+            $verify_stmt = mysqli_prepare($conn, $verify_sql);
+            mysqli_stmt_bind_param($verify_stmt, "i", $employer_id);
+            mysqli_stmt_execute($verify_stmt);
+            $verify_result = mysqli_stmt_get_result($verify_stmt);
+            $verify_data = mysqli_fetch_assoc($verify_result);
+            
+            // Update employer's average rating and review count in tbl_login
+            $updateEmployerSQL = "UPDATE tbl_login 
+                                SET avg_rating = ?,
+                                    total_reviews = ?
                                 WHERE user_id = ?";
 
             $update_stmt = mysqli_prepare($conn, $updateEmployerSQL);
-            mysqli_stmt_bind_param($update_stmt, "iii", $employer_id, $employer_id, $employer_id);
+            mysqli_stmt_bind_param($update_stmt, "dii", $verify_data['avg_rating'], $verify_data['total_reviews'], $employer_id);
             
             if (mysqli_stmt_execute($update_stmt)) {
                 $_SESSION['success'] = "Review submitted successfully";
             } else {
-                $_SESSION['error'] = "Review submitted but failed to update employer rating";
+                $_SESSION['error'] = "Review submitted but failed to update employer rating: " . mysqli_error($conn);
             }
             
+            mysqli_stmt_close($verify_stmt);
             mysqli_stmt_close($update_stmt);
         } 
         else 
