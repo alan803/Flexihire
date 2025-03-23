@@ -221,6 +221,7 @@
                 <a href="bookmark.php"><i class="fas fa-bookmark"></i> Bookmarks</a>
                 <a href="sidebar/appointment/appointment.html"><i class="fas fa-calendar"></i> Appointments</a>
                 <a href="reportedjobs.php"><i class="fas fa-flag"></i> Reported Jobs</a>
+                <a href="reviews.php"><i class="fas fa-star"></i> Reviews</a>
                 <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
             </div>
             <div class="logout-container">

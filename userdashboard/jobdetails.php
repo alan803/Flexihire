@@ -271,6 +271,9 @@
                             <i class="fas fa-paper-plane"></i>
                             Apply Now
                         </button>
+                        <a href="fetch_employer_rating.php?employer_id=<?php echo $job['employer_id']; ?>&job_id=<?php echo $job_id; ?>" class="view-details-btn">
+                            <i class="fas fa-user-tie"></i> Employer Details
+                        </a>
                         <button onclick="toggleBookmark(<?php echo $job_id; ?>)" class="save-btn <?php echo $is_bookmarked ? 'saved' : ''; ?>">
                             <?php if ($is_bookmarked): ?>
                                 <i class="fas fa-bookmark"></i> Saved

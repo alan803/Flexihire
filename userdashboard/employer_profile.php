@@ -38,9 +38,10 @@
     mysqli_stmt_execute($stmt_email);
     $result_email = mysqli_stmt_get_result($stmt_email);
     $row_email = mysqli_fetch_assoc($result_email);
-    $email = $row_email['email'];
+    $email = $row_email['email'] ?? '';
     
-    $company_name = $row['company_name'];
+    // Safely get company name with null coalescing operator
+    $company_name = $row['company_name'] ?? 'Company Name Not Set';
 
     // Check if row data exists
     if ($row) {
@@ -138,12 +139,12 @@
                             <?php endif; ?>
                         </div>
                         <div class="profile-details">
-                            <h2><?php echo htmlspecialchars($row['company_name']); ?></h2>
+                            <h2><?php echo htmlspecialchars($company_name); ?></h2>
                             <p class="company-type">Company</p>
                             <div class="company-meta">
-                                <span><i class="fas fa-building"></i> Reg: <?php echo htmlspecialchars($row['registration_number']); ?></span>
-                                <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['location']); ?></span>
-                                <span><i class="fas fa-calendar"></i> Est. <?php echo htmlspecialchars($row['establishment_year']); ?></span>
+                                <span><i class="fas fa-building"></i> Reg: <?php echo htmlspecialchars($row['registration_number'] ?? 'Not Set'); ?></span>
+                                <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['location'] ?? 'Location Not Set'); ?></span>
+                                <span><i class="fas fa-calendar"></i> Est. <?php echo htmlspecialchars($row['establishment_year'] ?? 'Year Not Set'); ?></span>
                             </div>
                         </div>
                         <div class="profile-actions">
@@ -162,11 +163,11 @@
                         <div class="info-content">
                             <div class="info-item">
                                 <label>Contact Person</label>
-                                <p><?php echo htmlspecialchars($row['contact_person']); ?></p>
+                                <p><?php echo htmlspecialchars($row['contact_person'] ?? 'Not Set'); ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Phone Number</label>
-                                <p><?php echo htmlspecialchars($row['phone_number']); ?></p>
+                                <p><?php echo htmlspecialchars($row['phone_number'] ?? 'Not Set'); ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Email</label>
@@ -174,7 +175,7 @@
                             </div>
                             <div class="info-item">
                                 <label>Address</label>
-                                <p><?php echo htmlspecialchars($row['address']); ?></p>
+                                <p><?php echo htmlspecialchars($row['address'] ?? 'Not Set'); ?></p>
                             </div>
                         </div>
                     </div>
@@ -183,7 +184,7 @@
                     <div class="info-card">
                         <h3><i class="fas fa-building"></i> About Company</h3>
                         <div class="info-content">
-                            <p class="description"><?php echo htmlspecialchars($row['shop_description']); ?></p>
+                            <p class="description"><?php echo htmlspecialchars($row['shop_description'] ?? 'No description available'); ?></p>
                         </div>
                     </div>
 
@@ -193,15 +194,15 @@
                         <div class="info-content">
                             <div class="info-item">
                                 <label>Industry</label>
-                                <p><?php echo htmlspecialchars($row['details']); ?></p>
+                                <p><?php echo htmlspecialchars($row['details'] ?? 'Not Set'); ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Registration Number</label>
-                                <p><?php echo htmlspecialchars($row['registration_number']); ?></p>
+                                <p><?php echo htmlspecialchars($row['registration_number'] ?? 'Not Set'); ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Established</label>
-                                <p><?php echo htmlspecialchars($row['establishment_year']); ?></p>
+                                <p><?php echo htmlspecialchars($row['establishment_year'] ?? 'Not Set'); ?></p>
                             </div>
                         </div>
                     </div>

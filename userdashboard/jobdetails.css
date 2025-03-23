@@ -175,30 +175,45 @@ body {
 
 .job-actions {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 2px solid rgba(138, 108, 224, 0.15);
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
 }
 
-.apply-btn, .save-btn {
-    padding: 0.75rem 1.5rem;
+.apply-btn, .view-details-btn, .save-btn, .report-btn {
+    padding: 10px 20px;
     border-radius: 8px;
-    font-weight: 500;
-    font-size: 1rem;
-    display: inline-flex;
+    font-size: 14px;
+    display: flex;
     align-items: center;
-    gap: 0.75rem;
-    transition: all 0.3s ease;
-    min-width: 150px;
-    justify-content: center;
+    gap: 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
 }
 
 .apply-btn {
-    background: var(--primary-color);
-    color: var(--white);
+    background: #4CAF50;
+    color: white;
     border: none;
+}
+
+.apply-btn:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.view-details-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+}
+
+.view-details-btn:hover {
+    background: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
 }
 
 .save-btn {
