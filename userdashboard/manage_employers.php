@@ -86,7 +86,7 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar (Matching Admin Dashboard) -->
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
@@ -96,11 +96,11 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="manage_users.php" class="nav-item active">
+                <a href="manage_users.php" class="nav-item">
                     <i class="fas fa-users"></i>
                     <span>Manage Users</span>
                 </a>
-                <a href="manage_employers.php" class="nav-item">
+                <a href="manage_employers.php" class="nav-item active">
                     <i class="fas fa-building"></i>
                     <span>Manage Employers</span>
                 </a>
