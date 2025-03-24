@@ -91,7 +91,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo-section">
-                <h1>AutoRecruits</h1>
+                <h1>FlexiHire</h1>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item active">

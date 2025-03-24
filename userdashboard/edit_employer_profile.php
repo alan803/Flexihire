@@ -132,13 +132,37 @@
 
         $result_push = mysqli_stmt_execute($stmt);
 
-        // Update email
-        $sql_email_push = "UPDATE tbl_login SET email=? WHERE user_id=?";
-        $stmt_email = mysqli_prepare($conn, $sql_email_push);
-        mysqli_stmt_bind_param($stmt_email, "si", $email, $employer_id);
-        $result_push_email = mysqli_stmt_execute($stmt_email);
+        // Update email only if it has changed
+        $sql_check_email = "SELECT email FROM tbl_login WHERE employer_id = ?";
+        $stmt_check = mysqli_prepare($conn, $sql_check_email);
+        mysqli_stmt_bind_param($stmt_check, "i", $employer_id);
+        mysqli_stmt_execute($stmt_check);
+        $result_check = mysqli_stmt_get_result($stmt_check);
+        $current_email = mysqli_fetch_assoc($result_check)['email'];
 
-        if ($result_push && $result_push_email) {
+        // Only update email if it's different from current email
+        if ($email !== $current_email) {
+            // Check if new email already exists for another user
+            $sql_check_duplicate = "SELECT email FROM tbl_login WHERE email = ? AND employer_id != ?";
+            $stmt_check_duplicate = mysqli_prepare($conn, $sql_check_duplicate);
+            mysqli_stmt_bind_param($stmt_check_duplicate, "si", $email, $employer_id);
+            mysqli_stmt_execute($stmt_check_duplicate);
+            $result_duplicate = mysqli_stmt_get_result($stmt_check_duplicate);
+            
+            if (mysqli_num_rows($result_duplicate) > 0) {
+                $_SESSION['update_error'] = "Email already exists";
+                header("Location: edit_employer_profile.php");
+                exit();
+            }
+            
+            // Update email if no duplicate found
+            $sql_email_push = "UPDATE tbl_login SET email=? WHERE employer_id=?";
+            $stmt_email = mysqli_prepare($conn, $sql_email_push);
+            mysqli_stmt_bind_param($stmt_email, "si", $email, $employer_id);
+            $result_push_email = mysqli_stmt_execute($stmt_email);
+        }
+
+        if ($result_push) {
             $_SESSION['update_success'] = true;
             header("Location: employer_profile.php");
             exit();
