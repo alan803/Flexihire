@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
         onlineFields.classList.remove('show');
         phoneFields.classList.remove('show');
 
-        // Show the selected field
+        // Show the selected field with animation
         switch(interviewType) {
             case 'Physical':
                 physicalFields.style.display = 'block';
@@ -205,5 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listener to the dropdown
     if(interviewTypeSelect) {
         interviewTypeSelect.addEventListener('change', showFields);
+        // Show initial fields
+        showFields();
     }
 });

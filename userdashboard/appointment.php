@@ -152,20 +152,87 @@
                     <?php while ($appointment = mysqli_fetch_assoc($appointments_result)): ?>
                         <div class="appointment-card">
                             <div class="appointment-header">
-                                <h3><?php echo htmlspecialchars($appointment['job_title']); ?></h3>
-                            </div>
-                            <div class="appointment-body">
-                                <p><i class="fas fa-building"></i> <?php echo htmlspecialchars($appointment['company_name']); ?></p>
-                                <p><i class="fas fa-calendar-day"></i> Date: <?php echo date('Y-m-d', strtotime($appointment['appointment_date'])); ?></p>
-                                <p><i class="fas fa-clock"></i> Time: <?php echo date('h:i A', strtotime($appointment['appointment_time'])); ?></p>
-                                <div class="status-badge status-<?php echo strtolower($appointment['status']); ?>">
-                                    <?php echo ucfirst(htmlspecialchars($appointment['status'])); ?>
+                                <div class="header-left">
+                                    <h3><?php echo htmlspecialchars($appointment['job_title']); ?></h3>
+                                    <span class="company-name">
+                                        <i class="fas fa-building"></i> 
+                                        <?php echo htmlspecialchars($appointment['company_name']); ?>
+                                    </span>
+                                </div>
+                                <div class="header-right">
+                                    <span class="appointment-datetime">
+                                        <i class="fas fa-calendar"></i> 
+                                        <?php echo date('F j, Y', strtotime($appointment['appointment_date'])); ?>
+                                        <i class="fas fa-clock ml-2"></i> 
+                                        <?php echo date('g:i A', strtotime($appointment['appointment_time'])); ?>
+                                    </span>
                                 </div>
                             </div>
-                            <div class="appointment-footer">
-                                <a href="appointment_details.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" class="details-btn">
-                                    <i class="fas fa-info-circle"></i> Details
-                                </a>
+
+                            <div class="appointment-details">
+                                <div class="detail-row">
+                                    <div class="detail-item">
+                                        <span class="label">Position</span>
+                                        <span class="value"><?php echo htmlspecialchars($appointment['job_title']); ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="label">Interview Type</span>
+                                        <span class="value interview-type">
+                                            <i class="fas fa-<?php echo $appointment['interview_type'] === 'Physical' ? 'building' : 
+                                                ($appointment['interview_type'] === 'Online' ? 'video' : 'phone'); ?>"></i>
+                                            <?php echo htmlspecialchars($appointment['interview_type']); ?> Interview
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="label">
+                                            <?php echo $appointment['interview_type'] === 'Physical' ? 'Location' : 
+                                                ($appointment['interview_type'] === 'Online' ? 'Meeting Link' : 'Phone Number'); ?>
+                                        </span>
+                                        <span class="value">
+                                            <?php if($appointment['interview_type'] === 'Online'): ?>
+                                                <a href="<?php echo htmlspecialchars($appointment['location']); ?>" target="_blank" class="meeting-link">
+                                                    <i class="fas fa-external-link-alt"></i> Join Meeting
+                                                </a>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($appointment['location']); ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="label">Status</span>
+                                        <span class="status-badge status-<?php echo strtolower($appointment['status']); ?>">
+                                            <?php echo ucfirst(htmlspecialchars($appointment['status'])); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <?php if(!empty($appointment['notes'])): ?>
+                                <div class="appointment-notes">
+                                    <span class="label">Notes</span>
+                                    <p><?php echo nl2br(htmlspecialchars($appointment['notes'])); ?></p>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="appointment-actions">
+                                <?php if($appointment['status'] === 'pending'): ?>
+                                    <a href="reschedule_interview.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" 
+                                       class="action-btn btn-reschedule">
+                                        <i class="fas fa-calendar-alt"></i> Reschedule
+                                    </a>
+                                    <a href="cancel_interview.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" 
+                                       class="action-btn btn-cancel"
+                                       onclick="return confirm('Are you sure you want to cancel this interview?')">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                <?php endif; ?>
+                                <?php if($appointment['interview_type'] === 'Online'): ?>
+                                    <a href="<?php echo htmlspecialchars($appointment['location']); ?>" 
+                                       target="_blank" 
+                                       class="action-btn btn-join">
+                                        <i class="fas fa-video"></i> Join Meeting
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endwhile; ?>

@@ -173,8 +173,40 @@ $applicant = mysqli_fetch_assoc($applicant_result);
                 <?php endif; ?>
             </div>
             <div class="company-info">
-                <span><?php echo htmlspecialchars($row['company_name'] ?? 'Company Name'); ?></span>
-                <span><?php echo htmlspecialchars($row['email'] ?? 'Email'); ?></span>
+                <span class="company-name"><?php echo htmlspecialchars($row['company_name'] ?? 'Company Name'); ?></span>
+                <span class="company-email"><?php echo htmlspecialchars($row['email'] ?? 'Email'); ?></span>
+            </div>
+            <nav class="nav-menu">
+                <a href="employerdashboard.php" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="postjob.php" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Post a Job</span>
+                </a>
+                <a href="myjoblist.php" class="nav-item active">
+                    <i class="fas fa-briefcase"></i>
+                    <span>My Jobs</span>
+                </a>
+                <a href="applicants.php" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Applicants</span>
+                </a>
+                <a href="interviews.php" class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Interviews</span>
+                </a>
+            </nav>
+            <div class="settings-section">
+                <a href="employer_profile.php" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="../login/logout.php" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
             </div>
         </div>
 
@@ -244,10 +276,12 @@ $applicant = mysqli_fetch_assoc($applicant_result);
                         <textarea name="notes"></textarea>
                     </div>
 
-                    <button type="submit" class="submit-btn">
-                        <i class="fas fa-calendar-check"></i>
-                        Schedule Interview
-                    </button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check"></i>
+                            Schedule Interview
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

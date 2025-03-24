@@ -277,10 +277,16 @@ $row = mysqli_fetch_assoc($result);
                         <textarea name="notes"><?php echo htmlspecialchars($appointment['notes'] ?? ''); ?></textarea>
                     </div>
 
-                    <button type="submit" class="submit-btn">
-                        <i class="fas fa-calendar-check"></i>
-                        Update Interview
-                    </button>
+                    <div class="form-actions">
+                        <a href="interviews.php" class="btn btn-cancel">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check"></i>
+                            Update Interview
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

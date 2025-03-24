@@ -422,10 +422,14 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                     <a href="applicants.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn view-btn">
                                         <i class="fas fa-users"></i> Applicants
                                     </a>
-                                    <a href="schedule_interview.php?job_id=<?php echo $job_data['job_id']; ?>" 
-                                       class="action-btn interview-btn">
-                                        <i class="fas fa-calendar-check"></i> Schedule Interview
-                                    </a>
+                                    
+                                    <?php if($job_data['interview'] === 'yes'): ?>
+                                        <a href="schedule_interview.php?job_id=<?php echo $job_data['job_id']; ?>" 
+                                           class="action-btn interview-btn">
+                                            <i class="fas fa-calendar-check"></i> Schedule Interview
+                                        </a>
+                                    <?php endif; ?>
+
                                     <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>

@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 case 3:  // Admin
                     $_SESSION['user_type'] = 'admin';
                     $_SESSION['admin_id'] = $row['login_id'];
-                    header("Location: ../userdashboard/admindashboard.html");
+                    header("Location: ../userdashboard/admindashboard.php");
                     break;
                     
                 default:

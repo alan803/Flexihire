@@ -337,111 +337,166 @@ body {
     color: #94a3b8;
 }
 
-/* Form Styles (Added from reschedule_interview.css) */
+/* Form Container Styles */
 .form-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    max-width: 800px;
+    margin: 2rem auto;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
 }
 
+/* Form Header */
 .form-header {
-    margin-bottom: 2rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #f1f5f9;
 }
 
 .form-header h2 {
-    font-size: 24px;
+    font-size: 1.8rem;
     font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 10px;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.5px;
 }
 
 .form-header p {
-    color: var(--light-text);
-    font-size: 14px;
+    color: #64748b;
+    font-size: 1.1rem;
+    line-height: 1.5;
 }
 
-.error-message {
-    background-color: #fee2e2;
-    color: var(--danger-color);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
+/* Form Groups */
 .form-group {
-    margin-bottom: 1.5rem;
-    display: block;
+    margin-bottom: 2rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.3px;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
     font-size: 1rem;
-    color: var(--text-color);
+    color: #1e293b;
     background-color: #fff;
-}
-
-.form-group textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-#interview_type {
-    appearance: auto; /* Show default dropdown arrow */
-}
-
-.interview-fields {
-    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
 }
 
-.interview-fields .form-group {
-    display: block;
-    opacity: 1;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
 }
 
+/* Interview Type Select */
+#interview_type {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Interview Fields */
+.interview-fields {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.interview-fields .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Required Field Indicator */
 .required:after {
     content: '*';
-    color: var(--danger-color);
+    color: #ef4444;
     margin-left: 4px;
+    font-size: 1rem;
 }
 
-.submit-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 1rem;
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.75rem;
     transition: all 0.3s ease;
+    text-decoration: none;
 }
 
-.submit-btn:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-cancel {
+    background: #fff;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-cancel:hover {
+    background: #fef2f2;
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Notes Textarea */
+textarea {
+    min-height: 120px;
+    line-height: 1.6;
+    resize: vertical;
 }
 
 /* Responsive Design */
@@ -510,11 +565,36 @@ body {
     }
 
     .form-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .interview-fields {
         padding: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
     }
 }
 
-/* Animation */
+/* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -526,6 +606,31 @@ body {
     }
 }
 
-.interview-card {
-    animation: fadeIn 0.3s ease-out;
+.form-container {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Field Focus Styles */
+.form-group input:focus::placeholder,
+.form-group textarea:focus::placeholder {
+    color: #94a3b8;
+}
+
+/* Custom Scrollbar */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
