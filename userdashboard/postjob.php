@@ -53,21 +53,43 @@
         $application_deadline = $_POST['last_date'];
         $contact = $_POST['phone'];
         $interview = isset($_POST['interview']) ? $_POST['interview'] : NULL;
+        $status = 'pending'; // Set initial status as pending
         
         // Update the SQL statement to handle NULL values
-        $stmt = $conn->prepare("INSERT INTO tbl_jobs (category, job_title, location, job_description, vacancy_date, vacancy, salary, application_deadline, interview, employer_id, town, start_time, end_time, working_days, contact_no, license_required, badge_required) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO tbl_jobs (category, job_title, location, job_description, vacancy_date, vacancy, salary, application_deadline, interview, employer_id, town, start_time, end_time, working_days, contact_no, license_required, badge_required, status, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)");
         
-        // Use "sssssssssissssss" instead of "sssssssssssssssss" to handle NULL values
-        $stmt->bind_param("sssssssssississss", $category, $job_title, $location, $job_description, $vacancy_date, $vacancy, $salary, $application_deadline, $interview, $employer_id, $town, $start_time, $end_time, $working_days, $contact, $license, $badge);
+        // Fix the bind_param statement to match the number of parameters
+        $stmt->bind_param("sssssssssississsss", 
+            $category, 
+            $job_title, 
+            $location, 
+            $job_description, 
+            $vacancy_date, 
+            $vacancy, 
+            $salary, 
+            $application_deadline, 
+            $interview, 
+            $employer_id, 
+            $town, 
+            $start_time, 
+            $end_time, 
+            $working_days, 
+            $contact, 
+            $license, 
+            $badge, 
+            $status
+        );
         
         if ($stmt->execute()) 
         {
-            header("Location: postjob.php?message=Job added successfully!");
+            $_SESSION['success'] = "Job posted successfully and is pending admin approval.";
+            header("Location: myjoblist.php");
             exit();
         } 
         else 
         {
-            header("Location: postjob.php?message=Error posting job: " . $stmt->error);
+            $_SESSION['error'] = "Error posting job: " . $conn->error;
+            header("Location: postjob.php?message=Error posting job: " . $conn->error);
             exit();
         }
 

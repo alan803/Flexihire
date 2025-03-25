@@ -73,6 +73,7 @@
                   (SELECT status FROM tbl_applications WHERE job_id = j.job_id AND user_id = ? LIMIT 1) AS application_status
               FROM tbl_jobs j 
               JOIN tbl_employer e ON j.employer_id = e.employer_id
+              WHERE j.status = 'approved' AND j.is_deleted = 0
               ORDER BY j.created_at DESC";
 
     $stmt = mysqli_prepare($conn, $sql_fetch);

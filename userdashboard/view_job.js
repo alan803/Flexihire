@@ -39,31 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', debounce(updateSidebar, 200));
     updateSidebar();
 
-    // Export Functionality
-    const exportBtn = $('.export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', async () => {
-            try {
-                toggleLoading(exportBtn, true);
-                const response = await fetch('export_jobs.php');
-                if (!response.ok) throw new Error('Export failed');
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `jobs_export_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                showNotification('Jobs exported successfully', 'success');
-            } catch (error) {
-                showNotification('Export failed: ' + error.message, 'error');
-            } finally {
-                toggleLoading(exportBtn, false);
-            }
-        });
-    }
-
     // Hide all confirmation panels initially
     const panels = document.querySelectorAll('.confirmation-panel');
     panels.forEach(panel => {
@@ -72,19 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Overlay click handler
     document.getElementById('confirmationOverlay').addEventListener('click', function() {
-        hideDeleteConfirmation();
         hideRestoreConfirmation();
-        hideRejectConfirmation();
-        hideAcceptConfirmation();
     });
 
     // Close confirmation with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            hideDeleteConfirmation();
             hideRestoreConfirmation();
-            hideRejectConfirmation();
-            hideAcceptConfirmation();
         }
     });
 
@@ -112,18 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // Loading State
-    function toggleLoading(element, isLoading) {
-        if (isLoading) {
-            element.disabled = true;
-            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-        } else {
-            element.disabled = false;
-            element.innerHTML = '<i class="fas fa-download"></i> Export Jobs';
-        }
+    // Restore Confirmation Functions
+    function showRestoreConfirmation(jobId) {
+        document.getElementById('confirmationOverlay').style.display = 'block';
+        document.getElementById('restorePanel').style.display = 'block';
+        document.getElementById('confirmRestore').href = `restore_jobbyadmin.php?job_id=${jobId}`;
     }
 
-    // Animation Keyframes
+    function hideRestoreConfirmation() {
+        document.getElementById('confirmationOverlay').style.display = 'none';
+        document.getElementById('restorePanel').style.display = 'none';
+    }
+
+    // Function to view application details
+    function viewApplication(applicationId) {
+        window.location.href = `view_application.php?application_id=${applicationId}`;
+    }
+
+    // Add animation styles
     const styleSheet = document.createElement('style');
     styleSheet.textContent = `
         @keyframes slideIn {
@@ -156,63 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(styleSheet);
 
-    // Delete Confirmation Functions
-    function showDeleteConfirmation(jobId) {
-        document.getElementById('confirmationOverlay').style.display = 'block';
-        document.getElementById('deletePanel').style.display = 'block';
-        document.getElementById('confirmDelete').href = `delete_job.php?job_id=${jobId}`;
-    }
-
-    function hideDeleteConfirmation() {
-        document.getElementById('confirmationOverlay').style.display = 'none';
-        document.getElementById('deletePanel').style.display = 'none';
-    }
-
-    // Restore Confirmation Functions
-    function showRestoreConfirmation(jobId) {
-        document.getElementById('confirmationOverlay').style.display = 'block';
-        document.getElementById('restorePanel').style.display = 'block';
-        document.getElementById('confirmRestore').href = `restore_jobbyadmin.php?job_id=${jobId}`;
-    }
-
-    function hideRestoreConfirmation() {
-        document.getElementById('confirmationOverlay').style.display = 'none';
-        document.getElementById('restorePanel').style.display = 'none';
-    }
-
-    // Reject Confirmation Functions
-    function showRejectConfirmation(jobId) {
-        document.getElementById('confirmationOverlay').style.display = 'block';
-        document.getElementById('rejectPanel').style.display = 'block';
-        document.getElementById('confirmReject').href = `reject_job.php?job_id=${jobId}`;
-    }
-
-    function hideRejectConfirmation() {
-        document.getElementById('confirmationOverlay').style.display = 'none';
-        document.getElementById('rejectPanel').style.display = 'none';
-    }
-
-    // Accept Confirmation Functions
-    function showAcceptConfirmation(jobId) {
-        document.getElementById('confirmationOverlay').style.display = 'block';
-        document.getElementById('acceptPanel').style.display = 'block';
-        document.getElementById('confirmAccept').href = `accept_job.php?job_id=${jobId}`;
-    }
-
-    function hideAcceptConfirmation() {
-        document.getElementById('confirmationOverlay').style.display = 'none';
-        document.getElementById('acceptPanel').style.display = 'none';
-    }
-
     // Make functions globally available
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.hideDeleteConfirmation = hideDeleteConfirmation;
     window.showRestoreConfirmation = showRestoreConfirmation;
     window.hideRestoreConfirmation = hideRestoreConfirmation;
-    window.showRejectConfirmation = showRejectConfirmation;
-    window.hideRejectConfirmation = hideRejectConfirmation;
-    window.showAcceptConfirmation = showAcceptConfirmation;
-    window.hideAcceptConfirmation = hideAcceptConfirmation;
+    window.viewApplication = viewApplication;
 });
 
 // Debounce Utility

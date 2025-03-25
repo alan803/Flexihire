@@ -23,7 +23,7 @@ $stats_result = mysqli_query($conn, $stats_query);
 $stats = mysqli_fetch_assoc($stats_result);
 
 // Fetch all jobs with employer details
-$jobs_query = "SELECT j.job_id, j.job_title, j.status, j.created_at, e.company_name 
+$jobs_query = "SELECT j.job_id, j.job_title, j.status, j.created_at, j.is_deleted, e.company_name 
                FROM tbl_jobs j 
                LEFT JOIN tbl_employer e ON j.employer_id = e.employer_id 
                ORDER BY j.created_at DESC";
@@ -46,6 +46,43 @@ $total_pages = ceil($total_records / $records_per_page);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="manage_jobs.css">
+    <style>
+        /* ... existing styles ... */
+
+        .accept-btn {
+            background-color: #dcfce7;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .accept-btn:hover {
+            background-color: #bbf7d0;
+            color: #15803d;
+            border-color: #86efac;
+        }
+
+        .accept-btn i {
+            color: #16a34a;
+        }
+
+        .confirmation-icon.success {
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+
+        .confirm-btn.success {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .confirm-btn.success:hover {
+            background-color: #15803d;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -93,6 +130,24 @@ $total_pages = ceil($total_records / $records_per_page);
                 </div>
             </header>
 
+            <?php if (isset($_SESSION['success'])): ?>
+                <div class="alert alert-success">
+                    <?php 
+                    echo $_SESSION['success'];
+                    unset($_SESSION['success']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-error">
+                    <?php 
+                    echo $_SESSION['error'];
+                    unset($_SESSION['error']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Stats Section -->
             <section class="users-stats" aria-label="Job statistics">
                 <div class="stat-item">
@@ -137,16 +192,28 @@ $total_pages = ceil($total_records / $records_per_page);
                                         <a href="view_job.php?job_id=<?= $job['job_id'] ?>" class="view-btn">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button type="button" class="reject-btn" onclick="showRejectConfirmation(<?= $job['job_id'] ?>)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <?php if (strtolower($job['status']) === 'active'): ?>
-                                            <button type="button" class="delete-btn" onclick="showConfirmation(<?= $job['job_id'] ?>)">
-                                                <i class="fas fa-ban"></i>
+                                        <?php if ($job['is_deleted'] == 1): ?>
+                                            <button type="button" class="restore-btn" onclick="showRestoreConfirmation(<?= $job['job_id'] ?>)">
+                                                <i class="fas fa-undo"></i>
                                             </button>
                                         <?php else: ?>
-                                            <button type="button" class="activate-btn" onclick="showActivateConfirmation(<?= $job['job_id'] ?>)">
-                                                <i class="fas fa-check"></i>
+                                            <?php if (strtolower($job['status']) === 'pending'): ?>
+                                                <button type="button" class="accept-btn" onclick="showAcceptConfirmation(<?= $job['job_id'] ?>)">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="reject-btn" onclick="showRejectConfirmation(<?= $job['job_id'] ?>)">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if (strtolower($job['status']) === 'active'): ?>
+                                                <button type="button" class="delete-btn" onclick="showConfirmation(<?= $job['job_id'] ?>)">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                        <?php if ($job['is_deleted'] != 1): ?>
+                                            <button type="button" class="trash-btn" onclick="showDeleteConfirmation(<?= $job['job_id'] ?>)">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         <?php endif; ?>
                                     </td>
@@ -195,6 +262,23 @@ $total_pages = ceil($total_records / $records_per_page);
     <!-- Confirmation Panels -->
     <div id="confirmationOverlay" class="overlay"></div>
 
+    <!-- Delete Confirmation Panel -->
+    <div class="confirmation-panel" id="deletePanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon danger">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Delete Job</h3>
+                <p>Are you sure you want to permanently delete this job? This action cannot be undone.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideDeleteConfirmation()">Cancel</button>
+                <a href="#" id="confirmDelete" class="confirm-btn danger">Delete</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Deactivate Confirmation Panel -->
     <div class="confirmation-panel" id="deactivatePanel">
         <div class="confirmation-content">
@@ -242,6 +326,40 @@ $total_pages = ceil($total_records / $records_per_page);
             <div class="confirmation-actions">
                 <button class="cancel-btn" onclick="hideRejectConfirmation()">Cancel</button>
                 <a href="#" id="confirmReject" class="confirm-btn danger">Reject</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Panel -->
+    <div class="confirmation-panel" id="restorePanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Restore Job</h3>
+                <p>Are you sure you want to restore this job? It will become visible to users again.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideRestoreConfirmation()">Cancel</button>
+                <a href="#" id="confirmRestore" class="confirm-btn success">Restore</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accept Confirmation Panel -->
+    <div class="confirmation-panel" id="acceptPanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Accept Job</h3>
+                <p>Are you sure you want to accept this job? It will become visible to users.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideAcceptConfirmation()">Cancel</button>
+                <a href="#" id="confirmAccept" class="confirm-btn success">Accept</a>
             </div>
         </div>
     </div>

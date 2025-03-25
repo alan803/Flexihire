@@ -7,7 +7,8 @@ $dbname = "project";
 mysqli_select_db($conn, $dbname) or die("Database selection failed: " . mysqli_error($conn));
 
 // Authentication check
-if (!isset($_SESSION['admin_id'])) {
+if (!isset($_SESSION['admin_id'])) 
+{
     header("Location: ../login/loginvalidation.php");
     exit();
 }
@@ -212,9 +213,9 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                             <button class="action-btn view-btn" onclick="viewEmployer(<?= $row['employer_id'] ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <button class="action-btn edit-btn" onclick="editEmployer(<?= $row['employer_id'] ?>)">
+                                            <!-- <button class="action-btn edit-btn" onclick="editEmployer(<?= $row['employer_id'] ?>)">
                                                 <i class="fas fa-pen"></i>
-                                            </button>
+                                            </button> -->
                                             <?php if(strtolower($row['status']) === 'active'): ?>
                                                 <button class="action-btn delete-btn" onclick="showConfirmation(<?= $row['employer_id'] ?>)">
                                                     <i class="fas fa-user-slash"></i>
@@ -310,7 +311,53 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
         </div>
     </div>
 
+    <!-- Restore Confirmation Panel -->
+    <div class="confirmation-panel" id="restorePanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Restore Job</h3>
+                <p>Are you sure you want to restore this job? It will become visible to users again.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideRestoreConfirmation()">Cancel</button>
+                <a href="#" id="confirmRestore" class="confirm-btn success">Restore</a>
+            </div>
+        </div>
+    </div>
+
     <script src="manage_employers.js" defer></script>
+    <script>
+        // Restore Confirmation Functions
+        function showRestoreConfirmation(jobId) {
+            document.getElementById('confirmationOverlay').style.display = 'block';
+            document.getElementById('restorePanel').style.display = 'block';
+            document.getElementById('confirmRestore').href = `restore_jobbyadmin.php?job_id=${jobId}`;
+        }
+
+        function hideRestoreConfirmation() {
+            document.getElementById('confirmationOverlay').style.display = 'none';
+            document.getElementById('restorePanel').style.display = 'none';
+        }
+
+        // Close confirmation when clicking overlay
+        document.getElementById('confirmationOverlay').addEventListener('click', function() {
+            hideRestoreConfirmation();
+        });
+
+        // Close confirmation with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideRestoreConfirmation();
+            }
+        });
+
+        // Make functions globally available
+        window.showRestoreConfirmation = showRestoreConfirmation;
+        window.hideRestoreConfirmation = hideRestoreConfirmation;
+    </script>
 </body>
 </html>
 

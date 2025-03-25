@@ -200,9 +200,9 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                             <a href="view_user.php?user_id=<?= $row['user_id'] ?>" class="view-btn">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button class="edit-btn" onclick="editUser(<?= $row['user_id'] ?>)">
+                                            <!-- <button class="edit-btn" onclick="editUser(<?= $row['user_id'] ?>)">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
+                                            </button> -->
                                             <?php if(strtolower($row['status']) === 'active'): ?>
                                                 <button type="button" class="delete-btn" onclick="showConfirmation(<?= $row['user_id'] ?>)">
                                                     <i class="fas fa-user-slash"></i>

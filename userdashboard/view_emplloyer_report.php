@@ -112,9 +112,9 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="page-header">
-                <a href="manage_employers.php" class="back-button">
+                <a href="reports.php" class="back-button">
                     <i class="fas fa-arrow-left"></i>
-                    <span>Back to Employers</span>
+                    <span>Back to Reports</span>
                 </a>
             </div>
 

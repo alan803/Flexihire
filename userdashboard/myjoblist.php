@@ -153,6 +153,16 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             background-color: rgba(245, 158, 11, 0.1);
             color: var(--warning-color);
         }
+
+        .status-approved {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #16a34a;
+        }
+
+        .status-rejected {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
         
         .job-actions {
             display: flex;
@@ -229,6 +239,104 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             font-size: 16px;
             display: block;
             margin-bottom: 5px;
+        }
+
+        /* Confirmation Panel Styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .confirmation-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .confirmation-content {
+            text-align: center;
+        }
+
+        .confirmation-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-icon.danger {
+            color: #dc2626;
+        }
+
+        .confirmation-text h3 {
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .confirmation-text p {
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cancel-btn, .confirm-btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: none;
+        }
+
+        .confirm-btn {
+            text-decoration: none;
+            border: none;
+        }
+
+        .confirm-btn.danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .confirm-btn.danger:hover {
+            background-color: #b91c1c;
         }
     </style>
 </head>
@@ -317,6 +425,18 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                             data-status="all">
                         All Active Jobs (<?php echo $active_jobs; ?>)
                     </button>
+                    <button class="filter-btn <?php echo $current_status === 'pending' ? 'active' : ''; ?>" 
+                            data-status="pending">
+                        Pending Approval
+                    </button>
+                    <button class="filter-btn <?php echo $current_status === 'approved' ? 'active' : ''; ?>" 
+                            data-status="approved">
+                        Approved Jobs
+                    </button>
+                    <button class="filter-btn <?php echo $current_status === 'rejected' ? 'active' : ''; ?>" 
+                            data-status="rejected">
+                        Rejected Jobs
+                    </button>
                     <button class="filter-btn <?php echo $current_status === 'deactivated' ? 'active' : ''; ?>" 
                             data-status="deactivated">
                         Deactivated (<?php echo $deactivated_jobs; ?>)
@@ -342,16 +462,39 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                     $status = isset($_GET['status']) ? $_GET['status'] : 'all';
                     $is_deleted = ($status === 'deactivated') ? 1 : 0;
 
-                    $sql_fetch = "SELECT *, 
-                                  CASE 
-                                    WHEN is_deleted = 1 THEN 'deactivated'
-                                    ELSE 'active'
-                                  END as status 
-                                  FROM tbl_jobs 
-                                  WHERE employer_id = ? AND is_deleted = ?";
+                    // Get all jobs for this employer
+                    $sql = "SELECT * FROM tbl_jobs WHERE employer_id = ?";
+                    
+                    // Apply filters if selected
+                    if (isset($_GET['status'])) {
+                        switch ($_GET['status']) {
+                            case 'active':
+                                $sql .= " AND (status = 'pending' OR status = 'approved') AND is_deleted = 0";
+                                break;
+                            case 'pending':
+                                $sql .= " AND status = 'pending' AND is_deleted = 0";
+                                break;
+                            case 'approved':
+                                $sql .= " AND status = 'approved' AND is_deleted = 0";
+                                break;
+                            case 'rejected':
+                                $sql .= " AND status = 'rejected' AND is_deleted = 0";
+                                break;
+                            case 'deactivated':
+                                $sql .= " AND is_deleted = 1";
+                                break;
+                            default:
+                                $sql .= " AND is_deleted = 0";
+                        }
+                    } else {
+                        // Default view: show all non-deleted jobs
+                        $sql .= " AND is_deleted = 0";
+                    }
+                    
+                    $sql .= " ORDER BY job_id DESC";
 
-                    $stmt_fetch = mysqli_prepare($conn, $sql_fetch);
-                    mysqli_stmt_bind_param($stmt_fetch, "ii", $employer_id, $is_deleted);
+                    $stmt_fetch = mysqli_prepare($conn, $sql);
+                    mysqli_stmt_bind_param($stmt_fetch, "i", $employer_id);
                     mysqli_stmt_execute($stmt_fetch);
                     $result_fetch = mysqli_stmt_get_result($stmt_fetch);
 
@@ -366,7 +509,14 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                 <div class="job-details">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                                         <h3><?php echo htmlspecialchars($job_data['job_title']); ?></h3>
-                                        <span class="job-status <?php echo $job_data['status'] == 'deactivated' ? 'status-deactivated' : 'status-active'; ?>">
+                                        <span class="job-status <?php 
+                                            echo match($job_data['status']) {
+                                                'deactivated' => 'status-deactivated',
+                                                'approved' => 'status-approved',
+                                                'rejected' => 'status-rejected',
+                                                default => 'status-active'
+                                            };
+                                        ?>">
                                             <?php echo ucfirst($job_data['status']); ?>
                                         </span>
                                     </div>
@@ -433,14 +583,11 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                     <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="deletejob.php?id=<?php echo $job_data['job_id']; ?>" 
-                                       onclick="return confirm('Are you sure you want to deactivate this job?')" 
-                                       class="action-btn delete-btn">
+                                    <a href="#" class="action-btn delete-btn" onclick="showDeleteConfirmation(<?php echo $job_data['job_id']; ?>); return false;">
                                         <i class="fas fa-trash-alt"></i> Deactivate
                                     </a>
                                 <?php else: ?>
-                                    <a href="restore_job.php?job_id=<?php echo $job_data['job_id']; ?>" 
-                                       onclick="return confirm('Are you sure you want to reactivate this job?')" 
+                                    <a href="#" onclick="showRestoreConfirmation(<?php echo $job_data['job_id']; ?>); return false;" 
                                        class="action-btn reactivate-btn">
                                         <i class="fas fa-redo"></i> Restore
                                     </a>
@@ -527,6 +674,41 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         </div>
     </div>
     
+    <!-- Delete Confirmation Panel -->
+    <div id="confirmationOverlay" class="overlay"></div>
+    <div class="confirmation-panel" id="deletePanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon danger">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Deactivate Job</h3>
+                <p>Are you sure you want to deactivate this job? It will no longer be visible to users.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideDeleteConfirmation()">Cancel</button>
+                <a href="#" id="confirmDelete" class="confirm-btn danger">Deactivate</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Panel -->
+    <div class="confirmation-panel" id="restorePanel">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="confirmation-text">
+                <h3>Restore Job</h3>
+                <p>Are you sure you want to restore this job? It will become visible to users again.</p>
+            </div>
+            <div class="confirmation-actions">
+                <button class="cancel-btn" onclick="hideRestoreConfirmation()">Cancel</button>
+                <a href="#" id="confirmRestore" class="confirm-btn success">Restore</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
@@ -584,6 +766,50 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                     window.location.href = `myjoblist.php?status=${status}`;
                 });
             });
+
+            // Delete Confirmation Functions
+            function showDeleteConfirmation(jobId) {
+                document.getElementById('confirmationOverlay').style.display = 'block';
+                document.getElementById('deletePanel').style.display = 'block';
+                document.getElementById('confirmDelete').href = `deletejob.php?id=${jobId}`;
+            }
+
+            function hideDeleteConfirmation() {
+                document.getElementById('confirmationOverlay').style.display = 'none';
+                document.getElementById('deletePanel').style.display = 'none';
+            }
+
+            // Restore Confirmation Functions
+            function showRestoreConfirmation(jobId) {
+                document.getElementById('confirmationOverlay').style.display = 'block';
+                document.getElementById('restorePanel').style.display = 'block';
+                document.getElementById('confirmRestore').href = `restore_job.php?job_id=${jobId}`;
+            }
+
+            function hideRestoreConfirmation() {
+                document.getElementById('confirmationOverlay').style.display = 'none';
+                document.getElementById('restorePanel').style.display = 'none';
+            }
+
+            // Close confirmation when clicking overlay
+            document.getElementById('confirmationOverlay').addEventListener('click', function() {
+                hideDeleteConfirmation();
+                hideRestoreConfirmation();
+            });
+
+            // Close confirmation with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideDeleteConfirmation();
+                    hideRestoreConfirmation();
+                }
+            });
+
+            // Make functions globally available
+            window.showDeleteConfirmation = showDeleteConfirmation;
+            window.hideDeleteConfirmation = hideDeleteConfirmation;
+            window.showRestoreConfirmation = showRestoreConfirmation;
+            window.hideRestoreConfirmation = hideRestoreConfirmation;
         });
         
         function showSearchBar() {

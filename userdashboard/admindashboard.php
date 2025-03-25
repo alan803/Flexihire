@@ -30,11 +30,11 @@
     $row_total_jobs=mysqli_fetch_assoc($result_total_jobs);
     $total_jobs=$row_total_jobs['total_jobs'];
 
-    //fetching no of users are applied for a job
-    $sql_total_applicants="SELECT COUNT(*) AS total_applicants FROM tbl_applications";
-    $result_total_applicants=mysqli_query($conn,$sql_total_applicants);
-    $row_total_applicants=mysqli_fetch_assoc($result_total_applicants);
-    $total_applicants=$row_total_applicants['total_applicants'];
+    //fetching no of reports
+    $sql_total_reports="SELECT COUNT(*) AS total_reports FROM tbl_reports";
+    $result_total_reports=mysqli_query($conn,$sql_total_reports);
+    $row_total_reports=mysqli_fetch_assoc($result_total_reports);
+    $total_reports=$row_total_reports['total_reports'];
 
 // // Fetch dashboard statistics
 // $stats = array();
@@ -169,18 +169,18 @@
                     </div>
                 </div>
 
-                <!-- Applications Stats -->
+                <!-- Reports Stats -->
                 <div class="stat-card">
                     <div class="stat-header">
-                        <span class="stat-title">Total Applications</span>
+                        <span class="stat-title">Total Reports</span>
                         <div class="stat-icon bg-red">
                             <i class="fas fa-file-alt"></i>
                         </div>
                     </div>
-                    <div class="stat-value" data-target="<?php echo $stats['applications']; ?>"><?php echo $total_applicants; ?></div>
+                    <div class="stat-value"><?php echo $total_reports; ?></div>
                     <div class="stat-change">
                         <i class="fas fa-arrow-up"></i>
-                        <a href="manage_applications.php">Job Applications</a>
+                        <a href="reports.php">View Reports</a>
                     </div>
                 </div>
             </div>

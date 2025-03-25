@@ -749,3 +749,40 @@ body {
 .actions a {
     text-decoration: none;
 }
+
+/* Disabled button styles */
+.actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Trash Button */
+.trash-btn {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.trash-btn:hover {
+    background-color: #fecaca;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+}
+
+.trash-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Restore Button */
+.restore-btn {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.restore-btn:hover {
+    background-color: #bbf7d0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.1);
+}

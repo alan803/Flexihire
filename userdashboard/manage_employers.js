@@ -191,6 +191,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
     document.head.appendChild(styleSheet);
+
+    function showRestoreConfirmation(jobId) {
+        document.getElementById('confirmationOverlay').style.display = 'block';
+        document.getElementById('restorePanel').style.display = 'block';
+        document.getElementById('confirmRestore').href = `restore_jobbyadmin.php?job_id=${jobId}`;
+    }
+
+    function hideRestoreConfirmation() {
+        document.getElementById('confirmationOverlay').style.display = 'none';
+        document.getElementById('restorePanel').style.display = 'none';
+    }
+
+    document.getElementById('confirmationOverlay').addEventListener('click', function() {
+        hideRestoreConfirmation();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideRestoreConfirmation();
+        }
+    });
+
+    window.showRestoreConfirmation = showRestoreConfirmation;
+    window.hideRestoreConfirmation = hideRestoreConfirmation;
 });
 
 // Debounce Utility
