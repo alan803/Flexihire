@@ -354,3 +354,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('minsalary').addEventListener('input', filterminsalary);
     document.getElementById('date').addEventListener('input', filterdate);
 });
+
+function viewReportDetails(jobId) {
+    const modal = document.getElementById(`reportModal-${jobId}`);
+    modal.style.display = "block";
+
+    // Close modal when clicking the X
+    modal.querySelector('.close-modal').onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+}

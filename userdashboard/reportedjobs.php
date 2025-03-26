@@ -176,10 +176,12 @@
                 $user_id = isset($_SESSION['id']) ? $_SESSION['id'] : $_SESSION['user_id'];
                 
                 // Fetch reported jobs with error checking
-                $bookmark_sql = "SELECT j.*, r.status as report_status 
-                                FROM tbl_jobs j 
-                                INNER JOIN tbl_reports r ON j.job_id = r.reported_job_id 
-                                WHERE r.reporter_id = ?";
+                $bookmark_sql = "SELECT j.*, r.status as report_status, 
+                                r.created_at, r.reason, 
+                                r.resolution_notes
+                        FROM tbl_jobs j 
+                        INNER JOIN tbl_reports r ON j.job_id = r.reported_job_id 
+                        WHERE r.reporter_id = ?";
                 
                 $stmt = mysqli_prepare($conn, $bookmark_sql);
                 if (!$stmt) {
@@ -214,11 +216,36 @@
                         echo '<p class="date"><i class="fas fa-calendar-alt"></i> Posted: ' . date('Y-m-d', strtotime($row['created_at'])) . '</p>';
                         echo '</div>';
                         echo '<div class="job-footer">';
-                        // Update status button to use report_status
-                        $status_class = strtolower($row['report_status'] ?? 'pending'); // Default to pending if null
-                        echo '<button class="status-btn ' . $status_class . '">';
+                        echo '<button class="status-btn ' . strtolower($row['report_status']) . '">';
                         echo '<i class="fas fa-clock"></i> Status: ' . htmlspecialchars($row['report_status'] ?? 'Pending');
                         echo '</button>';
+                        echo '<button class="view-report-btn" onclick="viewReportDetails(' . $row['job_id'] . ')">';
+                        echo '<i class="fas fa-info-circle"></i> View Report Details';
+                        echo '</button>';
+                        echo '</div>';
+                        echo '</div>';
+
+                        // Add the modal HTML right after each job card
+                        echo '<div id="reportModal-' . $row['job_id'] . '" class="report-modal">';
+                        echo '<div class="report-modal-content">';
+                        echo '<div class="report-header">';
+                        echo '<h3>Report Details</h3>';
+                        echo '<span class="close-modal">&times;</span>';
+                        echo '</div>';
+                        echo '<div class="report-body">';
+                        echo '<div class="report-info">';
+                        echo '<p><strong>Status:</strong> <span class="status-badge ' . strtolower($row['report_status']) . '">' . htmlspecialchars($row['report_status']) . '</span></p>';
+                        echo '<p><strong>Reported On:</strong> ' . date('F j, Y', strtotime($row['created_at'])) . '</p>';
+                        echo '<p><strong>Report Reason:</strong> ' . htmlspecialchars($row['reason']) . '</p>';
+                        if(!empty($row['resolution_notes'])) {
+                            echo '<div class="admin-notes">';
+                            echo '<h4>Admin Response:</h4>';
+                            echo '<p>' . nl2br(htmlspecialchars($row['resolution_notes'])) . '</p>';
+                            // echo '<small>Last updated: ' . date('F j, Y', strtotime($row['last_updated'])) . '</small>';
+                            echo '</div>';
+                        }
+                        echo '</div>';
+                        echo '</div>';
                         echo '</div>';
                         echo '</div>';
                     }
@@ -488,6 +515,151 @@
         position: relative;
         cursor: pointer;
     }
+    </style>
+
+    <!-- Report Details Modal -->
+    <div id="reportModal-<?php echo $row['job_id']; ?>" class="report-modal">
+        <div class="report-modal-content">
+            <div class="report-header">
+                <h3>Report Details</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="report-body">
+                <div class="report-info">
+                    <p><strong>Status:</strong> <span class="status-badge <?php echo strtolower($row['report_status']); ?>"><?php echo htmlspecialchars($row['report_status']); ?></span></p>
+                    <p><strong>Reported On:</strong> <?php echo date('F j, Y', strtotime($row['created_at'])); ?></p>
+                    <p><strong>Report Reason:</strong> <?php echo htmlspecialchars($row['reason']); ?></p>
+                    <?php if(!empty($row['resolution_notes'])): ?>
+                        <div class="admin-notes">
+                            <h4>Admin Response:</h4>
+                            <p><?php echo nl2br(htmlspecialchars($row['resolution_notes'])); ?></p>
+                            <!-- <small>Last updated: <?php echo date('F j, Y', strtotime($row['last_updated'])); ?></small> -->
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal Styles -->
+    <style>
+        /* Report Modal Styles */
+        .report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .report-modal-content {
+            position: relative;
+            background: white;
+            margin: 10% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: modalSlide 0.3s ease;
+        }
+
+        .report-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .report-header h3 {
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .report-body {
+            padding: 1.5rem;
+        }
+
+        .report-info p {
+            margin: 0.75rem 0;
+            line-height: 1.5;
+        }
+
+        .admin-notes {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .admin-notes h4 {
+            margin: 0 0 0.75rem 0;
+            color: var(--text-color);
+        }
+
+        .admin-notes small {
+            display: block;
+            margin-top: 1rem;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-badge.pending { background: #FFF3E0; color: #FF9800; }
+        .status-badge.reviewing { background: #E3F2FD; color: #2196F3; }
+        .status-badge.resolved { background: #E8F5E9; color: #4CAF50; }
+        .status-badge.rejected { background: #FFEBEE; color: #F44336; }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .view-report-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .view-report-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(138, 108, 224, 0.2);
+        }
     </style>
 </body>
 </html>

@@ -106,7 +106,18 @@
         
         <div class="nav-right">
             <div class="profile-info">
-                <span class="nav-username"><?php echo htmlspecialchars($user['first_name']); ?></span>
+                <span class="nav-username">
+                    <?php 
+                        // Display username if it exists, otherwise show first name
+                        if (!empty($user['username'])) {
+                            echo htmlspecialchars($user['username']);
+                        } elseif (!empty($user['first_name'])) {
+                            echo htmlspecialchars($user['first_name']);
+                        } else {
+                            echo "User";
+                        }
+                    ?>
+                </span>
                 <div class="profile-container">
                     <?php if (!empty($user_data['profile_image'])): ?>
                         <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">

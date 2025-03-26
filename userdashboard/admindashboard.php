@@ -4,6 +4,33 @@
     $dbname = "project";
     mysqli_select_db($conn, $dbname);
 
+    // Add the time_elapsed_string function here
+    function time_elapsed_string($datetime) {
+        $now = new DateTime;
+        $ago = new DateTime($datetime);
+        $diff = $now->diff($ago);
+
+        if ($diff->y > 0) {
+            return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+        }
+        if ($diff->m > 0) {
+            return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+        }
+        if ($diff->d > 0) {
+            if ($diff->d == 1) {
+                return 'Yesterday';
+            }
+            return $diff->d . ' days ago';
+        }
+        if ($diff->h > 0) {
+            return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+        }
+        if ($diff->i > 0) {
+            return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+        }
+        return 'Just now';
+    }
+
     // Check if admin is logged in
     if (!isset($_SESSION['admin_id'])) {
         header("Location: ../login/loginvalidation.php");
@@ -73,7 +100,55 @@
 // ORDER BY created_at DESC 
 // LIMIT 10";
 
-// $result_activities = mysqli_query($conn, $sql_activities);
+// Add this before the HTML section, with your other queries
+// Recent Activities Query
+$sql_activities = "SELECT * FROM (
+    SELECT 
+        'New User' as type,
+        u.first_name,
+        u.last_name,
+        l.email,
+        u.created_at,
+        l.status,
+        'user' as category
+    FROM tbl_user u
+    LEFT JOIN tbl_login l ON u.user_id = l.user_id
+    
+    UNION ALL
+    
+    SELECT 
+        'New Employer' as type,
+        e.company_name as first_name,
+        '' as last_name,
+        l.email,
+        e.created_at,
+        l.status,
+        'employer' as category
+    FROM tbl_employer e
+    LEFT JOIN tbl_login l ON e.employer_id = l.employer_id
+    
+    UNION ALL
+    
+    SELECT 
+        'New Job' as type,
+        j.job_title as first_name,
+        e.company_name as last_name,
+        l.email,
+        j.created_at,
+        j.status,
+        'job' as category
+    FROM tbl_jobs j
+    JOIN tbl_employer e ON j.employer_id = e.employer_id
+    LEFT JOIN tbl_login l ON e.employer_id = l.employer_id
+) as activities 
+ORDER BY created_at DESC 
+LIMIT 10";
+
+$result_activities = mysqli_query($conn, $sql_activities);
+
+if (!$result_activities) {
+    die("Query failed: " . mysqli_error($conn));
+}
 ?>
 
 <!DOCTYPE html>
@@ -185,33 +260,73 @@
                 </div>
             </div>
 
-            <!-- Recent Activity Section -->
+            <!-- Recent Activity Section with essential information -->
             <div class="recent-activity">
                 <div class="section-header">
-                    <h2 class="section-title">Recent Activity</h2>
+                    <h2><i class="fas fa-history"></i> Recent Activities</h2>
                 </div>
+                
                 <div class="activity-list">
-                    <?php while($activity = mysqli_fetch_assoc($result_activities)): ?>
-                        <div class="activity-item">
-                            <div class="activity-icon bg-<?php echo strtolower(str_replace(' ', '-', $activity['type'])); ?>">
-                                <i class="fas fa-<?php 
-                                    echo $activity['type'] === 'New User' ? 'user' : 
-                                        ($activity['type'] === 'New Employer' ? 'building' : 'briefcase'); 
-                                ?>"></i>
-                            </div>
-                            <div class="activity-details">
-                                <div class="activity-title">
-                                    <?php 
-                                        echo $activity['type'] . ': ' . 
-                                        htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']); 
-                                    ?>
+                    <?php if(mysqli_num_rows($result_activities) > 0): ?>
+                        <?php while($activity = mysqli_fetch_assoc($result_activities)): ?>
+                            <div class="activity-item">
+                                <div class="activity-icon bg-<?php echo $activity['category']; ?>">
+                                    <i class="fas fa-<?php 
+                                        echo $activity['category'] === 'user' ? 'user' : 
+                                            ($activity['category'] === 'employer' ? 'building' : 
+                                                ($activity['category'] === 'job' ? 'briefcase' : 'file-alt')); 
+                                    ?>"></i>
                                 </div>
-                                <div class="activity-time">
-                                    <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
+                                
+                                <div class="activity-content">
+                                    <div class="activity-header">
+                                        <div class="activity-info">
+                                            <span class="activity-name">
+                                                <?php 
+                                                switch($activity['category']) {
+                                                    case 'user':
+                                                        echo htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']);
+                                                        break;
+                                                    case 'employer':
+                                                        echo htmlspecialchars($activity['first_name']); // company name
+                                                        break;
+                                                    case 'job':
+                                                        echo htmlspecialchars($activity['first_name']); // job title
+                                                        echo ' at ' . htmlspecialchars($activity['last_name']); // company name
+                                                        break;
+                                                    default:
+                                                        echo htmlspecialchars($activity['first_name']);
+                                                }
+                                                ?>
+                                            </span>
+                                            <span class="activity-type"><?php echo $activity['type']; ?></span>
+                                        </div>
+                                        <span class="activity-time">
+                                            <?php echo time_elapsed_string($activity['created_at']); ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <?php if($activity['email']): ?>
+                                        <div class="activity-subtitle">
+                                            <i class="fas fa-envelope"></i>
+                                            <?php echo htmlspecialchars($activity['email']); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="activity-status">
+                                        <span class="status-badge <?php echo strtolower($activity['status']); ?>">
+                                            <?php echo $activity['status']; ?>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <div class="no-activity">
+                            <i class="fas fa-info-circle"></i>
+                            <p>No recent activities found</p>
                         </div>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

@@ -87,34 +87,10 @@
             }
         }
 
-        // Handle profile data updates
-        $new_username = trim($_POST['name']);
+        // Remove username and email update logic
+        // Only keep phone and address updates
         $new_phone = trim($_POST['phone']);
         $new_address = trim($_POST['address']);
-        $new_email = trim($_POST['email']);
-
-        // Debug
-        error_log("New Username: " . $new_username);
-        error_log("Actual User ID: " . $actual_user_id);
-
-        if (!empty($new_username) && $new_username !== $username) {
-            // Update the username column instead of first_name
-            $update_sql = "UPDATE tbl_user SET username = ? WHERE user_id = ?";
-            $stmt = mysqli_prepare($conn, $update_sql);
-            
-            if ($stmt) {
-                mysqli_stmt_bind_param($stmt, "si", $new_username, $actual_user_id);
-                
-                if(mysqli_stmt_execute($stmt)) {
-                    error_log("Username update successful");
-                    $_SESSION['username'] = $new_username;
-                    $isUpdated = true;
-                } else {
-                    error_log("Username update failed: " . mysqli_error($conn));
-                }
-                mysqli_stmt_close($stmt);
-            }
-        }
 
         if (!empty($new_phone) && $new_phone !== $phone) 
         {
@@ -138,39 +114,9 @@
             mysqli_stmt_close($stmt);
         }
 
-        if (!empty($new_email) && $new_email !== $email) 
-        {
-            // Check if the new email already exists in the database
-            $check_email_sql = "SELECT COUNT(*) FROM tbl_login WHERE email = ? AND user_id != ?";
-            $stmt = mysqli_prepare($conn, $check_email_sql);
-            mysqli_stmt_bind_param($stmt, "si", $new_email, $actual_user_id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_bind_result($stmt, $email_count);
-            mysqli_stmt_fetch($stmt);
-            mysqli_stmt_close($stmt);
-
-            if ($email_count > 0) 
-            {
-                echo "<script>alert('Email already in use by another user.');</script>";
-            } 
-            else 
-            {
-                $update_email_sql = "UPDATE tbl_login SET email = ? WHERE user_id = ?";
-                $stmt = mysqli_prepare($conn, $update_email_sql);
-                mysqli_stmt_bind_param($stmt, "si", $new_email, $actual_user_id);
-                if(mysqli_stmt_execute($stmt)) {
-                    $isUpdated = true;
-                }
-                mysqli_stmt_close($stmt);
-            }
-        }
-
         // If any value was updated, refresh the page
         if ($isUpdated) 
         {
-            // Clear any cached username in session
-            unset($_SESSION['display_name']);
-            
             header("Location: userprofile.php");
             exit();
         }
@@ -339,17 +285,18 @@
                         <div class="detail-item">
                             <div class="detail-label">Username</div>
                             <input type="text" id="username" name="name" class="detail-value" 
-                                   placeholder="Enter your username" 
-                                   value="<?php echo isset($new_username) ? htmlspecialchars($new_username) : htmlspecialchars($username); ?>" 
-                                   onkeyup="validateUsername()">
+                                   value="<?php echo htmlspecialchars($username); ?>" 
+                                   readonly
+                                   style="background-color: #f5f5f5; cursor: not-allowed;">
                             <p class="error" id="usernameError"></p>
                         </div>
 
                         <div class="detail-item">
                             <div class="detail-label">Email</div>
                             <input type="email" id="email" name="email" class="detail-value" 
-                                   placeholder="Enter your email" value="<?php echo $email; ?>"
-                                   onkeyup="validateEmail()">
+                                   value="<?php echo htmlspecialchars($email); ?>"
+                                   readonly
+                                   style="background-color: #f5f5f5; cursor: not-allowed;">
                             <p class="error" id="emailError"></p>
                         </div>
 

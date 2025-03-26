@@ -164,20 +164,20 @@
                                     <div class="form-group">
                                         <label>Rating</label>
                                         <div class="rating-input">
-                                            <label for="star5-<?php echo $job['job_id']; ?>">★</label>
                                             <input type="radio" name="rating" id="star5-<?php echo $job['job_id']; ?>" value="5">
-
-                                            <label for="star4-<?php echo $job['job_id']; ?>">★</label>
+                                            <label for="star5-<?php echo $job['job_id']; ?>">★</label>
+                                            
                                             <input type="radio" name="rating" id="star4-<?php echo $job['job_id']; ?>" value="4">
-
-                                            <label for="star3-<?php echo $job['job_id']; ?>">★</label>
+                                            <label for="star4-<?php echo $job['job_id']; ?>">★</label>
+                                            
                                             <input type="radio" name="rating" id="star3-<?php echo $job['job_id']; ?>" value="3">
-
-                                            <label for="star2-<?php echo $job['job_id']; ?>">★</label>
+                                            <label for="star3-<?php echo $job['job_id']; ?>">★</label>
+                                            
                                             <input type="radio" name="rating" id="star2-<?php echo $job['job_id']; ?>" value="2">
-
-                                            <label for="star1-<?php echo $job['job_id']; ?>">★</label>
+                                            <label for="star2-<?php echo $job['job_id']; ?>">★</label>
+                                            
                                             <input type="radio" name="rating" id="star1-<?php echo $job['job_id']; ?>" value="1">
+                                            <label for="star1-<?php echo $job['job_id']; ?>">★</label>
                                         </div>
                                     </div>
 
@@ -199,29 +199,32 @@
         </main>
     </div>
 
+    <!-- Add this div at the end of body, before closing body tag -->
+    <div class="modal-overlay">
+        <?php if ($job['has_rated'] == 0): ?>
+            <div class="review-form-container" id="review-form-<?php echo $job['job_id']; ?>" style="display: none;">
+                <!-- Your existing form content -->
+            </div>
+        <?php endif; ?>
+    </div>
+
     <script>
         $(document).ready(function() {
-            // Show review form when Add Review button is clicked
+            // Show modal
             $('.add-review-btn').click(function() {
                 const jobId = $(this).data('job-id');
-                $(`#review-form-${jobId}`).slideDown();
+                $(`#review-form-${jobId}`).show();
+                $('.modal-overlay').addClass('modal-show');
+                $('body').css('overflow', 'hidden');
             });
 
-            // Hide review form when Cancel button is clicked
-            $('.cancel-btn').click(function() {
-                const jobId = $(this).data('job-id');
-                $(`#review-form-${jobId}`).slideUp();
-            });
-
-            // Handle star rating selection
-            $(".rating-input input").click(function () {
-                var jobId = $(this).attr("id").split("-")[1];
-                var rating = $(this).val();
-                
-                $(`#review-form-${jobId} .rating-input label`).removeClass("selected");
-                $(this).nextAll("label").addClass("selected");
-                $(this).prev("label").addClass("selected");
-                $(this).addClass("selected");
+            // Hide modal
+            $('.cancel-btn, .modal-overlay').click(function(e) {
+                if (e.target === this) {
+                    $('.review-form-container').hide();
+                    $('.modal-overlay').removeClass('modal-show');
+                    $('body').css('overflow', 'auto');
+                }
             });
         });
     </script>
