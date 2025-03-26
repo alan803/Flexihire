@@ -85,29 +85,92 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (!$error) {
-        // Insert into database
-        $sql = "INSERT INTO tbl_appointments 
-                (user_id, job_id, employer_id, appointment_date, appointment_time, 
-                 interview_type, status, location, notes) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            // Start transaction
+            mysqli_begin_transaction($conn);
 
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "iiissssss", 
-            $user_id, $job_id, $employer_id, $appointment_date, $appointment_time,
-            $interview_type, $status, $location, $notes
-        );
-        
-        if (mysqli_stmt_execute($stmt)) {
-            // Update application status
-            $update_sql = "UPDATE tbl_applications SET status = 'interview_scheduled' WHERE id = ?";
+            // Debug the received IDs
+            echo "Debug: Received application_id: " . $application_id . "<br>";
+            echo "Debug: Received job_id: " . $job_id . "<br>";
+
+            // 1. First update the application status
+            $update_sql = "UPDATE tbl_applications SET status = 'Interview Scheduled' WHERE id = ?";
             $update_stmt = mysqli_prepare($conn, $update_sql);
             mysqli_stmt_bind_param($update_stmt, "i", $application_id);
-            mysqli_stmt_execute($update_stmt);
             
+            if (!mysqli_stmt_execute($update_stmt)) {
+                throw new Exception("Failed to update application status: " . mysqli_error($conn));
+            }
+
+            $rows_affected = mysqli_stmt_affected_rows($update_stmt);
+            echo "Debug: Rows affected by update: " . $rows_affected . "<br>";
+
+            if ($rows_affected === 0) {
+                throw new Exception("No application found with ID: " . $application_id);
+            }
+
+            // 2. Then insert the appointment
+            $insert_sql = "INSERT INTO tbl_appointments 
+                          (user_id, job_id, employer_id, appointment_date, appointment_time, 
+                           interview_type, status, location, notes) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $insert_stmt = mysqli_prepare($conn, $insert_sql);
+            $status = 'Pending';
+            mysqli_stmt_bind_param($insert_stmt, "iiissssss", 
+                $user_id, 
+                $job_id, 
+                $employer_id, 
+                $appointment_date, 
+                $appointment_time,
+                $interview_type, 
+                $status,
+                $location, 
+                $notes
+            );
+            
+            echo "Debug: Parameters:<br>";
+            echo "user_id: $user_id<br>";
+            echo "job_id: $job_id<br>";
+            echo "employer_id: $employer_id<br>";
+            echo "appointment_date: $appointment_date<br>";
+            echo "appointment_time: $appointment_time<br>";
+            echo "interview_type: $interview_type<br>";
+            echo "status: $status<br>";
+            echo "location: $location<br>";
+            echo "notes: $notes<br>";
+            
+            if (!mysqli_stmt_execute($insert_stmt)) {
+                throw new Exception("Failed to create appointment: " . mysqli_error($conn));
+            }
+
+            // If both operations succeeded, commit the transaction
+            mysqli_commit($conn);
+
+            // Verify final state
+            $verify_sql = "SELECT * FROM tbl_applications WHERE id = ?";
+            $verify_stmt = mysqli_prepare($conn, $verify_sql);
+            mysqli_stmt_bind_param($verify_stmt, "i", $application_id);
+            mysqli_stmt_execute($verify_stmt);
+            $verify_result = mysqli_stmt_get_result($verify_stmt);
+            $updated_data = mysqli_fetch_assoc($verify_result);
+            
+            echo "Debug: Final application data: <pre>" . print_r($updated_data, true) . "</pre><br>";
+
             echo "<script>alert('Interview scheduled successfully!'); window.location.href='applicants.php?job_id=" . $job_id . "';</script>";
             exit();
-        } else {
-            $error_message = "Error scheduling appointment: " . mysqli_error($conn);
+        } catch (Exception $e) {
+            // Rollback on error
+            mysqli_rollback($conn);
+            
+            $error_message = "Error: " . $e->getMessage();
+            echo "Debug: Error occurred - " . $error_message . "<br>";
+            echo "Debug: Last MySQL Error: " . mysqli_error($conn) . "<br>";
+        } finally {
+            // Close statements
+            if (isset($update_stmt)) mysqli_stmt_close($update_stmt);
+            if (isset($insert_stmt)) mysqli_stmt_close($insert_stmt);
+            if (isset($verify_stmt)) mysqli_stmt_close($verify_stmt);
         }
     }
 }

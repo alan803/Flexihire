@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString().split('T')[0];
     dateInput.setAttribute('min', today);
 
+    // Get dates from data attributes
+    const vacancyDate = new Date(dateInput.dataset.vacancyDate);
+    const deadlineDate = new Date(dateInput.dataset.deadlineDate);
+
     // Validate User ID
     document.querySelector('input[name="user_id"]').addEventListener('input', function(e) {
         const value = e.target.value;
@@ -36,16 +40,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Validate Date
+    // Function to show error message
+    function showError(element, message) {
+        let errorDiv = getErrorDiv(element);
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            element.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        element.classList.add('error');
+    }
+
+    // Validate date on input
     dateInput.addEventListener('input', function(e) {
-        const selectedDate = new Date(e.target.value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
+        const selectedDate = new Date(this.value);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        // Remove any existing error message
+        const existingError = dateInput.parentElement.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Validation checks
         if (selectedDate < today) {
             showError(this, 'Please select a future date');
-        } else {
-            hideError(this);
+            return false;
+        }
+        
+        if (selectedDate <= deadlineDate) {
+            showError(this, 'Please select a date after the application deadline');
+            return false;
+        }
+        
+        if (selectedDate >= vacancyDate) {
+            showError(this, 'Please select a date before the vacancy date');
+            return false;
         }
     });
 
@@ -135,27 +166,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Form Submit Validation
+    // Form submission validation
     form.addEventListener('submit', function(e) {
-        const errors = document.querySelectorAll('.error-message');
-        if (errors.length > 0) {
+        const selectedDate = new Date(dateInput.value);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate <= deadlineDate || selectedDate >= vacancyDate || selectedDate < today) {
             e.preventDefault();
-            alert('Please fix all errors before submitting');
+            showError(dateInput, 'Please select a valid date between application deadline and vacancy date');
         }
     });
 
     // Utility Functions
-    function showError(element, message) {
-        let errorDiv = getErrorDiv(element);
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            element.parentNode.appendChild(errorDiv);
-        }
-        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-        element.classList.add('error');
-    }
-
     function hideError(element) {
         const errorDiv = getErrorDiv(element);
         if (errorDiv) {
