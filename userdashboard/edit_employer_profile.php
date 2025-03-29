@@ -132,7 +132,7 @@
 
         $result_push = mysqli_stmt_execute($stmt);
 
-        // Update email only if it has changed
+        // Update email only if it has changed and is not empty
         $sql_check_email = "SELECT email FROM tbl_login WHERE employer_id = ?";
         $stmt_check = mysqli_prepare($conn, $sql_check_email);
         mysqli_stmt_bind_param($stmt_check, "i", $employer_id);
@@ -140,8 +140,7 @@
         $result_check = mysqli_stmt_get_result($stmt_check);
         $current_email = mysqli_fetch_assoc($result_check)['email'];
 
-        // Only update email if it's different from current email
-        if ($email !== $current_email) {
+        if (!empty($email) && $email !== $current_email) {
             // Check if new email already exists for another user
             $sql_check_duplicate = "SELECT email FROM tbl_login WHERE email = ? AND employer_id != ?";
             $stmt_check_duplicate = mysqli_prepare($conn, $sql_check_duplicate);
@@ -150,16 +149,24 @@
             $result_duplicate = mysqli_stmt_get_result($stmt_check_duplicate);
             
             if (mysqli_num_rows($result_duplicate) > 0) {
-                $_SESSION['update_error'] = "Email already exists";
+                $_SESSION['message'] = "Email already exists";
+                $_SESSION['message_type'] = "error";
                 header("Location: edit_employer_profile.php");
                 exit();
             }
             
-            // Update email if no duplicate found
-            $sql_email_push = "UPDATE tbl_login SET email=? WHERE employer_id=?";
-            $stmt_email = mysqli_prepare($conn, $sql_email_push);
-            mysqli_stmt_bind_param($stmt_email, "si", $email, $employer_id);
-            $result_push_email = mysqli_stmt_execute($stmt_email);
+            // Update email if no duplicate found and email is valid
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $sql_email_push = "UPDATE tbl_login SET email=? WHERE employer_id=?";
+                $stmt_email = mysqli_prepare($conn, $sql_email_push);
+                mysqli_stmt_bind_param($stmt_email, "si", $email, $employer_id);
+                $result_push_email = mysqli_stmt_execute($stmt_email);
+            } else {
+                $_SESSION['message'] = "Invalid email format";
+                $_SESSION['message_type'] = "error";
+                header("Location: edit_employer_profile.php");
+                exit();
+            }
         }
 
         if ($result_push) {
@@ -387,6 +394,18 @@
                 width: 100%;
             }
         }
+
+        .helper-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        input[disabled] {
+            opacity: 0.7;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -532,8 +551,10 @@
                             <label>Email Address</label>
                             <input type="email" name="email" id="email" 
                                    value="<?php echo htmlspecialchars($email); ?>" 
-                                   onkeyup="checkemail()">
-                            <span id="email_error" class="error"></span>
+                                   disabled
+                                   style="background-color: #f5f5f5; cursor: not-allowed;"
+                                   readonly>
+                            <!-- <span class="helper-text">Email cannot be changed</span> -->
                         </div>
                     </div>
                 </div>
@@ -743,37 +764,6 @@
             return true;
         }
 
-        function checkemail()
-        {
-            const email=document.getElementById("email").value.trim();
-            const email_error=document.getElementById("email_error");
-            if (email[0] === " ") 
-            {
-                 error.textContent = "E-mail must start with a letter.";
-                return false;
-            }
-
-            // Check if email has valid format and domain
-            // const emailRegex = ;
-            if (!/^[a-zA-Z0-9][^\s@]*@(gmail\.com|yahoo\.com|hotmail\.com|amaljyothi\.ac\.in|mca\.ajce\.in)$/.test(email)) 
-            {
-                // Check if it's the domain that's invalid
-                if (email.includes('@')) 
-                {
-                    const domain = email.split('@')[1];
-                    if (domain !== 'gmail.com' && domain !== 'yahoo.com') 
-                    {
-                        email_error.textContent = "Invalid domain";
-                        return false;
-                    }
-                }
-                error.textContent = "Invalid email address.";
-                return false;
-            }
-            email_error.textContent="";
-            return true;
-        }
-        
         function checkaddress()
         {
             const address=document.getElementById("address").value.trim();
@@ -797,7 +787,6 @@
             const company_description_valid=checkcompanydescription();
             const contact_person_valid=checkcontactperson();
             const phone_number_valid=checkphonenumber();
-            const email_valid=checkemail();
             const address_valid=checkaddress();
             
             // Check file upload if a file was selected
@@ -826,7 +815,6 @@
                    company_description_valid && 
                    contact_person_valid && 
                    phone_number_valid && 
-                   email_valid && 
                    address_valid;
         }
 

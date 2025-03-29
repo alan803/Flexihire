@@ -1,10 +1,9 @@
 <?php
     session_start();
     // Check if user is logged in
-    if (!isset($_SESSION['employer_id'])) 
-    {
-        header("Location: ../login/loginvalidation.php");
-        exit();
+    if (!isset($_SESSION['employer_id'])) {
+    header("Location: ../login/loginvalidation.php");
+    exit();
     }
 
     include '../database/connectdatabase.php';
@@ -16,41 +15,38 @@
     $email = '';
 
     $employer_id = $_SESSION['employer_id'];
-    
+
     $sql = "SELECT u.company_name, l.email 
         FROM tbl_login AS l
         JOIN tbl_employer AS u ON l.employer_id = u.employer_id
         WHERE u.employer_id = ?";
-    
+
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $employer_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
-    if ($result && mysqli_num_rows($result) > 0) 
-    {
-        $employer_data = mysqli_fetch_array($result);
-        $email = $employer_data['email'];
-        $username = $employer_data['company_name'];
-    } 
-    else 
-    {
-        error_log("Database error or user not found for ID: $employer_id");
-        session_destroy();
-        header("Location: ../login/logout.php");
-        exit();
+    if ($result && mysqli_num_rows($result) > 0) {
+    $employer_data = mysqli_fetch_array($result);
+    $email = $employer_data['email'];
+    $username = $employer_data['company_name'];
+    } else {
+    error_log("Database error or user not found for ID: $employer_id");
+    session_destroy();
+    header("Location: ../login/logout.php");
+    exit();
     }
 
     // Fetching jobs with application status counts
     $sql_fetch = "SELECT j.*, 
-                  COUNT(CASE WHEN a.status = 'applied' THEN 1 END) AS applied_count,
-                  COUNT(CASE WHEN a.status = 'accepted' THEN 1 END) AS accepted_count,
-                  COUNT(CASE WHEN a.status = 'rejected' THEN 1 END) AS rejected_count,
-                  COUNT(a.id) AS total_applicants
-                  FROM tbl_jobs j
-                  LEFT JOIN tbl_applications a ON j.job_id = a.job_id
-                  WHERE j.employer_id = ? AND j.is_deleted = 0
-                  GROUP BY j.job_id";
+                COUNT(CASE WHEN a.status = 'applied' THEN 1 END) AS applied_count,
+                COUNT(CASE WHEN a.status = 'accepted' THEN 1 END) AS accepted_count,
+                COUNT(CASE WHEN a.status = 'rejected' THEN 1 END) AS rejected_count,
+                COUNT(a.id) AS total_applicants
+                FROM tbl_jobs j
+                LEFT JOIN tbl_applications a ON j.job_id = a.job_id
+                WHERE j.employer_id = ? AND j.is_deleted = 0
+                GROUP BY j.job_id";
     $stmt_fetch = mysqli_prepare($conn, $sql_fetch);
     mysqli_stmt_bind_param($stmt_fetch, "i", $employer_id);
     mysqli_stmt_execute($stmt_fetch);
@@ -66,7 +62,7 @@
     $active_jobs = 0;
 
     if ($row = mysqli_fetch_assoc($result_count)) {
-        $active_jobs = $row['active_jobs'];
+    $active_jobs = $row['active_jobs'];
     }
     mysqli_stmt_close($stmt_count);
 
@@ -77,9 +73,36 @@
     mysqli_stmt_execute($stmt_profile);
     $result_profile = mysqli_stmt_get_result($stmt_profile);
     $profile_data = mysqli_fetch_assoc($result_profile);
-    $profile_image_path = !empty($profile_data['profile_image']) && file_exists("../database/profile_picture/" . $profile_data['profile_image'])
-        ? "/mini project/database/profile_picture/" . htmlspecialchars($profile_data['profile_image'])
-        : "../assets/images/company-logo.png";
+    $profile_image_path = !empty($profile_data['profile_image']) && file_exists("employer_pf/" . basename($profile_data['profile_image']))
+    ? "employer_pf/" . htmlspecialchars(basename($profile_data['profile_image']))
+    : "../assets/images/company-logo.png";
+
+    // Add this query before the stats-grid section to count total applicants
+    $sql_applicants = "SELECT COUNT(*) as total_applicants 
+                   FROM tbl_applications a 
+                   JOIN tbl_jobs j ON a.job_id = j.job_id 
+                   WHERE j.employer_id = ? AND j.is_deleted = 0";
+    $stmt_applicants = mysqli_prepare($conn, $sql_applicants);
+    mysqli_stmt_bind_param($stmt_applicants, "i", $employer_id);
+    mysqli_stmt_execute($stmt_applicants);
+    $result_applicants = mysqli_stmt_get_result($stmt_applicants);
+    $total_applicants = mysqli_fetch_assoc($result_applicants)['total_applicants'];
+    mysqli_stmt_close($stmt_applicants);
+
+    // Add this query to count hired applicants
+    $sql_hired = "SELECT COUNT(*) as hired_count 
+              FROM tbl_applications a 
+              JOIN tbl_jobs j ON a.job_id = j.job_id 
+              WHERE j.employer_id = ? 
+              AND j.is_deleted = 0 
+              AND a.status = 'hired'";
+    $stmt_hired = mysqli_prepare($conn, $sql_hired);
+    mysqli_stmt_bind_param($stmt_hired, "i", $employer_id);
+    mysqli_stmt_execute($stmt_hired);
+    $result_hired = mysqli_stmt_get_result($stmt_hired);
+    $hired_count = mysqli_fetch_assoc($result_hired)['hired_count'];
+    mysqli_stmt_close($stmt_hired);
+
 ?>
 
 <!DOCTYPE html>
@@ -170,20 +193,20 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <div>
-                            <div class="stat-number">42</div>
-                            <div class="stat-label">New Applicants</div>
+                            <div class="stat-number"><?php echo $total_applicants; ?></div>
+                            <div class="stat-label">Total Applicants</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-clipboard-list"></i>
+                            <i class="fas fa-user-check"></i>
                         </div>
                         <div>
-                            <div class="stat-number">24</div>
-                            <div class="stat-label">Reviewed</div>
+                            <div class="stat-number"><?php echo $hired_count; ?></div>
+                            <div class="stat-label">Hired</div>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <!-- <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fas fa-check-circle"></i>
                         </div>
@@ -191,7 +214,7 @@
                             <div class="stat-number">12</div>
                             <div class="stat-label">Shortlisted</div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Recent Jobs Section -->
@@ -368,49 +391,50 @@
         function showSearchBar() {
             // Add search functionality if needed
         }
-        document.addEventListener("DOMContentLoaded", function() {
-    const logoImg = document.querySelector('.logo-container img');
-    logoImg.classList.add('loading');
-    logoImg.onload = function() {
-        logoImg.classList.remove('loading');
-    };
 
-    // Existing sidebar toggle code...
-    const applicantsToggle = document.getElementById('applicantsToggle');
-    const closeSidebar = document.getElementById('closeSidebar');
-    const applicantsSidebar = document.getElementById('applicantsSidebar');
-    const body = document.body;
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    body.appendChild(overlay);
-    
-    applicantsToggle.addEventListener('click', function() {
-        applicantsSidebar.classList.add('open');
-        overlay.classList.add('active');
-        body.style.overflow = 'hidden';
-    });
-    
-    closeSidebar.addEventListener('click', function() {
-        applicantsSidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        body.style.overflow = '';
-    });
-    
-    overlay.addEventListener('click', function() {
-        applicantsSidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        body.style.overflow = '';
-    });
-    
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && applicantsSidebar.classList.contains('open')) {
-            applicantsSidebar.classList.remove('open');
-            overlay.classList.remove('active');
-            body.style.overflow = '';
-        }
-    });
-});
+        document.addEventListener("DOMContentLoaded", function() {
+            const logoImg = document.querySelector('.logo-container img');
+            logoImg.classList.add('loading');
+            logoImg.onload = function() {
+                logoImg.classList.remove('loading');
+            };
+
+            // Existing sidebar toggle code...
+            const applicantsToggle = document.getElementById('applicantsToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const applicantsSidebar = document.getElementById('applicantsSidebar');
+            const body = document.body;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            body.appendChild(overlay);
+            
+            applicantsToggle.addEventListener('click', function() {
+                applicantsSidebar.classList.add('open');
+                overlay.classList.add('active');
+                body.style.overflow = 'hidden';
+            });
+            
+            closeSidebar.addEventListener('click', function() {
+                applicantsSidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                body.style.overflow = '';
+            });
+            
+            overlay.addEventListener('click', function() {
+                applicantsSidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                body.style.overflow = '';
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && applicantsSidebar.classList.contains('open')) {
+                    applicantsSidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                    body.style.overflow = '';
+                }
+            });
+        });
     </script>
 </body>
 </html>

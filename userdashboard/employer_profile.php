@@ -32,14 +32,18 @@
     }
     
     // Fetch email from tbl_login
-    $sql_email = "SELECT email FROM tbl_login WHERE user_id = ?";
+    $sql_email = "SELECT l.email 
+                  FROM tbl_login l 
+                  WHERE l.employer_id = ?";
     $stmt_email = mysqli_prepare($conn, $sql_email);
     mysqli_stmt_bind_param($stmt_email, "i", $employer_id);
     mysqli_stmt_execute($stmt_email);
     $result_email = mysqli_stmt_get_result($stmt_email);
     $row_email = mysqli_fetch_assoc($result_email);
-    $email = $row_email['email'] ?? '';
-    
+
+    // Set email with proper null check
+    $email = $row_email['email'] ?? 'Email Not Set';
+
     // Safely get company name with null coalescing operator
     $company_name = $row['company_name'] ?? 'Company Name Not Set';
 

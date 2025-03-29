@@ -19,9 +19,11 @@ if (isset($_GET['job_id']))
     $stmt->bind_param("ii", $job_id, $employer_id);
 
     if ($stmt->execute()) {
-        $_SESSION['success'] = "Job has been restored successfully.";
+        $_SESSION['message'] = "Job has been restored successfully.";
+        $_SESSION['message_type'] = "success";
     } else {
-        $_SESSION['error'] = "Error restoring job: " . $conn->error;
+        $_SESSION['message'] = "Error restoring job: " . $conn->error;
+        $_SESSION['message_type'] = "error";
     }
 
     $stmt->close();
@@ -30,7 +32,8 @@ if (isset($_GET['job_id']))
 } 
 else 
 {
-    $_SESSION['error'] = "Invalid job selection.";
+    $_SESSION['message'] = "Invalid job selection.";
+    $_SESSION['message_type'] = "error";
     header("Location: myjoblist.php");
     exit();
 }

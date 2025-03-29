@@ -139,7 +139,7 @@
                                 <a href="jobdetails.php?job_id=<?php echo $job['job_id']; ?>" class="view-details-btn">
                                     <i class="fas fa-info-circle"></i> View Job Details
                                 </a>
-                                <a href="employer_profile.php?employer_id=<?php echo $job['employer_id']; ?>" class="view-details-btn">
+                                <a href="fetch_employer_rating.php?employer_id=<?php echo $job['employer_id']; ?>" class="view-details-btn">
                                     <i class="fas fa-user-tie"></i> Employer Details
                                 </a>
                                 <?php if ($job['has_rated'] > 0): ?>

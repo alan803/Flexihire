@@ -164,12 +164,9 @@
     <div id="toast" class="toast">
         <div class="toast-content">
             <div class="toast-icon">
-                <i class="fas fa-exclamation-circle"></i>
+                <i class="fas fa-check-circle"></i>
             </div>
-            <div class="toast-message-container">
-                <div class="toast-title"></div>
-                <span id="toast-message"></span>
-            </div>
+            <div class="toast-message"></div>
         </div>
         <div class="toast-progress"></div>
     </div>
@@ -199,110 +196,170 @@
         </aside>
         <!-- Main Content Area -->
         <main class="main-content">
-            <!-- Search Container -->
-            <div class="content-wrapper">
-                <div class="search-section">
-                    <div class="search-container">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search applied jobs..." id="search" name="search" oninput="filterjobs()">
-                        </div>
-                        <div class="filter-box">
-                            <input type="text" placeholder="Location" id="location" name="location" oninput="filterlocation()">
-                            <div class="salary-range">
-                                <input type="number" placeholder="Min Salary" id="minsalary" name="minsalary" oninput="filterminsalary()">
-                                <input type="number" placeholder="Max Salary" id="maxsalary" name="maxsalary" oninput="filtermaxsalary()">
-                            </div>
-                            <input type="date" id="date" name="date" oninput="filterdate()">
-                            <button class="reset-button" onclick="resetFilters()">
-                                <i class="fas fa-undo"></i> Reset Filters
-                            </button>
+            <!-- Replace the search section with this header -->
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h2>Your Applications</h2>
+                        <p>Track and manage your job applications</p>
+                    </div>
+                    <div class="header-right">
+                        <div class="filter-group">
+                            <label for="statusFilter">Filter by Status:</label>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="all">All Applications</option>
+                                <option value="pending">Pending</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="interview scheduled">Interview Scheduled</option>
+                            </select>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Job Listings Container -->
-                <div class="jobs-section">
-                    <?php
-                    //fetching applied jobs with job details
-                    $applied = "SELECT a.id as application_id, a.status, a.applied_at, 
-                               j.job_id, j.job_title, j.job_description, j.salary, 
-                               j.location, j.town, j.created_at, j.vacancy_date 
+            <!-- Job Listings Container -->
+            <div class="jobs-section">
+                <?php
+                //fetching applied jobs with job details
+                $applied = "SELECT a.id as application_id, a.status, a.applied_at, 
+                           j.job_id, j.job_title, j.job_description, j.salary, 
+                           j.location, j.town, j.created_at, j.vacancy_date 
                        FROM tbl_applications a
                        INNER JOIN tbl_jobs j ON a.job_id = j.job_id
                        WHERE a.user_id = ?
                        ORDER BY a.applied_at DESC";
-                    
-                    $stmt = mysqli_prepare($conn, $applied);
-                    mysqli_stmt_bind_param($stmt, "i", $user_id);
-                    mysqli_stmt_execute($stmt);
-                    $result_applied = mysqli_stmt_get_result($stmt);
+                
+                $stmt = mysqli_prepare($conn, $applied);
+                mysqli_stmt_bind_param($stmt, "i", $user_id);
+                mysqli_stmt_execute($stmt);
+                $result_applied = mysqli_stmt_get_result($stmt);
 
-                    if ($result_applied && mysqli_num_rows($result_applied) > 0) {
-                        while ($row = mysqli_fetch_assoc($result_applied)) {
-                            $job_id = $row['job_id'];
-                            $_SESSION['job_id'] = $job_id;
-                            
-                            // Check if user has already applied for this job
-                            // $check_sql = "SELECT status FROM tbl_applications WHERE user_id = ? AND job_id = ?";
-                            // $check_stmt = mysqli_prepare($conn, $check_sql);
-                            // mysqli_stmt_bind_param($check_stmt, "ii", $user_id, $job_id);
-                            // mysqli_stmt_execute($check_stmt);
-                            // $application_result = mysqli_stmt_get_result($check_stmt);
-                            // $has_applied = mysqli_num_rows($application_result) > 0;
-                            // $application_status = $has_applied ? mysqli_fetch_assoc($application_result)['status'] : null;
-                            ?>
-                            <div class="job-card" data-application-id="<?php echo $row['application_id']; ?>">
-                                <div class="job-header">
-                                    <h3 class="job_title"><?php echo htmlspecialchars($row['job_title']); ?></h3>
-                                    <span class="salary">₹<?php echo number_format($row['salary']); ?></span>
-                                </div>
-                                <div class="job-body">
-                                    <p class="description"><?php echo htmlspecialchars($row['job_description']); ?></p>
-                                    <p class="location">
-                                        <i class="fas fa-map-marker-alt"></i> 
-                                        <?php echo htmlspecialchars($row['location']) . ', ' . htmlspecialchars($row['town']); ?>
-                                    </p>
-                                    <p class="date">
-                                        <i class="fas fa-calendar-plus"></i> 
-                                        Posted: <?php echo date('Y-m-d', strtotime($row['created_at'])); ?>
-                                    </p>
-                                    <p class="date">
-                                        <i class="fas fa-calendar-alt"></i> 
-                                        Vacancy Date: <?php echo date('Y-m-d', strtotime($row['vacancy_date'])); ?>
-                                    </p>
-                                </div>
-                                <div class="job-footer">
-                                    <div class="button-group">
-                                        <!-- <a href="jobdetails.php?job_id=<?php echo $row['job_id']; ?>" class="details-btn">
-                                            <i class="fas fa-info-circle"></i> Details
-                                        </a> -->
-                                        <button class="applied-btn" disabled>
-                                            <i class="fas fa-check-circle"></i> Applied
-                                            <?php if (isset($row['status'])): ?>
-                                                (<?php echo htmlspecialchars($row['status']); ?>)
-                                            <?php endif; ?>
-                                        </button>
-                                        <a href="cancel_application.php?application_id=<?php echo $row['application_id']; ?>" 
-                                           class="details-btn cancel-hover"
-                                           onclick="openModal(<?php echo $row['application_id']; ?>); return false;">
-                                            <i class="fas fa-times-circle"></i> Cancel
-                                        </a>
-                                    </div>
+                if ($result_applied && mysqli_num_rows($result_applied) > 0) {
+                    while ($row = mysqli_fetch_assoc($result_applied)) {
+                        $job_id = $row['job_id'];
+                        $_SESSION['job_id'] = $job_id;
+                        
+                        // Check if user has already applied for this job
+                        // $check_sql = "SELECT status FROM tbl_applications WHERE user_id = ? AND job_id = ?";
+                        // $check_stmt = mysqli_prepare($conn, $check_sql);
+                        // mysqli_stmt_bind_param($check_stmt, "ii", $user_id, $job_id);
+                        // mysqli_stmt_execute($check_stmt);
+                        // $application_result = mysqli_stmt_get_result($check_stmt);
+                        // $has_applied = mysqli_num_rows($application_result) > 0;
+                        // $application_status = $has_applied ? mysqli_fetch_assoc($application_result)['status'] : null;
+                        ?>
+                        <div class="job-card" data-application-id="<?php echo $row['application_id']; ?>">
+                            <div class="job-header">
+                                <h3 class="job_title"><?php echo htmlspecialchars($row['job_title']); ?></h3>
+                                <span class="salary">₹<?php echo number_format($row['salary']); ?></span>
+                            </div>
+                            <div class="job-body">
+                                <p class="description"><?php echo htmlspecialchars($row['job_description']); ?></p>
+                                <p class="location">
+                                    <i class="fas fa-map-marker-alt"></i> 
+                                    <?php echo htmlspecialchars($row['location']) . ', ' . htmlspecialchars($row['town']); ?>
+                                </p>
+                                <p class="date">
+                                    <i class="fas fa-calendar-plus"></i> 
+                                    Posted: <?php echo date('Y-m-d', strtotime($row['created_at'])); ?>
+                                </p>
+                                <p class="date">
+                                    <i class="fas fa-calendar-alt"></i> 
+                                    Vacancy Date: <?php echo date('Y-m-d', strtotime($row['vacancy_date'])); ?>
+                                </p>
+                            </div>
+                            <div class="job-footer">
+                                <div class="button-group">
+                                    <!-- <a href="jobdetails.php?job_id=<?php echo $row['job_id']; ?>" class="details-btn">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </a> -->
+                                    <button class="applied-btn" data-status="<?php echo strtolower($row['status']); ?>" disabled>
+                                        <?php echo htmlspecialchars($row['status']); ?>
+                                    </button>
+                                    <a href="cancel_application.php?application_id=<?php echo $row['application_id']; ?>" 
+                                       class="details-btn cancel-hover"
+                                       onclick="openModal(<?php echo $row['application_id']; ?>); return false;">
+                                        <i class="fas fa-times-circle"></i> Cancel
+                                    </a>
                                 </div>
                             </div>
-                            <?php
-                        }
-                    } else {
-                        echo '<div class="no-jobs">You haven\'t applied to any jobs yet.</div>';
+                        </div>
+                        <?php
                     }
-                    ?>
-                </div>
+                } else {
+                    echo '<div class="no-jobs">You haven\'t applied to any jobs yet.</div>';
+                }
+                ?>
             </div>
         </main>
     </div>
     <script src="applied.js"></script>
     <style>
+    /* Professional Status Button Styles */
+    .applied-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        border: none;
+        transition: all 0.3s ease;
+        color: white;
+        cursor: default;
+        text-transform: capitalize;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        min-width: 120px;
+        text-align: center;
+    }
+
+    /* Status-specific styles with gradients */
+    .applied-btn[data-status="pending"] {
+        background: linear-gradient(135deg, #FFA726, #FB8C00);
+        border: 1px solid rgba(251, 140, 0, 0.1);
+    }
+
+    .applied-btn[data-status="accepted"] {
+        background: linear-gradient(135deg, #4CAF50, #43A047);
+        border: 1px solid rgba(67, 160, 71, 0.1);
+    }
+
+    .applied-btn[data-status="rejected"] {
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+        border: 1px solid rgba(220, 38, 38, 0.1);
+    }
+
+    .applied-btn[data-status="interview scheduled"] {
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+    }
+
+    /* Hover effect */
+    .applied-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Active state */
+    .applied-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Disabled state */
+    .applied-btn:disabled {
+        opacity: 1;
+        cursor: default;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .applied-btn {
+            width: 100%;
+            padding: 12px 20px;
+        }
+    }
+
     /* Add these styles for the cancel button */
     .cancel-btn {
         padding: 12px 24px;
@@ -346,47 +403,6 @@
             width: 100%;
             justify-content: center;
         }
-    }
-
-    /* Update the applied button styles */
-    .applied-btn {
-        padding: 12px 24px;
-        border-radius: 100px;
-        font-weight: 500;
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        background: #4CAF50;  /* Green background */
-        color: white !important;  /* Force white text */
-        border: none;
-        cursor: not-allowed;
-    }
-
-    /* Ensure text and icons are visible */
-    .applied-btn i,
-    .applied-btn span {
-        color: white !important;  /* Force white text for both icon and text */
-    }
-
-    /* Status colors within applied button */
-    .applied-btn .status-pending {
-        color: white !important;
-    }
-
-    .applied-btn .status-approved {
-        color: white !important;
-    }
-
-    .applied-btn .status-rejected {
-        color: white !important;
-    }
-
-    /* Optional: Add a subtle border */
-    .applied-btn {
-        border: 1px solid rgba(76, 175, 80, 0.2);
     }
 
     .message {
@@ -442,60 +458,48 @@
         }
     }
 
-    /* Toast styling */
+    /* Toast Notification Styles */
     .toast {
-        visibility: hidden;
         position: fixed;
         top: 80px;
         right: 30px;
         min-width: 300px;
-        max-width: 500px;
-        background-color: white;
+        max-width: 400px;
+        background: white;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         border-radius: 12px;
+        padding: 16px 20px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
         z-index: 1000;
-        overflow: hidden;
     }
 
     .toast.show {
+        opacity: 1;
         visibility: visible;
-        animation: slideInRight 0.3s ease-out;
+        transform: translateX(0);
     }
 
     .toast-content {
         display: flex;
-        align-items: flex-start;
-        padding: 16px 20px;
-        gap: 15px;
+        align-items: center;
+        gap: 12px;
     }
 
     .toast-icon {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .toast-icon i {
         font-size: 24px;
     }
 
-    .toast-message-container {
-        flex-grow: 1;
-    }
-
-    .toast-title {
-        font-weight: 600;
-        margin-bottom: 4px;
-        font-size: 16px;
-    }
-
-    #toast-message {
+    .toast-message {
         font-size: 14px;
         line-height: 1.5;
-        color: inherit;
+        color: #333;
     }
 
     .toast-progress {
@@ -504,23 +508,32 @@
         left: 0;
         width: 100%;
         height: 3px;
-        background: rgba(255, 255, 255, 0.3);
+        background: #e0e0e0;
+        border-radius: 0 0 12px 12px;
     }
 
     .toast-progress::after {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
         width: 100%;
-        background: rgba(255, 255, 255, 0.7);
-        animation: progress 3s linear;
+        height: 100%;
+        transform-origin: left;
+        animation: progress 3s linear forwards;
     }
 
+    /* Toast Types */
     .toast.success {
-        background: #10B981;
+        background: #4CAF50;
         color: white;
+    }
+
+    .toast.success .toast-message,
+    .toast.success .toast-icon i {
+        color: white;
+    }
+
+    .toast.success .toast-progress::after {
+        background: rgba(255, 255, 255, 0.7);
     }
 
     .toast.error {
@@ -528,137 +541,29 @@
         color: white;
     }
 
-    .toast.info {
-        background: #3B82F6;
+    .toast.error .toast-message,
+    .toast.error .toast-icon i {
         color: white;
     }
 
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    .toast.error .toast-progress::after {
+        background: rgba(255, 255, 255, 0.7);
     }
 
     @keyframes progress {
-        from {
-            width: 100%;
-        }
-        to {
-            width: 0%;
-        }
+        0% { width: 100%; }
+        100% { width: 0%; }
     }
 
     @media (max-width: 768px) {
         .toast {
-            width: 90%;
-            right: 5%;
             top: 20px;
+            right: 20px;
+            left: 20px;
+            min-width: unset;
+            max-width: unset;
         }
     }
-
-    /* Add this modal HTML before closing body tag */
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <i class="fas fa-exclamation-circle warning-icon"></i>
-                <h2>Cancel Application</h2>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to cancel this job application?</p>
-                <p class="warning-text">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn cancel-btn-secondary" onclick="closeModal()">No, Keep It</button>
-                <button class="modal-btn confirm-btn" onclick="confirmCancel()">Yes, Cancel Application</button>
-            </div>
-        </div>
-    </div>
-
-    /* Add these styles */
-    <style>
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-    }
-
-    .modal-content {
-        position: relative;
-        background-color: #fff;
-        margin: 15% auto;
-        padding: 20px;
-        width: 90%;
-        max-width: 500px;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-header {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .warning-icon {
-        color: #ff4b4b;
-        font-size: 48px;
-        margin-bottom: 10px;
-    }
-
-    .modal-body {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .warning-text {
-        color: #666;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-
-    .modal-footer {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .modal-btn {
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .cancel-btn-secondary {
-        background-color: #fff;
-        color: #666;
-        border: 1px solid #ddd;
-    }
-
-    .confirm-btn {
-        background-color: #ff4b4b;
-        color: white;
-        border: none;
-    }
-
-    .cancel-btn-secondary:hover {
-        background-color: #f5f5f5;
-    }
-
-    .confirm-btn:hover {
-        background-color: #ff3333;
-    }
-    </style>
     </style>
 
     <!-- Add this JavaScript -->
@@ -710,38 +615,28 @@
     // Add this to check if JavaScript is loading
     console.log('Modal JavaScript loaded');
 
-    // Add this function to show messages
-    function showToast(message, type = 'info') {
-        console.log('Showing toast:', message, type); // Debug line
+    // Toast notification function
+    function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastTitle = toast.querySelector('.toast-title');
-        const icon = toast.querySelector('i');
+        const toastMessage = toast.querySelector('.toast-message');
+        const toastIcon = toast.querySelector('.toast-icon i');
         
-        // Remove existing classes
-        toast.className = 'toast';
-        icon.className = 'fas';
-        
-        // Set title and icon based on type
-        switch(type) {
-            case 'success':
-                toastTitle.textContent = 'Success';
-                icon.classList.add('fa-check-circle');
-                break;
-            case 'error':
-                toastTitle.textContent = 'Error';
-                icon.classList.add('fa-exclamation-circle');
-                break;
-            default:
-                toastTitle.textContent = 'Information';
-                icon.classList.add('fa-info-circle');
-        }
-        
-        toast.classList.add(type);
+        // Set message
         toastMessage.textContent = message;
         
+        // Set icon based on type
+        if (type === 'success') {
+            toastIcon.className = 'fas fa-check-circle';
+            toast.className = 'toast show success';
+        } else if (type === 'error') {
+            toastIcon.className = 'fas fa-times-circle';
+            toast.className = 'toast show error';
+        }
+        
         // Show toast
-        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
         
         // Hide toast after 3 seconds
         setTimeout(() => {
@@ -749,15 +644,81 @@
         }, 3000);
     }
 
-    // Add this to ensure the function is available
-    window.showToast = showToast;
-
-    // When the page loads, check for messages
-    document.addEventListener('DOMContentLoaded', function() {
-        <?php if (isset($message)): ?>
+    // Show toast if PHP message exists
+    <?php if (isset($message)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
             showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
-        <?php endif; ?>
+        });
+    <?php endif; ?>
+
+    // Add this filter function
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        const selectedStatus = this.value.toLowerCase();
+        const jobCards = document.querySelectorAll('.job-card');
+        let matchFound = false;
+
+        // Remove any existing "no jobs" message
+        document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+
+        jobCards.forEach(card => {
+            const statusElement = card.querySelector('.status-badge') || 
+                                card.querySelector('.applied-btn');
+            const currentStatus = statusElement.textContent.toLowerCase().trim();
+
+            if (selectedStatus === 'all') {
+                card.style.display = 'block';
+                matchFound = true;
+            } else {
+                // Check if the status contains our selected status
+                // This handles cases like "Status: Pending" or just "Pending"
+                if (currentStatus.includes(selectedStatus)) {
+                    card.style.display = 'block';
+                    matchFound = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        });
+
+        // Show "no jobs" message if no matches found
+        if (!matchFound && selectedStatus !== 'all') {
+            const message = `No applications found with status "${
+                selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)
+            }"`;
+            showNoJobsMessage(message);
+        }
     });
+
+    // Add this to your existing showNoJobsMessage function if not already present
+    function showNoJobsMessage(message) {
+        const jobsSection = document.querySelector('.jobs-section');
+        const noJobsMessage = document.createElement('div');
+        noJobsMessage.className = 'no-jobs';
+        noJobsMessage.innerHTML = `
+            <div class="no-jobs-content">
+                <i class="fas fa-search"></i>
+                <h3>No Applications Found</h3>
+                <p>${message}</p>
+                <button class="reset-button" onclick="resetFilters()">
+                    <i class="fas fa-undo"></i> Reset Filters
+                </button>
+            </div>
+        `;
+        jobsSection.appendChild(noJobsMessage);
+    }
+
+    // Update your existing resetFilters function
+    function resetFilters() {
+        // Reset the status filter
+        document.getElementById('statusFilter').value = 'all';
+        
+        // Show all job cards
+        const jobCards = document.querySelectorAll('.job-card');
+        jobCards.forEach(card => card.style.display = 'block');
+        
+        // Remove any "no jobs" message
+        document.querySelectorAll('.no-jobs').forEach(el => el.remove());
+    }
     </script>
 
     <!-- Add this HTML right before the closing </body> tag -->
@@ -920,6 +881,87 @@
 
     .dropdown-menu a:hover {
         background-color: #f5f5f5;
+    }
+    </style>
+
+    <style>
+    /* Header Styles */
+    .header-container {
+        background: #fff;
+        border-radius: 15px;
+        padding: 1.5rem 2rem;
+        margin: 0.1rem 0 2rem 0;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+        width: 100%;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .header-left h2 {
+        font-size: 1.5rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .header-left p {
+        color: #7f8c8d;
+        font-size: 1rem;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .filter-group label {
+        font-weight: 500;
+        color: #2c3e50;
+        white-space: nowrap;
+    }
+
+    .filter-select {
+        padding: 0.75rem;
+        border: 1px solid rgba(186, 166, 227, 0.3);
+        border-radius: 6px;
+        background: #fff;
+        min-width: 180px;
+        color: #2c3e50;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .header-right {
+            width: 100%;
+        }
+
+        .filter-group {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
     }
     </style>
 </body>
