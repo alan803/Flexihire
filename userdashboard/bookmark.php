@@ -90,7 +90,6 @@ if ($result && mysqli_num_rows($result) > 0) {
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="toast-message-container">
-                <div class="toast-title">Success:</div>
                 <div id="toast-message">Operation completed successfully</div>
             </div>
         </div>
@@ -103,107 +102,71 @@ if ($result && mysqli_num_rows($result) > 0) {
         position: fixed;
         top: 20px;
         right: 20px;
-        width: 280px; /* Fixed width */
-        max-width: 90%; /* For responsiveness */
-        background-color: lightgreen;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
+        width: 300px;
+        max-width: 90%;
+        background-color: #4CAF50;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
         z-index: 1000;
         overflow: hidden;
-        border-left: 3px solid #4CAF50;
+        border-left: 4px solid #45a049;
         font-family: 'Poppins', sans-serif;
-        height: 60px; /* Increased height */
+        height: 50px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
     }
 
     .toast.show {
         visibility: visible;
-        animation: slideInRight 0.3s, fadeOut 0.5s 2.5s;
+        animation: slideInRight 0.3s ease-out, fadeOut 0.5s 2.5s forwards;
     }
 
     .toast-content {
         display: flex;
         align-items: center;
-        padding: 0 10px; /* Horizontal padding only */
-        gap: 8px;
-        height: 100%; /* Fill the parent height */
+        gap: 12px;
+        width: 100%;
     }
 
     .toast-icon {
         flex-shrink: 0;
         display: flex;
         align-items: center;
-        height: 100%;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
     }
 
     .toast-icon i {
-        font-size: 24px; /* Slightly larger icon */
-    }
-
-    .toast.success {
-        border-left-color: #4CAF50;
-    }
-
-    .toast.error {
-        border-left-color: #f44336;
-    }
-
-    .toast.warning {
-        border-left-color: #ff9800;
-    }
-
-    .toast.info {
-        border-left-color: #2196F3;
-    }
-
-    .toast.success .toast-icon i {
-        color: #4CAF50;
-    }
-
-    .toast.error .toast-icon i {
-        color: #f44336;
-    }
-
-    .toast.warning .toast-icon i {
-        color: #ff9800;
-    }
-
-    .toast.info .toast-icon i {
-        color: #2196F3;
+        font-size: 16px;
+        color: white;
     }
 
     .toast-message-container {
         flex-grow: 1;
         min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: flex;
-        align-items: center;
-        height: 100%;
-    }
-
-    .toast-title {
-        font-weight: 600;
-        color: #333;
-        font-size: 12px; /* Larger font */
-        margin-right: 4px;
     }
 
     #toast-message {
-        color: #666;
-        font-size: 12px; /* Larger font */
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin: 0;
     }
 
     @keyframes slideInRight {
         from {
             transform: translateX(100%);
+            opacity: 0;
         }
         to {
             transform: translateX(0);
+            opacity: 1;
         }
     }
 
@@ -219,7 +182,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     /* Responsive adjustments */
     @media (max-width: 576px) {
         .toast {
-            width: 250px;
+            width: 90%;
             left: 50%;
             right: auto;
             transform: translateX(-50%);
@@ -469,10 +432,9 @@ if ($result && mysqli_num_rows($result) > 0) {
             });
         });
 
-        function showToast(message, type = 'info') {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
-            const toastTitle = toast.querySelector('.toast-title');
             const icon = toast.querySelector('.toast-icon i');
             
             // Reset classes and clear any existing animations
@@ -485,31 +447,31 @@ if ($result && mysqli_num_rows($result) > 0) {
             // Set type-specific properties
             switch(type) {
                 case 'success':
-                    toastTitle.textContent = 'Success:';
                     icon.className = 'fas fa-check-circle';
-                    toast.classList.add('success');
+                    toast.style.backgroundColor = '#4CAF50';
+                    toast.style.borderLeftColor = '#45a049';
                     break;
                 case 'error':
-                    toastTitle.textContent = 'Error:';
                     icon.className = 'fas fa-exclamation-circle';
-                    toast.classList.add('error');
+                    toast.style.backgroundColor = '#f44336';
+                    toast.style.borderLeftColor = '#da190b';
                     break;
                 case 'warning':
-                    toastTitle.textContent = 'Warning:';
                     icon.className = 'fas fa-exclamation-triangle';
-                    toast.classList.add('warning');
+                    toast.style.backgroundColor = '#ff9800';
+                    toast.style.borderLeftColor = '#f57c00';
                     break;
                 default:
-                    toastTitle.textContent = 'Info:';
                     icon.className = 'fas fa-info-circle';
-                    toast.classList.add('info');
+                    toast.style.backgroundColor = '#2196F3';
+                    toast.style.borderLeftColor = '#1976D2';
             }
             
             toastMessage.textContent = message;
             toast.style.animation = '';
             toast.classList.add('show');
             
-            // Manually hide after 3 seconds in case animation doesn't work
+            // Manually hide after 3 seconds
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -541,8 +503,9 @@ if ($result && mysqli_num_rows($result) > 0) {
                                 document.querySelector('.job-listings').innerHTML = 
                                     '<div class="no-jobs">No bookmarked jobs found.</div>';
                             }
+                            // Show message with red background
+                            showToast('Job removed from bookmarks', 'error');
                         }, 300);
-                        showToast('Bookmark removed');
                     }
                 } else {
                     showToast(data.message || 'Error processing bookmark', 'error');

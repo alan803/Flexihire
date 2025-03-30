@@ -198,7 +198,8 @@ body {
 .confirm-btn:hover { background-color: #ff3333; }
 
 /* Responsive Adjustments */
-@media (max-width: 1200px) {
+@media (max-width: 1200px) 
+{
     .content-wrapper {
         padding: 20px;
     }

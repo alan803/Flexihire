@@ -13,6 +13,16 @@ if (!isset($_SESSION['admin_id']))
     exit();
 }
 
+// Message handling
+$message = '';
+$messageType = '';
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $messageType = $_SESSION['message_type'] ?? 'success';
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
+
 // Pagination setup
 $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
 $records_per_page = 10;
@@ -45,7 +55,7 @@ $sql = "SELECT
 $stmt = mysqli_prepare($conn, $sql);
 if ($where_clause) {
     $merged_params = array_merge($params, [$offset, $records_per_page]);
-    mysqli_stmt_bind_param($stmt, "ssssii", ...$merged_params);
+    mysqli_stmt_bind_param($stmt, "sssii", ...$merged_params);
 } else {
     mysqli_stmt_bind_param($stmt, "ii", $offset, $records_per_page);
 }
@@ -91,6 +101,10 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -123,24 +137,35 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
         <!-- Main Content -->
         <div class="main-content">
             <header class="page-header">
-                <h1>User Management</h1>
-                <div class="header-actions">
-                    <form class="search-box" method="GET" action="">
-                        <input type="search" 
-                               name="search" 
-                               id="searchInput" 
-                               placeholder="Search users..." 
-                               value="<?= htmlspecialchars($search) ?>" 
-                               aria-label="Search users">
-                        <button type="submit" aria-label="Search"><i class="fas fa-search"></i></button>
-                    </form>
-                    <button class="export-btn" aria-label="Export user data">
-                        <i class="fas fa-download"></i> Export Users
-                    </button>
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1>Employer Management</h1>
+                    </div>
+                    <div class="header-actions">
+                        <form class="search-box" method="GET" action="">
+                            <input type="text" 
+                                   name="search"
+                                   id="searchInput" 
+                                   placeholder="Search employers..." 
+                                   value="<?= htmlspecialchars($search) ?>" 
+                                   aria-label="Search employers">
+                            <i class="fas fa-search"></i>
+                        </form>
+                    </div>
                 </div>
             </header>
 
-            <section class="users-stats" aria-label="User statistics">
+            <?php if ($message): ?>
+                <div class="alert alert-<?= $messageType ?>" id="statusMessage">
+                    <i class="fas <?= $messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                    <?= htmlspecialchars($message) ?>
+                    <button type="button" class="close-alert" onclick="this.parentElement.style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <?php endif; ?>
+
+            <section class="users-stats" aria-label="Employer statistics">
                 <div class="stat-item">
                     <span class="stat-value"><?= number_format($stats['total']) ?></span>
                     <span class="stat-label">Total Employers</span>
@@ -156,32 +181,26 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
             </section>
 
             <section class="users-table-container">
-                <table class="employers-table">
-                    <thead>
-                        <tr>
-                            <th>NAME</th>
-                            <th>EMAIL</th>
-                            <th>STATUS</th>
-                            <th>JOINED DATE</th>
-                            <th>ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (mysqli_num_rows($result) > 0): ?>
+                <?php if (mysqli_num_rows($result) > 0): ?>
+                    <table class="employers-table">
+                        <thead>
+                            <tr>
+                                <th>NAME</th>
+                                <th>EMAIL</th>
+                                <th>STATUS</th>
+                                <th>JOINED DATE</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <?php while ($row = mysqli_fetch_assoc($result)): ?>
                                 <tr>
                                     <td>
                                         <div class="employer-info">
                                             <?php if (!empty($row['profile_image'])): ?>
                                                 <?php
-                                                // Debug file path
                                                 $imagePath = "employer_pf/" . basename($row['profile_image']);
                                                 $fullPath = $_SERVER['DOCUMENT_ROOT'] . "/mini project/userdashboard/" . $imagePath;
-                                                
-                                                // For debugging
-                                                error_log("Image from DB: " . $row['profile_image']);
-                                                error_log("Full path: " . $fullPath);
-                                                error_log("File exists: " . (file_exists($fullPath) ? 'Yes' : 'No'));
                                                 
                                                 if (file_exists($fullPath)):
                                                 ?>
@@ -192,9 +211,6 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                                              onload="this.classList.add('loaded')"
                                                              onerror="console.log('Image failed to load:', this.src)">
                                                     </div>
-                                                <?php else: ?>
-                                                    <!-- Debug message for missing file -->
-                                                    <?php error_log("File not found: " . $fullPath); ?>
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                             <span class="company-name"><?= htmlspecialchars($row['company_name']) ?></span>
@@ -213,9 +229,6 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                             <button class="action-btn view-btn" onclick="viewEmployer(<?= $row['employer_id'] ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <!-- <button class="action-btn edit-btn" onclick="editEmployer(<?= $row['employer_id'] ?>)">
-                                                <i class="fas fa-pen"></i>
-                                            </button> -->
                                             <?php if(strtolower($row['status']) === 'active'): ?>
                                                 <button class="action-btn delete-btn" onclick="showConfirmation(<?= $row['employer_id'] ?>)">
                                                     <i class="fas fa-user-slash"></i>
@@ -229,13 +242,26 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="5" class="no-records">No employers found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="no-results-container">
+                        <div class="no-results-content">
+                            <div class="no-results-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3>No Employers Found</h3>
+                            <?php if ($search): ?>
+                                <p>We couldn't find any employers matching "<span class="search-term"><?= htmlspecialchars($search) ?></span>"</p>
+                                <button onclick="clearSearch()" class="clear-search-btn">
+                                    <i class="fas fa-times"></i> Clear Search
+                                </button>
+                            <?php else: ?>
+                                <p>There are no employers in the system yet.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </section>
 
             <?php if ($total_pages > 1): ?>
@@ -287,10 +313,21 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
             <div class="confirmation-text">
                 <h3>Confirm Deactivation</h3>
                 <p>Are you sure you want to deactivate this employer's account?</p>
-            </div>
-            <div class="confirmation-actions">
-                <button class="cancel-btn" onclick="hideConfirmation()">Cancel</button>
-                <a href="#" id="confirmDeactivate" class="confirm-btn">Confirm</a>
+                <form id="deactivateForm" method="POST" action="deactivate_employer.php">
+                    <input type="hidden" name="employer_id" id="deactivateEmployerId">
+                    <div class="form-group">
+                        <label for="deactivateReason">Reason for Deactivation:</label>
+                        <textarea name="reason" id="deactivateReason" rows="4" required 
+                            placeholder="Please provide a reason for deactivating this account..."
+                            maxlength="500"></textarea>
+                        <div class="error-message" id="reasonError"></div>
+                        <div class="char-count" id="charCount">0/500</div>
+                    </div>
+                    <div class="confirmation-actions">
+                        <button type="button" class="cancel-btn" onclick="hideConfirmation()">Cancel</button>
+                        <button type="submit" class="confirm-btn" id="submitBtn">Confirm Deactivation</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -330,6 +367,11 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
 
     <script src="manage_employers.js" defer></script>
     <script>
+        // View Employer Function
+        function viewEmployer(employerId) {
+            window.location.href = `view_employer.php?id=${employerId}`;
+        }
+
         // Restore Confirmation Functions
         function showRestoreConfirmation(jobId) {
             document.getElementById('confirmationOverlay').style.display = 'block';
@@ -357,6 +399,7 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
         // Make functions globally available
         window.showRestoreConfirmation = showRestoreConfirmation;
         window.hideRestoreConfirmation = hideRestoreConfirmation;
+        window.viewEmployer = viewEmployer;
     </script>
 </body>
 </html>

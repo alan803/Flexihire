@@ -1,8 +1,10 @@
-// Define required statuses based on database values
+// appointment.js
+
+// Define required statuses
 const ALL_STATUSES = [
     'Pending',
-    'Accepted',
-    'Interview Scheduled'
+    'Cancelled',
+    'Finished'
 ];
 
 // Filter appointments by status
@@ -11,28 +13,40 @@ function filterAppointments() {
     const appointmentCards = document.querySelectorAll('.appointment-card');
     let matchFound = false;
 
+    // Debug
     console.log('Filtering by:', statusFilter);
 
     // Remove existing no-appointments message
     document.querySelectorAll('.no-appointments').forEach(el => el.remove());
 
     appointmentCards.forEach(card => {
-        const status = card.getAttribute('data-status').trim();
-
+        // Get the status text and normalize it for comparison
+        const statusBadge = card.querySelector('.status-badge');
+        const status = statusBadge ? statusBadge.textContent.trim() : '';
+        
+        // Debug
         console.log('Card status:', status);
 
-        if (statusFilter === 'all' || status === statusFilter) {
+        // Show/hide cards based on filter
+        if (statusFilter === 'all') {
             card.style.display = 'block';
             matchFound = true;
         } else {
-            card.style.display = 'none';
+            // Case insensitive comparison
+            if (status.toLowerCase() === statusFilter.toLowerCase()) {
+                card.style.display = 'block';
+                matchFound = true;
+            } else {
+                card.style.display = 'none';
+            }
         }
     });
 
+    // Show message if no appointments match the filter
     if (!matchFound) {
         const message = statusFilter === 'all' 
             ? 'No appointments found' 
-            : `No ${statusFilter} appointments found`;
+            : `No ${statusFilter.toLowerCase()} appointments found`;
         showNoAppointmentsMessage(message);
     }
 }
@@ -56,12 +70,12 @@ function showNoAppointmentsMessage(message) {
     appointmentListings.appendChild(noAppointmentsMessage);
 }
 
-// Enhance the existing status filter dropdown with styling
-function enhanceStatusFilter() {
+// Function to create and style the status filter dropdown
+function createStatusFilter() {
     const statusFilter = document.getElementById('status-filter');
     if (!statusFilter) return;
 
-    // Apply styles to the select element
+    // Style the select element
     statusFilter.style.cssText = `
         appearance: none;
         background-color: white;
@@ -78,7 +92,27 @@ function enhanceStatusFilter() {
         min-width: 200px;
     `;
 
-    // Add hover effect
+    // Clear existing options
+    statusFilter.innerHTML = '<option value="all">All Statuses</option>';
+
+    // Add the three required statuses
+    ALL_STATUSES.forEach(status => {
+        const option = document.createElement('option');
+        option.value = status.toLowerCase();
+        option.textContent = status;
+        
+        // Style the option
+        option.style.cssText = `
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            color: #4b5563;
+            background-color: white;
+        `;
+        
+        statusFilter.appendChild(option);
+    });
+
+    // Add hover effect to select
     statusFilter.addEventListener('mouseover', () => {
         statusFilter.style.borderColor = '#4f46e5';
     });
@@ -96,9 +130,13 @@ function enhanceStatusFilter() {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    enhanceStatusFilter();
+    // Initialize filter
+    createStatusFilter();
+
+    // Initial filter
     filterAppointments();
 
+    // Add animation class to cards
     document.querySelectorAll('.appointment-card').forEach(card => {
         card.classList.add('fade-in');
     });
@@ -112,13 +150,16 @@ style.textContent = `
         transform: translateY(20px);
         transition: opacity 0.3s ease, transform 0.3s ease;
     }
+
     .appointment-card.fade-in {
         opacity: 1;
         transform: translateY(0);
     }
+
     .no-appointments {
         animation: fadeIn 0.3s ease;
     }
+
     @keyframes fadeIn {
         from {
             opacity: 0;
@@ -129,13 +170,23 @@ style.textContent = `
             transform: translateY(0);
         }
     }
+
     #status-filter {
         transition: all 0.3s ease;
     }
+
     #status-filter:focus {
         outline: none;
         border-color: #4f46e5;
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    #status-filter option {
+        padding: 12px;
+    }
+
+    #status-filter option:hover {
+        background-color: #f3f4f6;
     }
 `;
 document.head.appendChild(style);

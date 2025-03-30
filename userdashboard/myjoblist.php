@@ -12,7 +12,7 @@ include '../database/connectdatabase.php';
 // Get employer_id from session
 $employer_id = $_SESSION['employer_id'];
 
-// Debug the session
+// Debug the session and connection
 echo "<!-- Debug: Session employer_id = " . $_SESSION['employer_id'] . " -->";
 
 // Fetch employer details
@@ -23,19 +23,15 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $row = mysqli_fetch_assoc($result);
 
-// Profile image handling
-$image_path = $row['profile_image'] ?? '';
-$profile_image_path = !empty($image_path) && file_exists("employer_pf/" . basename($image_path))
-    ? "employer_pf/" . htmlspecialchars(basename($image_path))
-    : "../assets/images/company-logo.png";
-
 // Debug: Check if file exists
+$image_path = $row['profile_image'];
+$full_path = __DIR__ . '/' . $image_path; // Get full server path
 echo "<!-- 
 Debug Info:
 Image Path from DB: " . $image_path . "
-Relative Path Checked: employer_pf/" . basename($image_path) . "
-File Exists: " . (file_exists("employer_pf/" . basename($image_path)) ? 'Yes' : 'No') . "
-Generated Image Path: " . $profile_image_path . "
+Full Server Path: " . $full_path . "
+File Exists: " . (file_exists($full_path) ? 'Yes' : 'No') . "
+File Permissions: " . (file_exists($full_path) ? decoct(fileperms($full_path) & 0777) : 'N/A') . "
 -->";
 
 // Fetch email from tbl_login
@@ -56,21 +52,21 @@ Debug Info:
 Employer ID: " . $employer_id . "
 Company Name: " . $company_name . "
 Email: " . $email . "
-Profile Image: " . ($image_path ?: 'Not set') . "
+Profile Image: " . ($row['profile_image'] ?? 'Not set') . "
 -->";
 
 mysqli_stmt_close($stmt);
 mysqli_stmt_close($stmt_email);
 
-// Fetching data from tbl_jobs
-$sql_fetch = "SELECT * FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
-$stmt_fetch = mysqli_prepare($conn, $sql_fetch);
-mysqli_stmt_bind_param($stmt_fetch, "i", $employer_id);
+// fetching data from tbl_jobs
+$sql_fetch="SELECT * FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
+$stmt_fetch=mysqli_prepare($conn,$sql_fetch);
+mysqli_stmt_bind_param($stmt_fetch,"i",$employer_id);
 mysqli_stmt_execute($stmt_fetch);
-$result_fetch = mysqli_stmt_get_result($stmt_fetch);
+$result_fetch=mysqli_stmt_get_result($stmt_fetch);
 mysqli_stmt_close($stmt_fetch);
 
-// Count for active_jobs
+// count for active_jobs
 $sql_count = "SELECT COUNT(*) AS active_jobs FROM tbl_jobs WHERE employer_id=? AND is_deleted=0";
 $stmt_count = mysqli_prepare($conn, $sql_count);
 mysqli_stmt_bind_param($stmt_count, "i", $employer_id);
@@ -81,9 +77,10 @@ $active_jobs = 0;
 if ($row = mysqli_fetch_assoc($result_count)) {
     $active_jobs = $row['active_jobs'];
 }
+
 mysqli_stmt_close($stmt_count);
 
-// Count for deactivated jobs
+// Add this after the existing count query
 $sql_deactivated_count = "SELECT COUNT(*) AS deactivated_jobs FROM tbl_jobs WHERE employer_id=? AND is_deleted=1";
 $stmt_deactivated_count = mysqli_prepare($conn, $sql_deactivated_count);
 mysqli_stmt_bind_param($stmt_deactivated_count, "i", $employer_id);
@@ -99,7 +96,6 @@ mysqli_stmt_close($stmt_deactivated_count);
 // Get current status from URL parameter, default to 'all'
 $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -221,16 +217,15 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             border-bottom: 1px solid var(--border-color);
         }
 
         .logo-container img {
-            width: 100px;      /* exact 100px width */
-            height: 100px;     /* exact 100px height */
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            display: block;
+            border: 2px solid var(--primary-color);
         }
 
         .company-info {
@@ -343,112 +338,6 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         .confirm-btn.danger:hover {
             background-color: #b91c1c;
         }
-
-        /* Toast Notification Styles */
-        .toast {
-            position: fixed;
-            top: 80px;
-            right: 30px;
-            min-width: 300px;
-            max-width: 400px;
-            background: white;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-            border-radius: 12px;
-            padding: 16px 20px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-        }
-
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .toast-icon {
-            flex-shrink: 0;
-        }
-
-        .toast-icon i {
-            font-size: 24px;
-        }
-
-        .toast-message {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #333;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .toast-progress::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            animation: progress 3s linear forwards;
-        }
-
-        /* Toast Types */
-        .toast.success {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .toast.success .toast-message,
-        .toast.success .toast-icon i {
-            color: white;
-        }
-
-        .toast.success .toast-progress::after {
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .toast.error {
-            background: #EF4444;
-            color: white;
-        }
-
-        .toast.error .toast-message,
-        .toast.error .toast-icon i {
-            color: white;
-        }
-
-        .toast.error .toast-progress::after {
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        @keyframes progress {
-            0% { width: 100%; }
-            100% { width: 0%; }
-        }
-
-        @media (max-width: 768px) {
-            .toast {
-                top: 20px;
-                right: 20px;
-                left: 20px;
-                min-width: unset;
-                max-width: unset;
-            }
-        }
     </style>
 </head>
 <body>
@@ -456,9 +345,23 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         <!-- Main Sidebar -->
         <div class="sidebar">
             <div class="logo-container">
-                <img src="<?php echo $profile_image_path; ?>" 
-                     alt="<?php echo htmlspecialchars($company_name); ?>"
-                     onerror="this.src='../assets/images/company-logo.png';">
+                <?php 
+                if(!empty($row['profile_image']) && file_exists($full_path)): 
+                    // Debug: Output the HTML being generated
+                    echo "<!-- Generated img tag with src: " . htmlspecialchars($image_path) . " -->";
+                ?>
+                    <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                         alt="<?php echo htmlspecialchars($company_name); ?>"
+                         onerror="this.src='../assets/images/company-logo.png';"
+                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                <?php else: 
+                    echo "<!-- Using default image because: " . 
+                         (empty($row['profile_image']) ? "No image path in DB" : "File not found") . " -->";
+                ?>
+                    <img src="../assets/images/company-logo.png" 
+                         alt="AutoRecruits.in"
+                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                <?php endif; ?>
             </div>
             <div class="company-info">
                 <span><?php echo htmlspecialchars($company_name); ?></span>
@@ -584,6 +487,7 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                 $sql .= " AND is_deleted = 0";
                         }
                     } else {
+                        // Default view: show all non-deleted jobs
                         $sql .= " AND is_deleted = 0";
                     }
                     
@@ -664,7 +568,7 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                             </div>
                             
                             <div class="job-actions">
-                                <?php if($job_data['is_deleted'] != 1): ?>
+                                <?php if($job_data['status'] != 'deactivated'): ?>
                                     <a href="applicants.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn view-btn">
                                         <i class="fas fa-users"></i> Applicants
                                     </a>
@@ -805,17 +709,6 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <div class="toast-content">
-            <div class="toast-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="toast-message"></div>
-        </div>
-        <div class="toast-progress"></div>
-    </div>
-
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
@@ -834,21 +727,21 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             applicantsToggle.addEventListener('click', function() {
                 applicantsSidebar.classList.add('open');
                 overlay.classList.add('active');
-                body.style.overflow = 'hidden';
+                body.style.overflow = 'hidden'; // Prevent scrolling when sidebar is open
             });
             
             // Close sidebar
             closeSidebar.addEventListener('click', function() {
                 applicantsSidebar.classList.remove('open');
                 overlay.classList.remove('active');
-                body.style.overflow = '';
+                body.style.overflow = ''; // Restore scrolling
             });
             
             // Close sidebar when clicking on overlay
             overlay.addEventListener('click', function() {
                 applicantsSidebar.classList.remove('open');
                 overlay.classList.remove('active');
-                body.style.overflow = '';
+                body.style.overflow = ''; // Restore scrolling
             });
             
             // Close sidebar with Escape key
@@ -856,7 +749,7 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                 if (e.key === 'Escape' && applicantsSidebar.classList.contains('open')) {
                     applicantsSidebar.classList.remove('open');
                     overlay.classList.remove('active');
-                    body.style.overflow = '';
+                    body.style.overflow = ''; // Restore scrolling
                 }
             });
             
@@ -864,8 +757,11 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             const filterButtons = document.querySelectorAll('.filter-btn');
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
+                    // Remove active class from all buttons
                     filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
                     this.classList.add('active');
+
                     const status = this.dataset.status;
                     window.location.href = `myjoblist.php?status=${status}`;
                 });
@@ -919,43 +815,6 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         function showSearchBar() {
             // Add search functionality if needed
         }
-
-        // Toast notification function
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = toast.querySelector('.toast-message');
-            const toastIcon = toast.querySelector('.toast-icon i');
-            
-            toastMessage.textContent = message;
-            if (type === 'success') {
-                toastIcon.className = 'fas fa-check-circle';
-                toast.className = 'toast show success';
-            } else if (type === 'error') {
-                toastIcon.className = 'fas fa-times-circle';
-                toast.className = 'toast show error';
-            }
-            
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Show toast if PHP message exists
-        <?php if (isset($_SESSION['message'])): ?>
-            document.addEventListener('DOMContentLoaded', function() {
-                showToast(
-                    '<?php echo addslashes($_SESSION['message']); ?>', 
-                    '<?php echo $_SESSION['message_type']; ?>'
-                );
-            });
-            <?php 
-            unset($_SESSION['message']);
-            unset($_SESSION['message_type']);
-            ?>
-        <?php endif; ?>
     </script>
 </body>
 </html>

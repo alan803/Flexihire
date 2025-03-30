@@ -213,6 +213,79 @@ document.addEventListener('DOMContentLoaded', () => {
     window.hideRejectConfirmation = hideRejectConfirmation;
     window.showAcceptConfirmation = showAcceptConfirmation;
     window.hideAcceptConfirmation = hideAcceptConfirmation;
+
+    // Message auto-removal functionality
+    const statusMessage = document.getElementById('statusMessage');
+    if (statusMessage) {
+        setTimeout(() => {
+            statusMessage.style.opacity = '0';
+            setTimeout(() => {
+                statusMessage.remove();
+            }, 300); // Wait for fade out animation to complete
+        }, 3000); // Wait 3 seconds before starting fade out
+    }
+
+    // Job filtering functionality
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            document.querySelector('.filter-btn.active').classList.remove('active');
+            button.classList.add('active');
+
+            // Filter jobs
+            const filter = button.dataset.filter;
+            document.querySelectorAll('.job-card').forEach(card => {
+                if (filter === 'all' || 
+                   (filter === 'active' && card.dataset.status === 'active') ||
+                   (filter === 'deactivated' && card.dataset.status === 'deactivated')) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const jobCards = document.querySelectorAll('.job-card');
+            let resultsFound = false;
+
+            jobCards.forEach(card => {
+                const jobTitle = card.querySelector('h3').textContent.toLowerCase();
+                const companyName = card.querySelector('.job-meta span').textContent.toLowerCase();
+                const location = card.querySelectorAll('.job-meta span')[1].textContent.toLowerCase();
+                
+                if (jobTitle.includes(searchText) || 
+                    companyName.includes(searchText) || 
+                    location.includes(searchText)) {
+                    card.style.display = 'flex';
+                    resultsFound = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            const noResultsElement = document.getElementById('noSearchResults');
+            if (!resultsFound && searchText.length > 0) {
+                noResultsElement.style.display = 'flex';
+            } else {
+                noResultsElement.style.display = 'none';
+            }
+        });
+    }
+
+    // Clear search function
+    window.clearSearch = function() {
+        const searchInput = document.getElementById('searchInput');
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('keyup'));
+        searchInput.focus();
+    };
 });
 
 // Debounce Utility

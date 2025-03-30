@@ -73,9 +73,11 @@ try {
         $mail->send();
     }
 
-    $_SESSION['success'] = "User account has been deactivated successfully";
+    $_SESSION['message'] = "User account has been deactivated successfully";
+    $_SESSION['message_type'] = "success";
 } catch (Exception $e) {
-    $_SESSION['error'] = "Error deactivating user account";
+    $_SESSION['message'] = "Error deactivating user account";
+    $_SESSION['message_type'] = "error";
     error_log($e->getMessage());
 }
 

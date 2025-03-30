@@ -12,6 +12,16 @@ if (!isset($_SESSION['admin_id'])) {
     exit();
 }
 
+// Message handling
+$message = '';
+$messageType = '';
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $messageType = $_SESSION['message_type'] ?? 'success';
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
+
 // Pagination setup
 $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
 $records_per_page = 10;
@@ -88,10 +98,14 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar (Matching Admin Dashboard) -->
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -126,20 +140,26 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
             <header class="page-header">
                 <h1>User Management</h1>
                 <div class="header-actions">
-                    <form class="search-box" method="GET" action="">
-                        <input type="search" 
-                               name="search" 
+                    <div class="search-box">
+                        <input type="text" 
                                id="searchInput" 
                                placeholder="Search users..." 
                                value="<?= htmlspecialchars($search) ?>" 
                                aria-label="Search users">
-                        <button type="submit" aria-label="Search"><i class="fas fa-search"></i></button>
-                    </form>
-                    <button class="export-btn" aria-label="Export user data">
-                        <i class="fas fa-download"></i> Export Users
-                    </button>
+                        <i class="fas fa-search"></i>
+                    </div>
                 </div>
             </header>
+
+            <?php if ($message): ?>
+                <div class="alert alert-<?= $messageType ?>" id="statusMessage">
+                    <i class="fas <?= $messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                    <?= htmlspecialchars($message) ?>
+                    <button type="button" class="close-alert" onclick="this.parentElement.style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <?php endif; ?>
 
             <section class="users-stats" aria-label="User statistics">
     <div class="stat-item">
@@ -156,18 +176,18 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
     </div>
 </section>
             <section class="users-table-container">
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                            <th>Joined Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (mysqli_num_rows($result) > 0): ?>
+                <?php if (mysqli_num_rows($result) > 0): ?>
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <?php while ($row = mysqli_fetch_assoc($result)): ?>
                                 <tr>
                                     <td>
@@ -216,13 +236,26 @@ const DEFAULT_AVATAR = '../assets/images/default-avatar.png';
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="5" class="no-records">No users found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="no-results-container">
+                        <div class="no-results-content">
+                            <div class="no-results-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3>No Users Found</h3>
+                            <?php if ($search): ?>
+                                <p>We couldn't find any users matching "<span class="search-term"><?= htmlspecialchars($search) ?></span>"</p>
+                                <button onclick="clearSearch()" class="clear-search-btn">
+                                    <i class="fas fa-times"></i> Clear Search
+                                </button>
+                            <?php else: ?>
+                                <p>There are no users in the system yet.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </section>
 
             <?php if ($total_pages > 1): ?>

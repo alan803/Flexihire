@@ -112,7 +112,7 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="page-header">
-                <a href="reports.php" class="back-button">
+                <a href="view_report.php" class="back-button">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Reports</span>
                 </a>

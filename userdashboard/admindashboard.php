@@ -167,6 +167,10 @@ if (!$result_activities) {
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item active">
@@ -207,7 +211,7 @@ if (!$result_activities) {
                             <i class="fas fa-users"></i>
                         </div>
                     </div>
-                    <div class="stat-value" data-target="<?php echo $stats['users']; ?>"><?php echo $total_users; ?></div>
+                    <div class="stat-value" data-target="<?php echo $total_users; ?>">0</div>
                     <div class="stat-change">
                         <i class="fas fa-arrow-up"></i>
                         <a href="manage_users.php">Active Job Seekers</a>
@@ -222,7 +226,7 @@ if (!$result_activities) {
                             <i class="fas fa-building"></i>
                         </div>
                     </div>
-                    <div class="stat-value" data-target="<?php echo $stats['employers']; ?>"><?php echo $total_employers; ?></div>
+                    <div class="stat-value" data-target="<?php echo $total_employers; ?>">0</div>
                     <div class="stat-change">
                         <i class="fas fa-arrow-up"></i>
                         <a href="manage_employers.php">Registered Companies</a>
@@ -237,7 +241,7 @@ if (!$result_activities) {
                             <i class="fas fa-briefcase"></i>
                         </div>
                     </div>
-                    <div class="stat-value" data-target="<?php echo $stats['jobs']; ?>"><?php echo $total_jobs; ?></div>
+                    <div class="stat-value" data-target="<?php echo $total_jobs; ?>">0</div>
                     <div class="stat-change">
                         <i class="fas fa-arrow-up"></i>
                         <a href="manage_jobs.php">Active Listings</a>
@@ -252,7 +256,7 @@ if (!$result_activities) {
                             <i class="fas fa-file-alt"></i>
                         </div>
                     </div>
-                    <div class="stat-value"><?php echo $total_reports; ?></div>
+                    <div class="stat-value" data-target="<?php echo $total_reports; ?>">0</div>
                     <div class="stat-change">
                         <i class="fas fa-arrow-up"></i>
                         <a href="reports.php">View Reports</a>

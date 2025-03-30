@@ -68,6 +68,10 @@ if(!$report = mysqli_fetch_assoc($result)) {
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -87,7 +91,7 @@ if(!$report = mysqli_fetch_assoc($result)) {
                     <span>Manage Jobs</span>
                 </a>
                 <a href="reports.php" class="nav-item active">
-                    <i class="fas fa-flag"></i>
+                    <i class="fas fa-chart-bar"></i>
                     <span>Reports</span>
                 </a>
                 <a href="../login/logout.php" class="nav-item">
@@ -142,11 +146,11 @@ if(!$report = mysqli_fetch_assoc($result)) {
                             <div class="entity-info">
                                 <span class="entity-name"><?= htmlspecialchars($report['reported_entity']) ?></span>
                             </div>
-                            <?php if ($report['report_type'] === 'Job' && $report['job_employer_id']): ?>
+                            <!-- <?php if ($report['report_type'] === 'Job' && $report['job_employer_id']): ?>
                                 <a href="view_emplloyer_report.php?employer_id=<?= $report['job_employer_id'] ?>" class="view-employer-btn">
                                     <i class="fas fa-building"></i> View Employer
                                 </a>
-                            <?php endif; ?>
+                            <?php endif; ?> -->
                         </div>
                     </div>
 

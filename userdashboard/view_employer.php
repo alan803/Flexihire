@@ -13,40 +13,62 @@
     $dbname = "project";
     mysqli_select_db($conn, $dbname) or die("Database selection failed: " . mysqli_error($conn));
 
-    // Get user_id from URL parameter
-    if (isset($_GET['employer_id'])) 
-    {
-        $employer_id = filter_input(INPUT_GET, 'employer_id', FILTER_VALIDATE_INT);
-        if ($employer_id === false || $employer_id === null) 
-        {
-            header('Location: manage_employers.php');
-            exit();
-        }
-        
-        // Updated query to use tbl_selected for hired users count
-        $sql = "SELECT e.employer_id, e.company_name, e.phone_number, e.address, 
-                       e.establishment_year, e.created_at, e.profile_image, 
-                       l.email, l.status,
-                       (SELECT COUNT(*) FROM tbl_jobs WHERE employer_id = e.employer_id) as total_jobs,
-                       (SELECT COUNT(*) FROM tbl_selected s 
-                        INNER JOIN tbl_jobs j ON s.job_id = j.job_id 
-                        WHERE j.employer_id = e.employer_id) as hired_users
-                FROM tbl_employer e 
-                LEFT JOIN tbl_login l ON e.employer_id = l.employer_id 
-                WHERE e.employer_id = ?";
-                
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $employer_id);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        $employer = mysqli_fetch_assoc($result);
-        mysqli_stmt_close($stmt);
-    } 
-    else 
-    {
-        header('Location: manage_employers.php');
+    // Get employer ID from URL
+    $employer_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    if (!$employer_id) {
+        header("Location: manage_employers.php");
         exit();
     }
+
+    // Fetch employer details
+    $sql = "SELECT 
+                e.*,
+                l.email,
+                l.status,
+                l.created_at as join_date,
+                (SELECT COUNT(*) FROM tbl_jobs WHERE employer_id = e.employer_id AND is_deleted = 0) as total_jobs,
+                (SELECT COUNT(*) FROM tbl_selected s 
+                 INNER JOIN tbl_jobs j ON s.job_id = j.job_id 
+                 WHERE j.employer_id = e.employer_id) as hired_users
+            FROM tbl_employer e 
+            LEFT JOIN tbl_login l ON e.employer_id = l.employer_id
+            WHERE e.employer_id = ?";
+
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $employer_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (mysqli_num_rows($result) === 0) {
+        header("Location: manage_employers.php");
+        exit();
+    }
+
+    $employer = mysqli_fetch_assoc($result);
+
+    // Fetch employer's jobs
+    $jobs_sql = "SELECT 
+                    job_id,
+                    job_title,
+                    location,
+                    category,
+                    salary,
+                    vacancy,
+                    status,
+                    created_at,
+                    application_deadline,
+                    working_days,
+                    start_time,
+                    end_time
+                 FROM tbl_jobs 
+                 WHERE employer_id = ? AND is_deleted = 0
+                 ORDER BY created_at DESC";
+
+    $jobs_stmt = mysqli_prepare($conn, $jobs_sql);
+    mysqli_stmt_bind_param($jobs_stmt, "i", $employer_id);
+    mysqli_stmt_execute($jobs_stmt);
+    $jobs_result = mysqli_stmt_get_result($jobs_stmt);
+    $jobs = mysqli_fetch_all($jobs_result, MYSQLI_ASSOC);
 
     mysqli_close($conn);
 
@@ -80,17 +102,21 @@
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="manage_users.php" class="nav-item active">
+                <a href="manage_users.php" class="nav-item">
                     <i class="fas fa-users"></i>
                     <span>Manage Users</span>
                 </a>
-                <a href="manage_employers.php" class="nav-item">
+                <a href="manage_employers.php" class="nav-item active">
                     <i class="fas fa-building"></i>
                     <span>Manage Employers</span>
                 </a>
@@ -112,20 +138,27 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="page-header">
-                <a href="manage_employers.php" class="back-button">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Employers</span>
-                </a>
+                <div class="header-content">
+                    <a href="manage_employers.php" class="back-button">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Employers</span>
+                    </a>
+                </div>
             </div>
 
             <?php if ($employer): ?>
                 <div class="user-profile">
                     <div class="profile-header">
                         <div class="profile-image-container">
-                            <img src="<?= htmlspecialchars($employer['profile_image']) ?>" 
-                                 alt="Company Profile" 
-                                 class="profile-image"
-                                 onerror="this.src='../assets/images/default-avatar.png'">
+                            <?php if (!empty($employer['profile_image'])): ?>
+                                <img src="<?= htmlspecialchars('./' . $employer['profile_image']) ?>" 
+                                     alt="<?= htmlspecialchars($employer['company_name']) ?> Logo"
+                                     class="profile-image">
+                            <?php else: ?>
+                                <div class="avatar-placeholder">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <div class="profile-info">
                             <div class="company-details">
@@ -191,6 +224,90 @@
                     <p>Employer not found.</p>
                 </div>
             <?php endif; ?>
+
+            <div class="jobs-section">
+                <div class="section-header">
+                    <h2>Posted Jobs</h2>
+                    <div class="job-stats">
+                        <span class="stat-item">
+                            <i class="fas fa-briefcase"></i>
+                            <?= count($jobs) ?> Active Jobs
+                        </span>
+                    </div>
+                </div>
+
+                <?php if (count($jobs) > 0): ?>
+                    <div class="jobs-grid">
+                        <?php foreach ($jobs as $job): ?>
+                            <div class="job-card">
+                                <div class="job-header">
+                                    <div class="job-title-section">
+                                        <h3><?= htmlspecialchars($job['job_title']) ?></h3>
+                                        <span class="job-category">
+                                            <i class="fas fa-tag"></i>
+                                            <?= htmlspecialchars($job['category']) ?>
+                                        </span>
+                                    </div>
+                                    <span class="job-status <?= strtolower($job['status']) ?>">
+                                        <?= ucfirst($job['status']) ?>
+                                    </span>
+                                </div>
+
+                                <div class="job-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span><?= htmlspecialchars($job['location']) ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-users"></i>
+                                        <span><?= htmlspecialchars($job['vacancy']) ?> Vacancies</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        <span>₹<?= number_format($job['salary'], 2) ?></span>
+                                    </div>
+                                </div>
+
+                                <div class="job-details">
+                                    <div class="detail-row">
+                                        <i class="fas fa-calendar"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">Application Deadline</span>
+                                            <span class="detail-value"><?= date('M d, Y', strtotime($job['application_deadline'])) ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <i class="fas fa-clock"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">Working Hours</span>
+                                            <span class="detail-value"><?= date('h:i A', strtotime($job['start_time'])) ?> - <?= date('h:i A', strtotime($job['end_time'])) ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">Working Days</span>
+                                            <span class="detail-value"><?= htmlspecialchars($job['working_days']) ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="job-footer">
+                                    <div class="job-date">
+                                        <i class="fas fa-clock"></i>
+                                        Posted <?= date('M d, Y', strtotime($job['created_at'])) ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="no-jobs">
+                        <i class="fas fa-briefcase"></i>
+                        <p>No jobs posted yet</p>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 

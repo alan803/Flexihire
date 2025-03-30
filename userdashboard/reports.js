@@ -43,27 +43,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const modals = {
         report: $('#reportModal'),
         resolve: $('#resolveModal'),
-        reject: $('#rejectModal')
+        reject: $('#rejectModal'),
+        deactivate: $('#deactivateModal')
     };
 
     function showModal(modal) {
-        modal.classList.add('active');
+        modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
-        // Close all modals and redirect
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
+        Object.values(modals).forEach(modal => {
             modal.style.display = 'none';
         });
-        
-        // Clear form inputs
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => form.reset());
-
-        // Redirect back to reports.php
-        window.location.href = 'reports.php';
+        document.body.style.overflow = 'auto';
     }
 
     // Close modal when clicking outside
@@ -148,76 +141,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show Resolve Modal
     window.showResolveModal = (reportId) => {
-        const modal = document.getElementById('resolveModal');
-        modal.style.display = 'block';
-        document.getElementById('resolveReportId').value = reportId;
-        
-        // Add event listeners for this specific modal
-        const closeBtn = modal.querySelector('.close-btn');
-        const cancelBtn = modal.querySelector('.cancel-btn');
-        const textarea = modal.querySelector('textarea');
-        
-        // Add validation for textarea
-        if (textarea) {
-            textarea.addEventListener('input', validateInput);
-            textarea.addEventListener('paste', handlePaste);
-        }
-        
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                window.location.href = 'reports.php';
-            }
-        }
-        
-        if (cancelBtn) {
-            cancelBtn.onclick = function() {
-                window.location.href = 'reports.php';
-            }
-        }
-        
-        // Close on outside click
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                window.location.href = 'reports.php';
-            }
-        }
+        $('#resolveReportId').value = reportId;
+        showModal(modals.resolve);
     };
 
     // Show Reject Modal
     window.showRejectModal = (reportId) => {
-        const modal = document.getElementById('rejectModal');
-        modal.style.display = 'block';
-        document.getElementById('rejectReportId').value = reportId;
-        
-        // Add event listeners for reject modal
-        const closeBtn = modal.querySelector('.close-btn');
-        const cancelBtn = modal.querySelector('.cancel-btn');
-        const textarea = modal.querySelector('textarea');
-        
-        // Add validation for textarea
-        if (textarea) {
-            textarea.addEventListener('input', validateInput);
-            textarea.addEventListener('paste', handlePaste);
-        }
-        
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                window.location.href = 'reports.php';
-            }
-        }
-        
-        if (cancelBtn) {
-            cancelBtn.onclick = function() {
-                window.location.href = 'reports.php';
-            }
-        }
-        
-        // Close on outside click for reject modal
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                window.location.href = 'reports.php';
-            }
-        }
+        $('#rejectReportId').value = reportId;
+        showModal(modals.reject);
+    };
+
+    // Show Deactivate Modal
+    window.showDeactivateModal = (employerId, companyName) => {
+        $('#deactivateEmployerId').value = employerId;
+        $('#deactivateEmployerName').textContent = companyName;
+        showModal(modals.deactivate);
+    };
+
+    // Close Deactivate Modal
+    window.closeDeactivateModal = () => {
+        modals.deactivate.style.display = 'none';
     };
 
     // Alert Function
@@ -237,69 +180,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-    // Add animation styles
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .sidebar.collapsed {
-            width: 80px;
-        }
-        .sidebar.collapsed .logo-section h1,
-        .sidebar.collapsed .nav-item span {
-            display: none;
-        }
-        .sidebar.collapsed .nav-item {
-            justify-content: center;
-            padding: 1rem;
-            margin: 0.3rem;
-        }
-        .sidebar.collapsed .nav-item i {
-            margin-right: 0;
-            font-size: 1.5rem;
-        }
-        .sidebar-collapsed {
-            margin-left: 80px !important;
-        }
-    `;
-    document.head.appendChild(styleSheet);
+    // Add near the top after your existing variable declarations
+    const searchInput = document.getElementById('searchInput');
+    const tableContainer = document.querySelector('.table-container');
+    const tableRows = document.querySelectorAll('table tbody tr');
 
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle form submissions
-        const resolveForm = document.getElementById('resolveForm');
-        const rejectForm = document.getElementById('rejectForm');
-        
-        if (resolveForm) {
-            resolveForm.addEventListener('submit', function(event) {
-                // Form will submit normally
-            });
-        }
-        
-        if (rejectForm) {
-            rejectForm.addEventListener('submit', function(event) {
-                // Form will submit normally
-            });
-        }
-        
-        // Handle Escape key for both modals
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                const activeModal = document.querySelector('.modal[style*="display: block"]');
-                if (activeModal) {
-                    window.location.href = 'reports.php';
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            let resultsFound = false;
+
+            // Remove existing no results message if it exists
+            const existingMessage = document.querySelector('.no-results-container');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            tableRows.forEach(row => {
+                const reporterName = row.querySelector('.reporter-name').textContent.toLowerCase();
+                const reporterEmail = row.querySelector('.reporter-email').textContent.toLowerCase();
+                const reportedEntity = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const reason = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+
+                if (reporterName.includes(searchText) || 
+                    reporterEmail.includes(searchText) || 
+                    reportedEntity.includes(searchText) || 
+                    reason.includes(searchText)) {
+                    row.style.display = '';
+                    resultsFound = true;
+                } else {
+                    row.style.display = 'none';
                 }
+            });
+
+            if (!resultsFound && searchText.length > 0) {
+                const noResultsHtml = `
+                    <div class="no-results-container">
+                        <div class="no-results-content">
+                            <h2>No Results Found</h2>
+                            <p>We couldn't find any reports matching your search criteria.</p>
+                            <button type="button" class="clear-search-btn" onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                                Clear Search
+                            </button>
+                        </div>
+                    </div>
+                `;
+                tableContainer.insertAdjacentHTML('beforeend', noResultsHtml);
             }
         });
-    });
+    }
 
-    // Input validation function
+    // Clear search function
+    window.clearSearch = function() {
+        if (searchInput) {
+            searchInput.value = '';
+            
+            // Show all rows
+            tableRows.forEach(row => {
+                row.style.display = '';
+            });
+
+            // Remove no results message
+            const noResultsContainer = document.querySelector('.no-results-container');
+            if (noResultsContainer) {
+                noResultsContainer.remove();
+            }
+
+            // Focus back on search input
+            searchInput.focus();
+        }
+    };
+
+    // Form validation
     function validateInput(event) {
         const textarea = event.target;
         const originalValue = textarea.value;
@@ -309,15 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (originalValue !== sanitizedValue) {
             textarea.value = sanitizedValue;
-            
-            // Show validation message
             showValidationMessage(textarea, 'Special characters are not allowed');
         } else {
             hideValidationMessage(textarea);
         }
     }
 
-    // Handle paste events
     function handlePaste(event) {
         event.preventDefault();
         const text = (event.originalEvent || event).clipboardData.getData('text/plain');
@@ -325,7 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.execCommand('insertText', false, sanitizedText);
     }
 
-    // Show validation message
     function showValidationMessage(element, message) {
         let validationMessage = element.parentElement.querySelector('.validation-message');
         
@@ -337,40 +287,40 @@ document.addEventListener('DOMContentLoaded', () => {
         
         validationMessage.textContent = message;
         validationMessage.style.display = 'block';
-        
-        // Add error state to textarea
         element.classList.add('error');
     }
 
-    // Hide validation message
     function hideValidationMessage(element) {
         const validationMessage = element.parentElement.querySelector('.validation-message');
         if (validationMessage) {
             validationMessage.style.display = 'none';
         }
-        
-        // Remove error state from textarea
         element.classList.remove('error');
     }
 
-    // Add these functions to your existing JavaScript
-    function sendEmail(userId) {
-        // Redirect to email page with user ID
-        window.location.href = `send_email.php?user_id=${userId}`;
+    // Add validation to all textareas in modals
+    $$('.modal textarea').forEach(textarea => {
+        textarea.addEventListener('input', validateInput);
+        textarea.addEventListener('paste', handlePaste);
+    });
+
+    // Debounce Utility
+    function debounce(func, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     }
 
-    function confirmDeactivate(userId) {
-        if (confirm('Are you sure you want to deactivate this account?')) {
-            window.location.href = `deactivate_account.php?user_id=${userId}`;
-        }
+    // Message auto-removal functionality
+    const statusMessage = document.getElementById('statusMessage');
+    if (statusMessage) {
+        setTimeout(() => {
+            statusMessage.style.opacity = '0';
+            setTimeout(() => {
+                statusMessage.remove();
+            }, 300);
+        }, 3000);
     }
 });
-
-// Debounce Utility
-function debounce(func, wait) {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}

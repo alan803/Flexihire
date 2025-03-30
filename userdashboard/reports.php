@@ -1,11 +1,22 @@
 <?php
     session_start();
     include '../database/connectdatabase.php';
-    if(!isset($_SESSION['admin_id']))
-    {
-        header("Location: ../loginvalidation.php");
+
+    // Check if admin is logged in
+    if (!isset($_SESSION['admin_id']) || $_SESSION['user_type'] !== 'admin') {
+        // Set cache-control headers
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
+        
+        header("Location: ../login/loginvalidation.php");
         exit();
     }
+
+    // Set cache-control headers for authenticated users too
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
 
     // Fetch report statistics
     $stats_sql = "SELECT 
@@ -25,17 +36,24 @@
                     u.first_name as reporter_name,
                     u.profile_image as reporter_picture,
                     l.email as reporter_email,
-                    e.company_name,
-                    e.employer_id,
                     CASE 
-                        WHEN r.reported_job_id IS NOT NULL THEN j.job_title
+                        WHEN r.reported_job_id IS NOT NULL THEN ej.company_name
                         WHEN r.reported_employer_id IS NOT NULL THEN e.company_name
                         WHEN r.reported_user_id IS NOT NULL THEN CONCAT(u2.first_name, ' ', u2.last_name)
-                    END as reported_entity
+                    END as reported_entity,
+                    CASE 
+                        WHEN r.reported_job_id IS NOT NULL THEN j.employer_id
+                        ELSE r.reported_employer_id
+                    END as employer_id,
+                    CASE 
+                        WHEN r.reported_job_id IS NOT NULL THEN ej.company_name
+                        ELSE e.company_name
+                    END as company_name
                     FROM tbl_reports r 
                     LEFT JOIN tbl_user u ON r.reporter_id = u.user_id
                     LEFT JOIN tbl_login l ON u.user_id = l.user_id
                     LEFT JOIN tbl_jobs j ON r.reported_job_id = j.job_id
+                    LEFT JOIN tbl_employer ej ON j.employer_id = ej.employer_id
                     LEFT JOIN tbl_employer e ON r.reported_employer_id = e.employer_id
                     LEFT JOIN tbl_user u2 ON r.reported_user_id = u2.user_id
                     ORDER BY r.created_at DESC";
@@ -81,6 +99,10 @@
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -100,7 +122,7 @@
                     <span>Manage Jobs</span>
                 </a>
                 <a href="reports.php" class="nav-item active">
-                    <i class="fas fa-flag"></i>
+                    <i class="fas fa-chart-bar"></i>
                     <span>Reports</span>
                 </a>
                 <a href="../login/logout.php" class="nav-item">
@@ -117,24 +139,32 @@
                     <div class="header-left">
                         <h1>Manage Reports</h1>
                     </div>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search reports..." id="searchInput">
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success">
-                    <?php 
-                    echo $_SESSION['success'];
-                    unset($_SESSION['success']);
-                    ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-error">
-                    <?php 
-                    echo $_SESSION['error'];
-                    unset($_SESSION['error']);
-                    ?>
+            <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+                <div class="alert alert-<?= isset($_SESSION['success']) ? 'success' : 'error' ?>" id="statusMessage">
+                    <i class="fas <?= isset($_SESSION['success']) ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                    <span>
+                        <?php 
+                        if (isset($_SESSION['success'])) {
+                            echo htmlspecialchars($_SESSION['success']);
+                            unset($_SESSION['success']);
+                        } elseif (isset($_SESSION['error'])) {
+                            echo htmlspecialchars($_SESSION['error']);
+                            unset($_SESSION['error']);
+                        }
+                        ?>
+                    </span>
+                    <button type="button" class="close-alert" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -242,11 +272,13 @@
                                                 <i class="fas fa-times-circle"></i>
                                             </a>
                                         <?php elseif ($report['status'] === 'resolved'): ?>
-                                            <a href="send_report_message.php?reporter_id=<?= $report['reporter_id'] ?>" class="action-icon email" title="Send Email">
+                                            <a href="send_report_message.php?report_id=<?= $report['report_id'] ?>&job_id=<?= $report['reported_job_id'] ?>&employer_id=<?= $report['employer_id'] ?>" 
+                                               class="action-icon email" 
+                                               title="Send Email">
                                                 <i class="fas fa-envelope"></i>
                                             </a>
                                             <a href="#" 
-                                               onclick="showDeactivateModal(<?= $report['employer_id'] ?>, '<?= htmlspecialchars($report['company_name']) ?>')" 
+                                               onclick="showDeactivateModal(<?= $report['reported_job_id'] ? $report['employer_id'] : $report['reported_employer_id'] ?>, '<?= htmlspecialchars($report['company_name']) ?>')" 
                                                class="action-icon deactivate" 
                                                title="Deactivate Account">
                                                 <i class="fas fa-user-slash"></i>
@@ -361,18 +393,6 @@
     </div>
 
     <script src="reports.js"></script>
-    <script>
-    function showDeactivateModal(employerId, companyName) {
-        document.getElementById('deactivateEmployerId').value = employerId;
-        document.getElementById('deactivateEmployerName').textContent = companyName;
-        document.getElementById('deactivateModal').style.display = 'block';
-    }
-
-    function closeDeactivateModal() {
-        document.getElementById('deactivateModal').style.display = 'none';
-        document.getElementById('deactivateForm').reset();
-    }
-    </script>
 </body>
 </html>
 

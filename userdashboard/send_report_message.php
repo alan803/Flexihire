@@ -13,28 +13,35 @@ if (!isset($_SESSION['admin_id'])) {
     exit();
 }
 
-// Get reporter_id from URL
-$reporter_id = filter_input(INPUT_GET, 'reporter_id', FILTER_VALIDATE_INT);
+// Get IDs from URL
+$report_id = filter_input(INPUT_GET, 'report_id', FILTER_VALIDATE_INT);
+$job_id = filter_input(INPUT_GET, 'job_id', FILTER_VALIDATE_INT);
+$employer_id = filter_input(INPUT_GET, 'employer_id', FILTER_VALIDATE_INT);
 
-if (!$reporter_id) {
-    header('Location: reports.php?error=invalid_id');
+if (!$report_id || !$job_id || !$employer_id) {
+    header('Location: reports.php?error=invalid_parameters');
     exit();
 }
 
-// Get employer details (removed username from query)
-$sql = "SELECT l.email, e.company_name, e.profile_image 
-        FROM tbl_employer e 
-        JOIN tbl_login l ON e.employer_id = l.employer_id 
-        WHERE e.employer_id = ?";
+// Get job, employer and report details
+$sql = "SELECT j.job_title, j.employer_id, 
+               e.company_name, 
+               l.email,
+               r.reason, r.created_at
+        FROM tbl_jobs j
+        JOIN tbl_employer e ON j.employer_id = e.employer_id
+        JOIN tbl_login l ON e.employer_id = l.employer_id
+        JOIN tbl_reports r ON r.reported_job_id = j.job_id
+        WHERE r.report_id = ? AND j.job_id = ? AND e.employer_id = ?";
 
 $stmt = mysqli_prepare($conn, $sql);
-mysqli_stmt_bind_param($stmt, "i", $reporter_id);
+mysqli_stmt_bind_param($stmt, "iii", $report_id, $job_id, $employer_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
-$employer = mysqli_fetch_assoc($result);
+$details = mysqli_fetch_assoc($result);
 mysqli_stmt_close($stmt);
 
-if ($employer) {
+if ($details) {
     $mail = new PHPMailer(true);
 
     try {
@@ -57,34 +64,37 @@ if ($employer) {
         );
 
         // Recipients
-        $mail->setFrom('flexihire369@gmail.com', 'FlexiHire');
-        $mail->addAddress($employer['email']);
+        $mail->setFrom('flexihire369@gmail.com', 'FlexiHire Admin');
+        $mail->addAddress($details['email']);
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = "Report Notice from FlexiHire";
+        $mail->Subject = "Job Posting Report Notice - FlexiHire";
         
-        // HTML Email Body (removed username)
+        // HTML Email Body
         $emailBody = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;'>
-                <h2 style='color: #1a56db; margin: 0;'>Report Notice from FlexiHire</h2>
+                <h2 style='color: #dc3545; margin: 0;'>Job Posting Report Notice</h2>
             </div>
             
             <div style='background-color: white; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-                <p>Dear <strong>{$employer['company_name']}</strong>,</p>
+                <p>Dear <strong>{$details['company_name']}</strong>,</p>
                 
-                <p>Your job posting has been reported for violation of our terms. Please review and update your posting accordingly.</p>
+                <p>We are writing to inform you that your job posting has been reported for potential violation of our terms and conditions.</p>
                 
                 <div style='margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;'>
                     <p style='margin: 0; color: #666;'>
-                        <strong>Account Details:</strong><br>
-                        Company Name: {$employer['company_name']}<br>
-                        Email: {$employer['email']}
+                        <strong>Job Details:</strong><br>
+                        Job Title: {$details['job_title']}<br>
+                        Report Reason: {$details['reason']}<br>
+                        Report Date: " . date('F j, Y', strtotime($details['created_at'])) . "
                     </p>
                 </div>
                 
-                <p>Please take immediate action to address this issue.</p>
+                <p>Please review your job posting and make any necessary adjustments to ensure compliance with our platform's guidelines. If you believe this report was made in error, please contact our support team.</p>
+                
+                <p>Failure to address these concerns may result in the removal of your job posting or other account restrictions.</p>
                 
                 <p style='margin-top: 20px;'>Best regards,<br>FlexiHire Admin Team</p>
             </div>
@@ -97,15 +107,19 @@ if ($employer) {
         $mail->Body = $emailBody;
         $mail->AltBody = strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $emailBody));
 
-        $mail->send();
-        header('Location: reports.php?success=email_sent');
+        if ($mail->send()) {
+            $_SESSION['success'] = "Email has been sent successfully";
+        } else {
+            $_SESSION['error'] = "Failed to send email";
+        }
+        header('Location: reports.php');
         exit();
     } catch (Exception $e) {
         header('Location: reports.php?error=email_failed&msg=' . urlencode($mail->ErrorInfo));
         exit();
     }
 } else {
-    header('Location: reports.php?error=employer_not_found');
+    header('Location: reports.php?error=details_not_found');
     exit();
 }
 ?>

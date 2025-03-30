@@ -1,65 +1,69 @@
 <?php
-session_start();
+    session_start();
 
-// Message handling
-if (isset($_SESSION['message'])) {
-    $message = $_SESSION['message'];
-    $message_type = $_SESSION['message_type'] ?? 'info';
-    unset($_SESSION['message']);
-    unset($_SESSION['message_type']);
-}
+    // Message handling
+    if (isset($_SESSION['message'])) 
+    {
+        $message = $_SESSION['message'];
+        $message_type = $_SESSION['message_type'] ?? 'info';
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+    }
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login/loginvalidation.php");
-    exit();
-}
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) 
+    {
+        header("Location: ../login/loginvalidation.php");
+        exit();
+    }
 
-include '../database/connectdatabase.php';
-$dbname = "project";
-mysqli_select_db($conn, $dbname);
+    include '../database/connectdatabase.php';
+    $dbname = "project";
+    mysqli_select_db($conn, $dbname);
 
-// Get user data
-$user_id = $_SESSION['user_id'];
-$sql = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image, u.user_id
-        FROM tbl_login l
-        INNER JOIN tbl_user u ON l.user_id = u.user_id
-        WHERE l.user_id = ?";
+    // Get user data
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT l.email, u.first_name, u.last_name, u.username, u.profile_image, u.user_id
+            FROM tbl_login l
+            INNER JOIN tbl_user u ON l.user_id = u.user_id
+            WHERE l.user_id = ?";
+    
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
-$stmt = mysqli_prepare($conn, $sql);
-mysqli_stmt_bind_param($stmt, "i", $user_id);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user_data = mysqli_fetch_assoc($result);
+        $email = $user_data['email'];
+        
+        $display_name = !empty($user_data['username']) 
+            ? $user_data['username'] 
+            : $user_data['first_name'] . " " . $user_data['last_name'];
+        
+        $profile_image = $user_data['profile_image'];
+        $_SESSION['display_name'] = $display_name;
+    } else {
+        error_log("Database error or user not found for ID: $user_id");
+        session_destroy();
+        header("Location: ../login/loginvalidation.php");
+        exit();
+    }
 
-if ($result && mysqli_num_rows($result) > 0) {
-    $user_data = mysqli_fetch_assoc($result);
-    $email = $user_data['email'];
-    $display_name = !empty($user_data['username']) 
-        ? $user_data['username'] 
-        : $user_data['first_name'] . " " . $user_data['last_name'];
-    $profile_image = $user_data['profile_image'];
-    $_SESSION['display_name'] = $display_name;
-} else {
-    error_log("Database error or user not found for ID: $user_id");
-    session_destroy();
-    header("Location: ../login/loginvalidation.php");
-    exit();
-}
+    // Fetch appointments for the user (excluding cancelled ones)
+    $sql_appointments = "SELECT a.appointment_id, a.job_id, a.appointment_date, a.appointment_time, 
+                           a.status, a.interview_type, a.location,
+                           j.job_title, e.company_name
+                    FROM tbl_appointments a
+                    JOIN tbl_jobs j ON a.job_id = j.job_id
+                    JOIN tbl_employer e ON j.employer_id = e.employer_id
+                    WHERE a.user_id = ? AND a.status != 'cancelled'
+                    ORDER BY a.appointment_date DESC, a.appointment_time DESC";
 
-// Fetch appointments for the user (excluding cancelled ones)
-$sql_appointments = "SELECT a.appointment_id, a.job_id, a.appointment_date, a.appointment_time, 
-                       a.status, a.interview_type, a.location,
-                       j.job_title, e.company_name
-                FROM tbl_appointments a
-                JOIN tbl_jobs j ON a.job_id = j.job_id
-                JOIN tbl_employer e ON j.employer_id = e.employer_id
-                WHERE a.user_id = ? AND a.status != 'cancelled'
-                ORDER BY a.appointment_date DESC, a.appointment_time DESC";
-
-$stmt = mysqli_prepare($conn, $sql_appointments);
-mysqli_stmt_bind_param($stmt, "i", $user_id);
-mysqli_stmt_execute($stmt);
-$appointments_result = mysqli_stmt_get_result($stmt);
+    $stmt = mysqli_prepare($conn, $sql_appointments);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $appointments_result = mysqli_stmt_get_result($stmt);
 ?>
 
 <!DOCTYPE html>
@@ -73,11 +77,13 @@ $appointments_result = mysqli_stmt_get_result($stmt);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-brand">
             <img src="logowithoutbcakground.png" alt="Logo" class="logo">
             <h1>FlexiHire</h1>
         </div>
+        
         <div class="nav-right">
             <div class="profile-container">
                 <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
@@ -94,6 +100,7 @@ $appointments_result = mysqli_stmt_get_result($stmt);
         </div>
     </nav>
 
+    <!-- Toast Notification -->
     <div id="toast" class="toast">
         <div class="toast-content">
             <div class="toast-icon">
@@ -106,7 +113,9 @@ $appointments_result = mysqli_stmt_get_result($stmt);
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="dashboard-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-menu">
                 <a href="userdashboard.php"><i class="fas fa-home"></i> Home</a>
@@ -125,21 +134,23 @@ $appointments_result = mysqli_stmt_get_result($stmt);
             </div>
         </aside>
 
+        <!-- Main Content Area -->
         <main class="main-content">
             <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h2 style="font-size: 1.5rem; color: 'black';">Your Appointments</h2>
                 <select id="status-filter" style="padding: 0.75rem; border: 1px solid rgba(186, 166, 227, 0.3); border-radius: 6px; background: var(--white);">
                     <option value="all">All Statuses</option>
                     <option value="pending">Pending</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="interview scheduled">Interview Scheduled</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
                 </select>
             </div>
 
+            <!-- Appointment Listings -->
             <div class="appointment-listings">
                 <?php if ($appointments_result && mysqli_num_rows($appointments_result) > 0): ?>
                     <?php while ($appointment = mysqli_fetch_assoc($appointments_result)): ?>
-                        <div class="appointment-card" data-status="<?php echo strtolower($appointment['status']); ?>">
+                        <div class="appointment-card">
                             <div class="appointment-header">
                                 <div class="header-left">
                                     <h3><?php echo htmlspecialchars($appointment['job_title']); ?></h3>
@@ -196,6 +207,13 @@ $appointments_result = mysqli_stmt_get_result($stmt);
                                 </div>
                             </div>
 
+                            <?php if(!empty($appointment['notes'])): ?>
+                                <div class="appointment-notes">
+                                    <span class="label">Notes</span>
+                                    <p><?php echo nl2br(htmlspecialchars($appointment['notes'])); ?></p>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="appointment-actions">
                                 <?php if($appointment['status'] === 'pending'): ?>
                                     <a href="reschedule_interview.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" 
@@ -235,6 +253,7 @@ $appointments_result = mysqli_stmt_get_result($stmt);
 
     <script src="appointment.js"></script>
     <script>
+    // Show toast message if exists
     <?php if (isset($message)): ?>
         document.addEventListener('DOMContentLoaded', function() {
             showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
@@ -247,9 +266,11 @@ $appointments_result = mysqli_stmt_get_result($stmt);
         const toastTitle = toast.querySelector('.toast-title');
         const icon = toast.querySelector('i');
         
+        // Reset classes
         toast.className = 'toast';
         icon.className = 'fas';
         
+        // Set type-specific properties
         switch(type) {
             case 'success':
                 toastTitle.textContent = 'Success';
@@ -270,30 +291,16 @@ $appointments_result = mysqli_stmt_get_result($stmt);
         toastMessage.textContent = message;
         toast.classList.add('show');
         
+        // Hide toast after 4 seconds with fade out
         setTimeout(() => {
             toast.style.transition = 'opacity 0.5s ease';
             toast.style.opacity = '0';
             setTimeout(() => {
                 toast.classList.remove('show');
-                toast.style.opacity = '1';
-            }, 500);
-        }, 4000);
+                toast.style.opacity = '1'; // Reset opacity for next use
+            }, 500); // Wait for fade out to complete
+        }, 4000); // Show for 4 seconds
     }
     </script>
-
-    <style>
-    .status-badge.status-accepted {
-        background: #4CAF50;
-        color: white;
-    }
-    .status-badge.status-pending {
-        background: #FFA726;
-        color: white;
-    }
-    .status-badge.status-interview-scheduled {
-        background: #2196F3;
-        color: white;
-    }
-    </style>
 </body>
 </html>

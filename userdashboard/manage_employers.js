@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sidebar Toggle for Mobile
     const sidebar = $('.sidebar');
     const mainContent = $('.main-content');
-    const menuToggle = $('.menu-toggle'); // Add this button in HTML if needed
+    const menuToggle = $('.menu-toggle');
 
     // Restore sidebar state
     const savedSidebarState = localStorage.getItem('sidebarState');
@@ -27,13 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Responsive Sidebar Adjustments
     const updateSidebar = () => {
-        const shouldCollapse = window.innerWidth <= 1024 && !sidebar.classList.contains('collapsed');
-        const shouldExpand = window.innerWidth > 1024 && savedSidebarState !== 'collapsed' && sidebar.classList.contains('collapsed');
-        
-        if (shouldCollapse) {
+        if (window.innerWidth <= 1024 && !sidebar.classList.contains('collapsed')) {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
-        } else if (shouldExpand) {
+        } else if (window.innerWidth > 1024 && savedSidebarState !== 'collapsed') {
             sidebar.classList.remove('collapsed');
             mainContent.classList.remove('sidebar-collapsed');
         }
@@ -43,98 +40,208 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSidebar();
 
     // Search Functionality
-    const searchInput = $('#searchInput');
+    const searchForm = document.querySelector('.search-box');
+    const searchInput = document.querySelector('.search-box input');
+    const employersTableContainer = document.querySelector('.users-table-container');
+    let searchTimeout;
+    
+    // Handle search input
     if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', () => {
+        searchInput.addEventListener('input', function(e) {
             clearTimeout(searchTimeout);
+            const searchTerm = e.target.value.trim();
+            
+            // Update search parameter
+            const searchParam = new URLSearchParams(window.location.search);
+            if (searchTerm) {
+                searchParam.set('search', searchTerm);
+            } else {
+                searchParam.delete('search');
+            }
+            searchParam.set('page', '1');
+            
+            // Debounce the search
             searchTimeout = setTimeout(() => {
-                const searchQuery = searchInput.value.trim();
-                window.location.href = `manage_employers.php?search=${encodeURIComponent(searchQuery)}`;
+                // Use fetch to get search results
+                fetch(`${window.location.pathname}?${searchParam.toString()}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Create a temporary container
+                        const tempContainer = document.createElement('div');
+                        tempContainer.innerHTML = html;
+                        
+                        // Extract the table container content
+                        const newTableContent = tempContainer.querySelector('.users-table-container').innerHTML;
+                        
+                        // Update the table container with new content
+                        employersTableContainer.innerHTML = newTableContent;
+                        
+                        // Update URL without page reload
+                        window.history.pushState({}, '', `${window.location.pathname}?${searchParam.toString()}`);
+                    })
+                    .catch(error => {
+                        console.error('Search failed:', error);
+                    });
             }, 500);
         });
-    }
 
-    // Export Functionality
-    const exportBtn = $('.export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', async () => {
-            try {
-                toggleLoading(exportBtn, true);
-                const response = await fetch('export_employers.php');
-                if (!response.ok) throw new Error('Export failed');
-                
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `employers_export_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                showNotification('Employers exported successfully', 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Export failed: ' + error.message, 'error');
-            } finally {
-                toggleLoading(exportBtn, false);
-            }
+        // Prevent form submission on enter
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
         });
     }
+    
+    // Handle clear search
+    window.clearSearch = function() {
+        if (searchInput) {
+            // Clear the search input
+            searchInput.value = '';
+            
+            // Update URL without page reload
+            window.history.pushState({}, '', window.location.pathname);
+            
+            // Fetch fresh content
+            fetch(window.location.pathname)
+                .then(response => response.text())
+                .then(html => {
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = html;
+                    const newTableContent = tempContainer.querySelector('.users-table-container').innerHTML;
+                    employersTableContainer.innerHTML = newTableContent;
+                })
+                .catch(error => {
+                    console.error('Clear search failed:', error);
+                });
+        }
+    };
 
     // Employer Action Handlers
     window.viewEmployer = (employerId) => {
-        window.location.href = `view_employer.php?employer_id=${employerId}`;
+        window.location.href = `view_employer.php?id=${employerId}`;
     };
 
     window.editEmployer = (employerId) => {
-        window.location.href = `edit_employer.php?employer_id=${employerId}`;
+        window.location.href = `edit_employer.php?id=${employerId}`;
     };
 
-    // Initialize elements
-    const overlay = document.getElementById('confirmationOverlay');
-    const deactivatePanel = document.getElementById('deactivatePanel');
-    const activatePanel = document.getElementById('activatePanel');
+    // Message auto-removal functionality
+    const statusMessage = document.getElementById('statusMessage');
+    if (statusMessage) {
+        setTimeout(() => {
+            statusMessage.style.opacity = '0';
+            setTimeout(() => {
+                statusMessage.remove();
+            }, 300); // Wait for fade out animation to complete
+        }, 3000); // Wait 3 seconds before starting fade out
+    }
 
-    // Show deactivate confirmation
-    window.showConfirmation = (employerId) => {
-        overlay.style.display = 'block';
-        deactivatePanel.style.display = 'block';
-        document.getElementById('confirmDeactivate').href = `deactivate_employer.php?employer_id=${employerId}`;
-    };
+    // Deactivation form handling
+    const deactivateForm = document.getElementById('deactivateForm');
+    const reasonTextarea = document.getElementById('deactivateReason');
+    const charCount = document.getElementById('charCount');
+    const reasonError = document.getElementById('reasonError');
+    const submitBtn = document.getElementById('submitBtn');
 
-    // Hide deactivate confirmation
-    window.hideConfirmation = () => {
-        overlay.style.display = 'none';
-        deactivatePanel.style.display = 'none';
-    };
-
-    // Show activate confirmation
-    window.showActivateConfirmation = (employerId) => {
-        overlay.style.display = 'block';
-        activatePanel.style.display = 'block';
-        document.getElementById('confirmActivate').href = `activate_employer.php?employer_id=${employerId}`;
-    };
-
-    // Hide activate confirmation
-    window.hideActivateConfirmation = () => {
-        overlay.style.display = 'none';
-        activatePanel.style.display = 'none';
-    };
-
-    // Close on overlay click
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            if (deactivatePanel.style.display === 'block') {
-                hideConfirmation();
-            } else if (activatePanel.style.display === 'block') {
-                hideActivateConfirmation();
+    if (reasonTextarea) {
+        reasonTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = `${length}/500`;
+            
+            if (length < 10) {
+                reasonError.textContent = 'Please provide a detailed reason (minimum 10 characters)';
+                submitBtn.disabled = true;
+            } else {
+                reasonError.textContent = '';
+                submitBtn.disabled = false;
             }
+        });
+    }
+
+    // Show deactivation confirmation
+    window.showConfirmation = (employerId) => {
+        const deactivatePanel = document.getElementById('deactivatePanel');
+        const overlay = document.getElementById('confirmationOverlay');
+        const employerIdInput = document.getElementById('deactivateEmployerId');
+
+        employerIdInput.value = employerId;
+        deactivatePanel.style.display = 'block';
+        overlay.style.display = 'block';
+        
+        requestAnimationFrame(() => {
+            deactivatePanel.classList.add('show');
+            overlay.classList.add('show');
+        });
+    };
+
+    // Hide deactivation confirmation
+    window.hideConfirmation = () => {
+        const deactivatePanel = document.getElementById('deactivatePanel');
+        const overlay = document.getElementById('confirmationOverlay');
+        
+        deactivatePanel.classList.remove('show');
+        overlay.classList.remove('show');
+        
+        setTimeout(() => {
+            deactivatePanel.style.display = 'none';
+            overlay.style.display = 'none';
+            // Reset form
+            if (deactivateForm) {
+                deactivateForm.reset();
+                reasonError.textContent = '';
+                charCount.textContent = '0/500';
+            }
+        }, 300);
+    };
+
+    // Show activation confirmation
+    window.showActivateConfirmation = (employerId) => {
+        const activatePanel = document.getElementById('activatePanel');
+        const overlay = document.getElementById('confirmationOverlay');
+        const confirmBtn = document.getElementById('confirmActivate');
+        
+        confirmBtn.href = `activate_employer.php?employer_id=${employerId}`;
+        activatePanel.style.display = 'block';
+        overlay.style.display = 'block';
+        
+        requestAnimationFrame(() => {
+            activatePanel.classList.add('show');
+            overlay.classList.add('show');
+        });
+    };
+
+    // Hide activation confirmation
+    window.hideActivateConfirmation = () => {
+        const activatePanel = document.getElementById('activatePanel');
+        const overlay = document.getElementById('confirmationOverlay');
+        
+        activatePanel.classList.remove('show');
+        overlay.classList.remove('show');
+        
+        setTimeout(() => {
+            activatePanel.style.display = 'none';
+            overlay.style.display = 'none';
+        }, 300);
+    };
+
+    // Close panels on overlay click
+    const overlay = document.getElementById('confirmationOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            hideConfirmation();
+            hideActivateConfirmation();
+        });
+    }
+
+    // Close panels on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideConfirmation();
+            hideActivateConfirmation();
         }
     });
 
     // Notification System
-    window.showNotification = (message, type) => {
+    function showNotification(message, type) {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
@@ -146,75 +253,49 @@ document.addEventListener('DOMContentLoaded', () => {
             border-radius: 8px;
             color: white;
             z-index: 1000;
-            background: ${type === 'success' ? 'var(--success)' : 'var(--danger)'};
             animation: slideIn 0.3s ease forwards;
+            background: ${type === 'success' ? 'var(--success-color)' : 'var(--danger-color)'};
         `;
+
         document.body.appendChild(notification);
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease forwards';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
-    };
-
-    // Loading State Toggle
-    function toggleLoading(element, isLoading) {
-        if (isLoading) {
-            element.disabled = true;
-            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-        } else {
-            element.disabled = false;
-            element.innerHTML = '<i class="fas fa-download"></i> Export Employers';
-        }
     }
-
-    // Image Loading
-    const images = $$('.employer-avatar');
-    images.forEach(img => {
-        if (img.complete) {
-            img.classList.add('loaded');
-        } else {
-            img.addEventListener('load', () => img.classList.add('loaded'));
-            img.addEventListener('error', () => img.parentElement.style.display = 'none');
-        }
-    });
 
     // Animation Keyframes
     const styleSheet = document.createElement('style');
     styleSheet.textContent = `
-        @keyframes slideIn {
+        @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        @keyframes slideOut {
+        @keyframes slideOutRight {
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar.collapsed .logo-section h1,
+        .sidebar.collapsed .nav-item span {
+            display: none;
+        }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 1rem;
+            margin: 0.3rem;
+        }
+        .sidebar.collapsed .nav-item i {
+            margin-right: 0;
+            font-size: 1.5rem;
+        }
+        .sidebar-collapsed {
+            margin-left: 80px !important;
+        }
     `;
     document.head.appendChild(styleSheet);
-
-    function showRestoreConfirmation(jobId) {
-        document.getElementById('confirmationOverlay').style.display = 'block';
-        document.getElementById('restorePanel').style.display = 'block';
-        document.getElementById('confirmRestore').href = `restore_jobbyadmin.php?job_id=${jobId}`;
-    }
-
-    function hideRestoreConfirmation() {
-        document.getElementById('confirmationOverlay').style.display = 'none';
-        document.getElementById('restorePanel').style.display = 'none';
-    }
-
-    document.getElementById('confirmationOverlay').addEventListener('click', function() {
-        hideRestoreConfirmation();
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            hideRestoreConfirmation();
-        }
-    });
-
-    window.showRestoreConfirmation = showRestoreConfirmation;
-    window.hideRestoreConfirmation = hideRestoreConfirmation;
 });
 
 // Debounce Utility

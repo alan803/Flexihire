@@ -3,12 +3,14 @@ session_start();
 require_once '../database/connectdatabase.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['admin_id'])) {
+if (!isset($_SESSION['admin_id'])) 
+{
     header('Location: ../login/loginvalidation.php');
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') 
+{
     header('Location: reports.php');
     exit();
 }
@@ -19,7 +21,7 @@ $reason = filter_input(INPUT_POST, 'reason', FILTER_SANITIZE_STRING);
 
 if (!$employer_id || empty($reason)) {
     $_SESSION['error'] = "Invalid input data";
-    header('Location: reports.php');
+    header('Location: manage_employers.php');
     exit();
 }
 
@@ -32,7 +34,7 @@ $check_result = mysqli_stmt_get_result($check_stmt);
 
 if (mysqli_num_rows($check_result) === 0) {
     $_SESSION['error'] = "Employer not found";
-    header('Location: reports.php');
+    header('Location: manage_employers.php');
     exit();
 }
 
@@ -121,13 +123,16 @@ try {
             error_log("Email sending failed: " . $mail->ErrorInfo);
         }
     }
+    
 
-    $_SESSION['success'] = "Employer account has been deactivated successfully";
+    $_SESSION['message'] = "Employer account has been deactivated successfully";
+    $_SESSION['message_type'] = "success";
 } catch (Exception $e) {
     error_log("Deactivation error: " . $e->getMessage());
-    $_SESSION['error'] = "Error deactivating employer account: " . $e->getMessage();
+    $_SESSION['message'] = "Error deactivating employer account";
+    $_SESSION['message_type'] = "error";
 }
 
-header('Location: reports.php');
+header('Location: manage_employers.php');
 exit();
 ?>

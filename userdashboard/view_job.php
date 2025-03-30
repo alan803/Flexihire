@@ -82,6 +82,10 @@ $applications_result = mysqli_stmt_get_result($applications_stmt);
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -123,11 +127,11 @@ $applications_result = mysqli_stmt_get_result($applications_stmt);
                             <i class="fas fa-arrow-left"></i>
                             <span>Back to Jobs</span>
                         </a>
-                        <?php if ($job['is_deleted'] == 1): ?>
+                        <!-- <?php if ($job['is_deleted'] == 1): ?>
                             <button type="button" class="restore-btn" onclick="showRestoreConfirmation(<?= $job['job_id'] ?>)">
                                 <i class="fas fa-undo"></i> Restore Job
                             </button>
-                        <?php endif; ?>
+                        <?php endif; ?> -->
                     </div>
                 </div>
             </header>
@@ -267,7 +271,6 @@ $applications_result = mysqli_stmt_get_result($applications_stmt);
                                 <th>Email</th>
                                 <th>Created Date</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -275,10 +278,16 @@ $applications_result = mysqli_stmt_get_result($applications_stmt);
                                 <tr>
                                     <td>
                                         <div class="user-info">
-                                            <img src="<?= !empty($application['profile_image']) ? '../profiles/user/' . $application['profile_image'] : '../assets/images/default-avatar.png' ?>" 
-                                                 alt="Profile" 
-                                                 class="user-avatar">
-                                            <span><?= htmlspecialchars($application['first_name'] . ' ' . $application['last_name']) ?></span>
+                                            <?php if (!empty($application['profile_image'])): ?>
+                                                <img src="../database/profile_picture/<?php echo htmlspecialchars($application['profile_image']); ?>" 
+                                                     alt="Profile" 
+                                                     class="user-avatar">
+                                            <?php else: ?>
+                                                <img src="../assets/images/default-avatar.png" 
+                                                     alt="Default Profile" 
+                                                     class="user-avatar">
+                                            <?php endif; ?>
+                                            <span><?php echo htmlspecialchars($application['first_name'] . ' ' . $application['last_name']); ?></span>
                                         </div>
                                     </td>
                                     <td><?= htmlspecialchars($application['email']) ?></td>
@@ -287,13 +296,6 @@ $applications_result = mysqli_stmt_get_result($applications_stmt);
                                         <span class="status-badge <?= strtolower($application['status']) ?>">
                                             <?= ucfirst($application['status']) ?>
                                         </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="view-btn" onclick="viewApplication(<?= $application['id'] ?>)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>

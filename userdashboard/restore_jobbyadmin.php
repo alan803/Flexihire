@@ -61,15 +61,14 @@
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "i", $job_id);
 
-    if (mysqli_stmt_execute($stmt)) 
-    {
+    if (mysqli_stmt_execute($stmt)) {
         error_log("Job successfully activated - Job ID: " . $job_id);
-        $_SESSION['success'] = "Job has been activated successfully";
-    } 
-    else 
-    {
+        $_SESSION['message'] = "Job has been activated successfully";
+        $_SESSION['message_type'] = "success";
+    } else {
         error_log("Error activating job - Job ID: " . $job_id . " - Error: " . mysqli_error($conn));
-        $_SESSION['error'] = "Error activating job: " . mysqli_error($conn);
+        $_SESSION['message'] = "Error activating job: " . mysqli_error($conn);
+        $_SESSION['message_type'] = "error";
     }
 
     mysqli_stmt_close($stmt);

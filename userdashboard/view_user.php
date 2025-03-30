@@ -34,6 +34,21 @@
         $result = mysqli_stmt_get_result($stmt);
         $user = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
+
+        // Fetch jobs user has been hired for
+        $hired_jobs_sql = "SELECT j.job_id, j.job_title, j.salary, j.location, j.town, 
+                                 e.company_name, s.selected_date
+                          FROM tbl_selected s
+                          JOIN tbl_jobs j ON s.job_id = j.job_id
+                          JOIN tbl_employer e ON j.employer_id = e.employer_id
+                          WHERE s.user_id = ?
+                          ORDER BY s.selected_date DESC";
+        
+        $hired_jobs_stmt = mysqli_prepare($conn, $hired_jobs_sql);
+        mysqli_stmt_bind_param($hired_jobs_stmt, "i", $user_id);
+        mysqli_stmt_execute($hired_jobs_stmt);
+        $hired_jobs_result = mysqli_stmt_get_result($hired_jobs_stmt);
+        mysqli_stmt_close($hired_jobs_stmt);
     } 
     else 
     {
@@ -57,10 +72,14 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar (Matching Admin Dashboard) -->
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo-section">
                 <h1>FlexiHire</h1>
+                <div class="admin-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Dashboard</span>
+                </div>
             </div>
             <nav class="nav-menu">
                 <a href="admindashboard.php" class="nav-item">
@@ -131,6 +150,56 @@
                             <h3>Joined Date</h3>
                             <p><?= date('F j, Y', strtotime($user['created_at'])) ?></p>
                         </div>
+                    </div>
+
+                    <!-- Hired Jobs Section -->
+                    <div class="hired-jobs-section">
+                        <div class="section-header">
+                            <h3>Hired Jobs</h3>
+                            <span class="job-count"><?= mysqli_num_rows($hired_jobs_result) ?> Position<?= mysqli_num_rows($hired_jobs_result) != 1 ? 's' : '' ?></span>
+                        </div>
+                        <?php if (mysqli_num_rows($hired_jobs_result) > 0): ?>
+                            <div class="hired-jobs-grid">
+                                <?php while ($job = mysqli_fetch_assoc($hired_jobs_result)): ?>
+                                    <div class="hired-job-card">
+                                        <div class="job-header">
+                                            <div class="company-logo">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                            <div class="job-title-section">
+                                                <h4><?= htmlspecialchars($job['job_title']) ?></h4>
+                                                <span class="company-name"><?= htmlspecialchars($job['company_name']) ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="job-details">
+                                            <div class="detail-row">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span><?= htmlspecialchars($job['location'] . ', ' . $job['town']) ?></span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <span>₹<?= htmlspecialchars($job['salary']) ?></span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <span>Hired on <?= date('F j, Y', strtotime($job['selected_date'])) ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="job-footer">
+                                            <span class="status-badge hired">Hired</span>
+                                            <a href="view_job.php?job_id=<?= htmlspecialchars($job['job_id']) ?>" class="view-job-btn">
+                                                View Details <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endwhile; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="no-jobs-message">
+                                <i class="fas fa-briefcase"></i>
+                                <p>This user has not been hired for any jobs yet.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php else: ?>

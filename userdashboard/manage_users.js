@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Message auto-removal functionality
+    const statusMessage = document.getElementById('statusMessage');
+    if (statusMessage) {
+        setTimeout(() => {
+            statusMessage.style.opacity = '0';
+            setTimeout(() => {
+                statusMessage.remove();
+            }, 300); // Wait for fade out animation to complete
+        }, 3000); // Wait 3 seconds before starting fade out
+    }
+
     // Utility Functions
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => document.querySelectorAll(selector);
@@ -40,43 +51,70 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSidebar();
 
     // Search Functionality
-    const searchInput = $('#searchInput');
+    const searchBox = document.querySelector('.search-box input');
+    const usersTableContainer = document.querySelector('.users-table-container');
     let searchTimeout;
-
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const searchQuery = searchInput.value.trim();
-                window.location.href = `manage_users.php?search=${encodeURIComponent(searchQuery)}`;
-            }, 500);
-        });
-    }
-
-    // Export Functionality
-    const exportBtn = $('.export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', async () => {
-            try {
-                toggleLoading(exportBtn, true);
-                const response = await fetch('export_users.php');
-                if (!response.ok) throw new Error('Export failed');
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `users_export_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                showNotification('Users exported successfully', 'success');
-            } catch (error) {
-                showNotification('Export failed: ' + error.message, 'error');
-            } finally {
-                toggleLoading(exportBtn, false);
-            }
-        });
-    }
+    
+    // Handle search input
+    searchBox.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        // Update search parameter
+        const searchParam = new URLSearchParams(window.location.search);
+        if (searchTerm) {
+            searchParam.set('search', searchTerm);
+        } else {
+            searchParam.delete('search');
+        }
+        searchParam.set('page', '1');
+        
+        // Debounce the search
+        searchTimeout = setTimeout(() => {
+            // Use fetch to get search results
+            fetch(`${window.location.pathname}?${searchParam.toString()}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary container
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = html;
+                    
+                    // Extract the table container content
+                    const newTableContent = tempContainer.querySelector('.users-table-container').innerHTML;
+                    
+                    // Update the table container with new content
+                    usersTableContainer.innerHTML = newTableContent;
+                    
+                    // Update URL without page reload
+                    window.history.pushState({}, '', `${window.location.pathname}?${searchParam.toString()}`);
+                })
+                .catch(error => {
+                    console.error('Search failed:', error);
+                });
+        }, 500);
+    });
+    
+    // Handle clear search
+    window.clearSearch = function() {
+        // Clear the search input
+        searchBox.value = '';
+        
+        // Update URL without page reload
+        window.history.pushState({}, '', window.location.pathname);
+        
+        // Fetch fresh content
+        fetch(window.location.pathname)
+            .then(response => response.text())
+            .then(html => {
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = html;
+                const newTableContent = tempContainer.querySelector('.users-table-container').innerHTML;
+                usersTableContainer.innerHTML = newTableContent;
+            })
+            .catch(error => {
+                console.error('Clear search failed:', error);
+            });
+    };
 
     // User Action Handlers
     window.viewUser = (userId) => {
@@ -181,17 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             notification.style.animation = 'slideOut 0.3s ease forwards';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
-    }
-
-    // Loading State
-    function toggleLoading(element, isLoading) {
-        if (isLoading) {
-            element.disabled = true;
-            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-        } else {
-            element.disabled = false;
-            element.innerHTML = '<i class="fas fa-download"></i> Export Users';
-        }
     }
 
     // Animation Keyframes
