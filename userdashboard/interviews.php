@@ -65,8 +65,8 @@ $interviews = mysqli_stmt_get_result($stmt);
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <div class="dashboard-container">
-        <!-- Sidebar (Copied from employerdashboard.php) -->
+    <!-- <div class="dashboard-container">
+        
         <div class="sidebar">
             <div class="logo-container">
                 <?php if(!empty($row['profile_image'])): ?>
@@ -113,7 +113,9 @@ $interviews = mysqli_stmt_get_result($stmt);
                     <a href="../login/logout.php">Logout</a>
                 </div>
             </div>
-        </div>
+        </div> -->
+
+        <?php include 'sidebar.php'; ?>
 
         <!-- Main Content (Unchanged) -->
         <div class="main-container">

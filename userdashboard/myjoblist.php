@@ -372,7 +372,7 @@ function time_elapsed_string($datetime) {
         <span id="successMessageText">Job has been successfully restored!</span>
     </div>
 
-    <div class="dashboard-container">
+    <!-- <div class="dashboard-container">
         <div class="sidebar">
             <div class="logo-container">
                 <?php if(!empty($profile_image)): ?>
@@ -398,7 +398,8 @@ function time_elapsed_string($datetime) {
                 <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
                 <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
                 </div>
-                </div>
+                </div> -->
+                <?php include 'sidebar.php'; ?>
         <!-- Main Container -->
         <div class="main-container">
             <!-- Main Content -->

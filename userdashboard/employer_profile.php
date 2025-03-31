@@ -75,8 +75,7 @@
     <link rel="stylesheet" href="employerdashboard.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
+    <!-- <div class="dashboard-container">
         <div class="sidebar">
             <div class="logo-container">
                 <?php if(!empty($row['profile_image'])): ?>
@@ -122,7 +121,9 @@
                     <a href="../login/logout.php">Logout</a>
                 </div>
             </div>
-        </div>
+        </div> -->
+
+        <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-container">

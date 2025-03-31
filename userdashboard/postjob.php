@@ -110,34 +110,7 @@
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo-container">
-                <?php if(!empty($profile_image)): ?>
-                    <img src="<?php echo htmlspecialchars($profile_image); ?>" 
-                         alt="<?php echo htmlspecialchars($username); ?>"
-                         onerror="this.src='../assets/images/company-logo.png';">
-                <?php else: ?>
-                    <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
-                <?php endif; ?>
-            </div>
-            <div class="company-info">
-                <span><?php echo htmlspecialchars($username); ?></span>
-                <span><?php echo htmlspecialchars($email); ?></span>
-            </div>
-            <nav class="nav-menu">
-                <div class="nav-item"><i class="fas fa-th-large"></i><a href="employerdashboard.php">Dashboard</a></div>
-                <div class="nav-item active"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></div>
-                <div class="nav-item"><i class="fas fa-briefcase"></i><a href="myjoblist.php">My Jobs</a></div>
-                <div class="nav-item"><i class="fas fa-users"></i><a href="applicants.php">Applicants</a></div>
-                <div class="nav-item"><i class="fas fa-calendar-check"></i><a href="interviews.php">Interviews</a></div>
-            </nav>
-            <div class="settings-section">
-                <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
-                <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
-            </div>
-        </div>
+    <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-container">

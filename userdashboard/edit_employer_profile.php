@@ -375,7 +375,7 @@
             <span class="notification-message"></span>
         </div>
     </div>
-    <div class="sidebar">
+    <!-- <div class="sidebar">
         <div class="logo-container">
             <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
                 <img src="<?php echo htmlspecialchars($profile_image); ?>" 
@@ -420,7 +420,9 @@
                 <a href="../login/logout.php">Logout</a>
             </div>
         </div>
-    </div>
+    </div> -->
+
+    <?php include 'sidebar.php'; ?>
     
     <div class="main-container">
         <div class="header">

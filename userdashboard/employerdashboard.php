@@ -234,7 +234,7 @@ mysqli_stmt_close($stmt_recent_applicants);
                                     </div>
                                     <div class="job-actions">
                                         <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</a>
-                                        <a href="deletejob.php?id=<?php echo $job_data['job_id']; ?>&action=deactivate" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete this job?')"><i class="fas fa-trash-alt"></i> Deactivate</a>
+                                        <!-- <a href="deletejob.php?id=<?php echo $job_data['job_id']; ?>&action=deactivate" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete this job?')"><i class="fas fa-trash-alt"></i> Deactivate</a> -->
                                     </div>
                                 </div>
                             <?php endwhile; ?>
