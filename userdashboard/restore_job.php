@@ -1,37 +1,38 @@
 <?php
 session_start();
 include '../database/connectdatabase.php';
+$dbname = "project";
+mysqli_select_db($conn, $dbname);
 
-if (!isset($_SESSION['employer_id'])) 
-{
-    header("Location: ../login/loginvalidation.php");
+if (!isset($_SESSION['employer_id']) || !isset($_GET['id'])) {
+    header("location: myjoblist.php");
     exit();
 }
 
-if (isset($_GET['job_id'])) 
-{
-    $job_id = $_GET['job_id'];
-    $employer_id = $_SESSION['employer_id'];
+$job_id = $_GET['id'];
+$employer_id = $_SESSION['employer_id'];
 
-    // Restore the job by setting is_deleted to 0
-    $sql = "UPDATE tbl_jobs SET is_deleted = 0 WHERE job_id = ? AND employer_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $job_id, $employer_id);
+// Verify job ownership and current status
+$check_query = "SELECT is_deleted FROM tbl_jobs WHERE job_id = ? AND employer_id = ?";
+$stmt = mysqli_prepare($conn, $check_query);
+mysqli_stmt_bind_param($stmt, "ii", $job_id, $employer_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
-    if ($stmt->execute()) {
-        header("Location: myjoblist.php?restored=true");
-    } else {
-        $_SESSION['error'] = "Error restoring job: " . $conn->error;
-        header("Location: myjoblist.php");
-    }
-
-    $stmt->close();
-    exit();
-} 
-else 
-{
-    $_SESSION['error'] = "Invalid job selection.";
-    header("Location: myjoblist.php");
+if (mysqli_num_rows($result) == 0) {
+    header("location: myjoblist.php?message=Job not found");
     exit();
 }
+
+// Update job status to active
+$update_query = "UPDATE tbl_jobs SET is_deleted = 0 WHERE job_id = ? AND employer_id = ?";
+$stmt = mysqli_prepare($conn, $update_query);
+mysqli_stmt_bind_param($stmt, "ii", $job_id, $employer_id);
+
+if (mysqli_stmt_execute($stmt)) {
+    header("location: myjoblist.php?message=Job activated successfully");
+} else {
+    header("location: myjoblist.php?message=Failed to activate job");
+}
+exit();
 ?>

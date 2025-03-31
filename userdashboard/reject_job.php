@@ -61,4 +61,4 @@
     // Redirect back to manage_jobs.php
     header("Location: manage_jobs.php");
     exit();
-?> 
+?>

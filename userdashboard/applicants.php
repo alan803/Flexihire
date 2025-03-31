@@ -101,6 +101,48 @@
         mysqli_data_seek($result, 0); // Reset pointer
         error_log("Debug - Application ID: " . $debug_applicant['id'] . ", Status: " . $debug_applicant['status']);
     }
+
+    // Fetch all jobs posted by this employer
+    $jobs_query = "SELECT j.*, 
+                          COUNT(a.id) as application_count
+                   FROM tbl_jobs j
+                   LEFT JOIN tbl_applications a ON j.job_id = a.job_id
+                   WHERE j.employer_id = ? AND j.is_deleted = 0
+                   GROUP BY j.job_id";
+    $stmt = mysqli_prepare($conn, $jobs_query);
+    mysqli_stmt_bind_param($stmt, "i", $employer_id);
+    mysqli_stmt_execute($stmt);
+    $jobs_result = mysqli_stmt_get_result($stmt);
+
+    // Get selected job_id from URL or first job
+    $selected_job_id = isset($_GET['job_id']) ? $_GET['job_id'] : null;
+    if (!$selected_job_id && $job_row = mysqli_fetch_assoc($jobs_result)) {
+        $selected_job_id = $job_row['job_id'];
+        mysqli_data_seek($jobs_result, 0); // Reset pointer
+    }
+
+    // Fetch applicants for the selected job
+    $applicants_query = "SELECT a.*, 
+                               u.first_name, 
+                               u.last_name, 
+                               u.phone_number,
+                               u.profile_image,
+                               l.email,
+                               j.license_required,
+                               j.badge_required,
+                               j.interview,
+                               CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path
+                        FROM tbl_applications a
+                        JOIN tbl_user u ON a.user_id = u.user_id
+                        JOIN tbl_login l ON u.user_id = l.user_id
+                        JOIN tbl_jobs j ON a.job_id = j.job_id
+                        WHERE a.job_id = ?
+                        ORDER BY a.applied_at DESC";
+
+    $stmt = mysqli_prepare($conn, $applicants_query);
+    mysqli_stmt_bind_param($stmt, "i", $selected_job_id);
+    mysqli_stmt_execute($stmt);
+    $applicants_result = mysqli_stmt_get_result($stmt);
 ?>
 
 <!DOCTYPE html>
@@ -333,7 +375,7 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
+    <!-- <div class="sidebar">
         <div class="logo-container">
             <?php if(!empty($row['profile_image'])): ?>
                 <img src="<?php echo htmlspecialchars($row['profile_image']); ?>" 
@@ -383,8 +425,9 @@
                 <a href="../login/logout.php">Logout</a>
             </div>
         </div>
-    </div>
-
+    </div> -->
+    <?php include 'sidebar.php'; ?>
+    
     <div class="main-container">
         <?php if(isset($_GET['success']) && $_GET['success'] == 'interview_scheduled'): ?>
             <div class="success-message" id="success-message">
@@ -418,9 +461,23 @@
             </div>
         </div>
 
-        <?php if (mysqli_num_rows($result) > 0): ?>
+        <!-- <div class="page-header">
+            <div class="job-selector">
+                <select id="jobSelect" onchange="window.location.href='?job_id=' + this.value">
+                    <?php while ($job = mysqli_fetch_assoc($jobs_result)): ?>
+                        <option value="<?php echo $job['job_id']; ?>" 
+                                <?php echo ($selected_job_id == $job['job_id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($job['job_title']); ?> 
+                            (<?php echo $job['application_count']; ?> applicants)
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+        </div> -->
+
+        <?php if (mysqli_num_rows($applicants_result) > 0): ?>
             <div class="applicants-grid">
-                <?php while ($applicant = mysqli_fetch_assoc($result)): ?>
+                <?php while ($applicant = mysqli_fetch_assoc($applicants_result)): ?>
                     <div class="applicant-card">
                         <?php
                             $status = strtolower($applicant['status'] ?? 'pending');

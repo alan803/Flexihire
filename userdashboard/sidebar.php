@@ -42,7 +42,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #8A6CE0;
+            --primary-color: #4a90e2;
             --secondary-color: #f4f7fa;
             --text-color: #333;
             --light-text: #666;
@@ -148,20 +148,16 @@ if ($result && mysqli_num_rows($result) > 0) {
         }
 
         .nav-item:hover {
-            background: rgba(138, 108, 224, 0.08);
-            transform: translateX(5px);
+            background: rgba(74, 144, 226, 0.08);
         }
 
         .nav-item.active {
-            background: rgba(138, 108, 224, 0.1);
-            font-weight: 600;
+            background: rgba(74, 144, 226, 0.1);
         }
 
-        /* Enhanced hover effect for active items */
         .nav-item.active:hover {
-            background: rgba(138, 108, 224, 0.15);
-            transform: translateX(8px);
-            box-shadow: 0 2px 8px rgba(138, 108, 224, 0.15);
+            background: rgba(74, 144, 226, 0.15);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
         }
 
         .nav-item.active::before {
@@ -170,7 +166,7 @@ if ($result && mysqli_num_rows($result) > 0) {
 
         .nav-item i {
             margin-right: 12px;
-            color: #8A6CE0;
+            color: #4a90e2;
             font-size: 18px;
             width: 24px;
             text-align: center;
@@ -188,31 +184,24 @@ if ($result && mysqli_num_rows($result) > 0) {
 
         .nav-item:hover i,
         .nav-item.active i {
-            color: #8A6CE0;
+            color: #4a90e2;
             opacity: 1;
             transform: scale(1.1);
         }
 
-        /* Enhanced icon effect for active hover */
-        .nav-item.active:hover i {
-            transform: scale(1.2) rotate(-5deg);
-        }
-
         .nav-item.active a {
-            color: #8A6CE0;
+            color: #4a90e2;
         }
 
         .nav-item:hover a {
             transform: translateX(3px);
         }
 
-        /* Enhanced text effect for active hover */
         .nav-item.active:hover a {
             transform: translateX(5px);
             letter-spacing: 0.3px;
         }
 
-        /* Special styling for logout button */
         .settings-section .nav-item:last-child::before {
             background-color: var(--danger-color);
         }
@@ -230,9 +219,8 @@ if ($result && mysqli_num_rows($result) > 0) {
             box-shadow: 0 2px 8px rgba(231, 76, 60, 0.15);
         }
 
-        /* Add subtle background glow for active item */
         .nav-item.active {
-            box-shadow: inset 0 0 20px rgba(138, 108, 224, 0.05);
+            box-shadow: inset 0 0 20px rgba(74, 144, 226, 0.05);
         }
 
         .settings-section {
@@ -240,7 +228,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             bottom: 20px;
             width: calc(100% - 40px);
             padding-top: 15px;
-            border-top: 1px solid rgba(138, 108, 224, 0.1);
+            border-top: 1px solid rgba(74, 144, 226, 0.1);
         }
 
         .settings-section .nav-item:last-child {
@@ -255,7 +243,6 @@ if ($result && mysqli_num_rows($result) > 0) {
             background: rgba(231, 76, 60, 0.1);
         }
 
-        /* Responsive styles */
         @media (max-width: 768px) {
             .sidebar {
                 width: 250px;

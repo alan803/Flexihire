@@ -222,8 +222,8 @@ $applicant = mysqli_fetch_assoc($applicant_result);
     <link rel="stylesheet" href="schedule_interview.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
+    <!-- <div class="dashboard-container">
+        
         <div class="sidebar">
             <div class="logo-container">
                 <?php if(!empty($row['profile_image'])): ?>
@@ -270,7 +270,9 @@ $applicant = mysqli_fetch_assoc($applicant_result);
                     <span>Logout</span>
                 </a>
             </div>
-        </div>
+        </div> -->
+        
+        <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-container">

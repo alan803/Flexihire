@@ -139,9 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         if ($stmt) {
             $stmt->bind_param($types, ...$params);
-            if ($stmt->execute()) {
+            if (mysqli_stmt_execute($stmt)) {
                 $stmt->close();
-                header("Location: myjoblist.php?message=Job updated successfully");
+                header("location: myjoblist.php?message=Job updated successfully");
                 exit();
             } else {
                 $stmt->close();

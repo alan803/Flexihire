@@ -35,7 +35,7 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar Styles (from employerdashboard.css) */
+/* Sidebar Styles - Commented Out
 .sidebar {
     width: 250px;
     background-color: var(--card-bg);
@@ -134,11 +134,11 @@ body {
     padding: 20px;
     border-top: 1px solid var(--border-color);
 }
+*/
 
 /* Main Content Styles */
 .main-container {
-    flex: 1;
-    margin-left: 250px;
+    margin-left: 0;  /* Changed from 250px */
     padding: 20px;
 }
 
@@ -508,11 +508,12 @@ textarea {
 
 @media (max-width: 992px) {
     .main-container {
-        margin-right: 250px;
+        margin-right: 0;  /* Changed from 250px */
     }
 }
 
 @media (max-width: 768px) {
+    /* Commented out sidebar responsive styles
     .sidebar {
         width: 80px;
         padding: 20px 0;
@@ -539,9 +540,10 @@ textarea {
     .nav-item i {
         margin-right: 0;
     }
+    */
     
     .main-container {
-        margin-left: 80px;
+        margin-left: 0;  /* Changed from 80px */
         padding: 1rem;
     }
     
