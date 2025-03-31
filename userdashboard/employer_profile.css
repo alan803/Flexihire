@@ -183,6 +183,58 @@ a
     margin-bottom: 15px;
 }
 
+/* Update the rating styles */
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0 20px 0;
+    background: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    width: fit-content;
+    border: 1px solid #FFE4B5; /* Light golden border */
+}
+
+.stars {
+    display: flex;
+    gap: 6px;
+}
+
+.stars i {
+    color: #FFD700; /* Pure gold color */
+    font-size: 22px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.stars i.far {
+    color: #D1D5DB; /* Gray color for empty stars */
+}
+
+.stars i.fa-star-half-alt {
+    color: #FFD700; /* Same gold color for half stars */
+}
+
+.rating-text {
+    color: #4B5563;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-text::before {
+    content: '|';
+    color: #D1D5DB;
+}
+
+.rating-count {
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
 /* Info Cards Professional Layout */
 .info-card {
     background: white;
@@ -346,7 +398,7 @@ a
     margin: 0;
 }
 
-/* Responsive Adjustments */
+/* Update media query for better mobile display */
 @media (max-width: 768px) {
     .info-card {
         padding: 20px;
@@ -370,6 +422,18 @@ a
     .company-meta span:nth-child(5) {
         flex-basis: 100%;
         white-space: normal;
+    }
+
+    .rating-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .rating-text::before {
+        display: none;
     }
 }
 
@@ -623,33 +687,47 @@ textarea.form-input {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 1000;
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 400px;
     display: none;
-    animation: slideIn 0.5s ease-out;
 }
 
 .notification.show {
     display: block;
+    animation: slideInRight 0.5s ease forwards;
 }
 
 .notification-content {
-    background: #4CAF50;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
     color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 16px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 16px;
+    font-size: 15px;
+    border-left: 4px solid #2E7D32;
 }
 
-.notification-content i {
-    font-size: 20px;
+.notification-content.error {
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    border-left: 4px solid #c62828;
 }
 
-/* Animation Keyframes */
-@keyframes slideIn {
+.notification-content.info {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border-left: 4px solid #0D47A1;
+}
+
+.notification-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+/* Update the animation keyframes */
+@keyframes slideInRight {
     from {
         transform: translateX(100%);
         opacity: 0;
@@ -662,11 +740,25 @@ textarea.form-input {
 
 @keyframes fadeOut {
     from {
-        transform: translateX(0);
         opacity: 1;
+        visibility: visible;
     }
     to {
-        transform: translateX(100%);
         opacity: 0;
+        visibility: hidden;
     }
+}
+
+/* Add these styles for readonly inputs */
+.form-input-readonly {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 4px;
+    display: block;
 }

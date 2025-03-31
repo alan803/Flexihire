@@ -19,13 +19,13 @@ if (isset($_GET['job_id']))
     $stmt->bind_param("ii", $job_id, $employer_id);
 
     if ($stmt->execute()) {
-        $_SESSION['success'] = "Job has been restored successfully.";
+        header("Location: myjoblist.php?restored=true");
     } else {
         $_SESSION['error'] = "Error restoring job: " . $conn->error;
+        header("Location: myjoblist.php");
     }
 
     $stmt->close();
-    header("Location: myjoblist.php");
     exit();
 } 
 else 

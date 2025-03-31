@@ -1,9 +1,14 @@
 <?php
+// Add error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 include '../database/connectdatabase.php';
 $dbname = "project";
 mysqli_select_db($conn, $dbname);
 
+// Verify employer is logged in
 if (!isset($_SESSION['employer_id'])) {
     header("Location: ../login/loginvalidation.php");
     exit();
@@ -12,17 +17,19 @@ if (!isset($_SESSION['employer_id'])) {
 $employer_id = $_SESSION['employer_id'];
 $appointment_id = $_GET['appointment_id'] ?? null;
 
+// Validate appointment_id
 if (!$appointment_id) {
+    $_SESSION['error'] = "Invalid appointment ID";
     header("Location: interviews.php");
     exit();
 }
 
-// Get appointment details
+// Get appointment details with validation
 $sql = "SELECT a.*, j.job_title, u.first_name, u.last_name 
         FROM tbl_appointments a
         JOIN tbl_jobs j ON a.job_id = j.job_id
         JOIN tbl_user u ON a.user_id = u.user_id
-        WHERE a.appointment_id = ? AND a.employer_id = ? AND a.status = 'pending'";
+        WHERE a.appointment_id = ? AND a.employer_id = ?";
 
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, "ii", $appointment_id, $employer_id);
@@ -30,6 +37,7 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
 if (mysqli_num_rows($result) === 0) {
+    $_SESSION['error'] = "Appointment not found";
     header("Location: interviews.php");
     exit();
 }
@@ -38,92 +46,88 @@ $appointment = mysqli_fetch_assoc($result);
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $appointment_date = $_POST["appointment_date"] ?? $appointment['appointment_date'];
-    $appointment_time = $_POST["appointment_time"] ?? $appointment['appointment_time'];
-    $interview_type = $_POST["interview_type"] ?? $appointment['interview_type'];
-    $notes = !empty($_POST["notes"]) ? $_POST["notes"] : $appointment['notes'];
-
-    // Set location based on interview type
-    $location = NULL;
+    // Get basic form data
+    $appointment_date = $_POST["appointment_date"] ?? '';
+    $appointment_time = $_POST["appointment_time"] ?? '';
+    $interview_type = $_POST["interview_type"] ?? '';
+    $notes = $_POST["notes"] ?? '';
     $error = false;
 
+    // Validate required fields
+    if (empty($appointment_date) || empty($appointment_time) || empty($interview_type)) {
+        $error = true;
+        $error_message = "Please fill in all required fields.";
+    }
+
+    // Get location based on interview type
     switch($interview_type) {
         case "Physical":
-            if (!empty($_POST["location"])) {
-                $location = $_POST["location"];
-            } else {
-                $location = $appointment['location'];
+            $location = $_POST["location"] ?? '';
+            if (empty($location)) {
+                $error = true;
+                $error_message = "Location is required for physical interviews.";
             }
             break;
-
         case "Online":
-            if (!empty($_POST["meeting_link"])) {
-                $location = $_POST["meeting_link"];
-            } else {
-                $location = $appointment['location'];
+            $location = $_POST["meeting_link"] ?? '';
+            if (empty($location)) {
+                $error = true;
+                $error_message = "Meeting link is required for online interviews.";
             }
             break;
-
         case "Phone":
-            if (!empty($_POST["phone_number"])) {
-                $location = $_POST["phone_number"];
-            } else {
-                $location = $appointment['location'];
+            $location = $_POST["phone_number"] ?? '';
+            if (empty($location)) {
+                $error = true;
+                $error_message = "Phone number is required for phone interviews.";
             }
             break;
+        default:
+            $error = true;
+            $error_message = "Invalid interview type selected.";
     }
 
     if (!$error) {
-        // Update only changed fields
-        $updates = array();
-        $params = array();
-        $types = "";
-
-        if ($appointment_date != $appointment['appointment_date']) {
-            $updates[] = "appointment_date = ?";
-            $params[] = $appointment_date;
-            $types .= "s";
-        }
-        if ($appointment_time != $appointment['appointment_time']) {
-            $updates[] = "appointment_time = ?";
-            $params[] = $appointment_time;
-            $types .= "s";
-        }
-        if ($interview_type != $appointment['interview_type']) {
-            $updates[] = "interview_type = ?";
-            $params[] = $interview_type;
-            $types .= "s";
-        }
-        if ($location != $appointment['location']) {
-            $updates[] = "location = ?";
-            $params[] = $location;
-            $types .= "s";
-        }
-        if ($notes != $appointment['notes']) {
-            $updates[] = "notes = ?";
-            $params[] = $notes;
-            $types .= "s";
-        }
-
-        if (!empty($updates)) {
-            $sql = "UPDATE tbl_appointments SET " . implode(", ", $updates) . " WHERE appointment_id = ?";
-            $params[] = $appointment_id;
-            $types .= "i";
-
-            $stmt = mysqli_prepare($conn, $sql);
-            if ($types) {
-                mysqli_stmt_bind_param($stmt, $types, ...$params);
-            }
+        try {
+            // Simple update query with all fields
+            $sql = "UPDATE tbl_appointments 
+                   SET appointment_date = ?,
+                       appointment_time = ?,
+                       interview_type = ?,
+                       location = ?,
+                       notes = ?
+                   WHERE appointment_id = ? AND employer_id = ?";
             
-            if (mysqli_stmt_execute($stmt)) {
-                echo "<script>alert('Interview rescheduled successfully!'); window.location.href='interviews.php';</script>";
+            $stmt = mysqli_prepare($conn, $sql);
+            if ($stmt === false) {
+                throw new Exception("Failed to prepare statement: " . mysqli_error($conn));
+            }
+
+            mysqli_stmt_bind_param($stmt, "sssssii", 
+                $appointment_date,
+                $appointment_time,
+                $interview_type,
+                $location,
+                $notes,
+                $appointment_id,
+                $employer_id
+            );
+
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Failed to execute update: " . mysqli_stmt_error($stmt));
+            }
+
+            if (mysqli_stmt_affected_rows($stmt) > 0) {
+                $_SESSION['success'] = "Interview updated successfully";
+                header("Location: interviews.php?success=interview_updated");
                 exit();
             } else {
-                $error_message = "Error updating appointment: " . mysqli_error($conn);
+                $error_message = "No changes were made to the interview.";
             }
-        } else {
-            header("Location: interviews.php");
-            exit();
+
+        } catch (Exception $e) {
+            $error_message = "Error updating appointment: " . $e->getMessage();
+            error_log($error_message);
         }
     }
 }

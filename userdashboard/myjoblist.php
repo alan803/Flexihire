@@ -95,6 +95,32 @@ mysqli_stmt_close($stmt_deactivated_count);
 
 // Get current status from URL parameter, default to 'all'
 $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
+
+function time_elapsed_string($datetime) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    if ($diff->y > 0) {
+        return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+    }
+    if ($diff->m > 0) {
+        return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+    }
+    if ($diff->d > 0) {
+        if ($diff->d == 1) {
+            return 'Yesterday';
+        }
+        return $diff->d . ' days ago';
+    }
+    if ($diff->h > 0) {
+        return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+    }
+    if ($diff->i > 0) {
+        return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+    }
+    return 'Just now';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -104,8 +130,8 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
     <title>My Jobs | <?php echo htmlspecialchars($company_name); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="employerdashboard.css">
-    <style>
+    <link rel="stylesheet" href="myjoblist.css">
+    <!-- <style>
         /* Additional styles specific to myjoblist.php */
         .job-filters {
             display: flex;
@@ -338,69 +364,41 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         .confirm-btn.danger:hover {
             background-color: #b91c1c;
         }
-    </style>
+    </style> -->
 </head>
 <body>
+    <div class="success-message" id="successMessage">
+        <i class="fas fa-check-circle"></i>
+        <span id="successMessageText">Job has been successfully restored!</span>
+    </div>
+
     <div class="dashboard-container">
-        <!-- Main Sidebar -->
         <div class="sidebar">
             <div class="logo-container">
-                <?php 
-                if(!empty($row['profile_image']) && file_exists($full_path)): 
-                    // Debug: Output the HTML being generated
-                    echo "<!-- Generated img tag with src: " . htmlspecialchars($image_path) . " -->";
-                ?>
-                    <img src="<?php echo htmlspecialchars($image_path); ?>" 
-                         alt="<?php echo htmlspecialchars($company_name); ?>"
-                         onerror="this.src='../assets/images/company-logo.png';"
-                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
-                <?php else: 
-                    echo "<!-- Using default image because: " . 
-                         (empty($row['profile_image']) ? "No image path in DB" : "File not found") . " -->";
-                ?>
-                    <img src="../assets/images/company-logo.png" 
-                         alt="AutoRecruits.in"
-                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                <?php if(!empty($profile_image)): ?>
+                    <img src="<?php echo htmlspecialchars($profile_image); ?>" 
+                         alt="<?php echo htmlspecialchars($username); ?>"
+                         onerror="this.src='../assets/images/company-logo.png';">
+                <?php else: ?>
+                    <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
                 <?php endif; ?>
             </div>
             <div class="company-info">
-                <span><?php echo htmlspecialchars($company_name); ?></span>
-                <span style="font-size: 13px; color: var(--light-text);"><?php echo htmlspecialchars($email); ?></span>
+                <span><?php echo htmlspecialchars($username); ?></span>
+                <span><?php echo htmlspecialchars($email); ?></span>
             </div>
             <nav class="nav-menu">
-                <div class="nav-item">
-                    <i class="fas fa-th-large"></i>
-                    <a href="employerdashboard.php">Dashboard</a>
-                </div>
-                <div class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <a href="postjob.php">Post a Job</a>
-                </div>
-                <div class="nav-item">
-                    <i class="fas fa-briefcase"></i>
-                    <a href="myjoblist.php">My Jobs</a>
-                </div>
-                <div class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <a href="applicants.php">Applicants</a>
-                </div>
-                <div class="nav-item">
-                    <i class="fas fa-calendar-check"></i>
-                    <a href="interviews.php">Interviews</a>
-                </div>
+                <div class="nav-item"><i class="fas fa-th-large"></i><a href="employerdashboard.php">Dashboard</a></div>
+                <div class="nav-item"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></div>
+                <div class="nav-item active"><i class="fas fa-briefcase"></i><a href="myjoblist.php">My Jobs</a></div>
+                <div class="nav-item"><i class="fas fa-users"></i><a href="applicants.php">Applicants</a></div>
+                <div class="nav-item"><i class="fas fa-calendar-check"></i><a href="sidebar.php">Interviews</a></div>
             </nav>
             <div class="settings-section">
-                <div class="nav-item">
-                    <i class="fas fa-user-cog"></i>
-                    <a href="employer_profile.php">My Profile</a>
+                <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
+                <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
                 </div>
-                <div class="nav-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <a href="../login/logout.php">Logout</a>
                 </div>
-            </div>
-        </div>
-
         <!-- Main Container -->
         <div class="main-container">
             <!-- Main Content -->
@@ -408,10 +406,10 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                 <div class="header">
                     <h1>My Jobs - <?php echo htmlspecialchars($company_name); ?></h1>
                     <div style="display: flex; gap: 15px;">
-                        <button id="applicantsToggle" class="toggle-sidebar-btn">
+                        <!-- <button id="applicantsToggle" class="toggle-sidebar-btn">
                             <i class="fas fa-users"></i>
                             <span>Applicants</span>
-                        </button>
+                        </button> -->
                         <button class="post-job-btn">
                             <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
                             <a href="postjob.php">Post a Job</a>
@@ -423,36 +421,64 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                 <div class="job-filters">
                     <button class="filter-btn <?php echo ($current_status === 'all' || $current_status === '') ? 'active' : ''; ?>" 
                             data-status="all">
-                        All Active Jobs (<?php echo $active_jobs; ?>)
+                        All Active Jobs <span><?php echo $active_jobs; ?></span>
                     </button>
                     <button class="filter-btn <?php echo $current_status === 'pending' ? 'active' : ''; ?>" 
                             data-status="pending">
-                        Pending Approval
+                        Pending Approval <span><?php 
+                            $pending_count = mysqli_fetch_assoc(mysqli_query($conn, 
+                                "SELECT COUNT(*) as count FROM tbl_jobs WHERE employer_id=$employer_id AND status='pending' AND is_deleted=0"
+                            ))['count'];
+                            echo $pending_count; 
+                        ?></span>
                     </button>
                     <button class="filter-btn <?php echo $current_status === 'approved' ? 'active' : ''; ?>" 
                             data-status="approved">
-                        Approved Jobs
+                        Approved Jobs <span><?php 
+                            $approved_count = mysqli_fetch_assoc(mysqli_query($conn, 
+                                "SELECT COUNT(*) as count FROM tbl_jobs WHERE employer_id=$employer_id AND status='approved' AND is_deleted=0"
+                            ))['count'];
+                            echo $approved_count; 
+                        ?></span>
                     </button>
                     <button class="filter-btn <?php echo $current_status === 'rejected' ? 'active' : ''; ?>" 
                             data-status="rejected">
-                        Rejected Jobs
+                        Rejected Jobs <span><?php 
+                            $rejected_count = mysqli_fetch_assoc(mysqli_query($conn, 
+                                "SELECT COUNT(*) as count FROM tbl_jobs WHERE employer_id=$employer_id AND status='rejected' AND is_deleted=0"
+                            ))['count'];
+                            echo $rejected_count; 
+                        ?></span>
                     </button>
                     <button class="filter-btn <?php echo $current_status === 'deactivated' ? 'active' : ''; ?>" 
                             data-status="deactivated">
-                        Deactivated (<?php echo $deactivated_jobs; ?>)
+                        Deactivated <span><?php echo $deactivated_jobs; ?></span>
                     </button>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search Section -->
+                <div class="search-section">
                 <div class="search-container">
                     <div class="search-bar">
-                        <select>
-                            <option value="all">All Categories</option>
-                            <option value="salary">Salary</option>
-                            <option value="location">Location</option>
-                            <option value="title">Job Title</option>
-                        </select>
-                        <input type="text" placeholder="Search for jobs..." onfocus="showSearchBar()">
+                            <svg class="search-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                            </svg>
+                            <input type="text" class="search-input" placeholder="Search jobs..." aria-label="Search jobs">
+                            <svg class="search-close" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add this right after the search section and before the job-card-container -->
+                <div class="no-results-container">
+                    <div class="no-results">
+                        <svg class="search-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                        </svg>
+                        <h3>No jobs found</h3>
+                        <p>Try adjusting your search criteria</p>
                     </div>
                 </div>
                 
@@ -543,6 +569,7 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                     
                                     <div class="job-stats" style="display: flex; gap: 15px; margin-top: 15px;">
                                         <?php
+                                        // Applicants count
                                         $sql_applicants = "SELECT COUNT(*) as applicant_count FROM tbl_applications WHERE job_id = ?";
                                         $stmt_applicants = mysqli_prepare($conn, $sql_applicants);
                                         mysqli_stmt_bind_param($stmt_applicants, "i", $job_data['job_id']);
@@ -561,14 +588,14 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                         </div>
                                         <div class="job-stat-item" style="display: flex; align-items: center; font-size: 13px; color: var(--success-color);">
                                             <i class="fas fa-clock" style="margin-right: 5px;"></i>
-                                            <span>Posted 3 days ago</span>
+                                            <span>Posted <?php echo time_elapsed_string($job_data['created_at']); ?></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="job-actions">
-                                <?php if($job_data['status'] != 'deactivated'): ?>
+                                <?php if($job_data['is_deleted'] == 0): // For active jobs ?>
                                     <a href="applicants.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn view-btn">
                                         <i class="fas fa-users"></i> Applicants
                                     </a>
@@ -583,13 +610,30 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                                     <a href="editjob.php?job_id=<?php echo $job_data['job_id']; ?>" class="action-btn edit-btn">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
+
+                                    <?php 
+                                    // Check if job has any applicants
+                                    $sql_check_applicants = "SELECT COUNT(*) as applicant_count FROM tbl_applications WHERE job_id = ?";
+                                    $stmt_check = mysqli_prepare($conn, $sql_check_applicants);
+                                    mysqli_stmt_bind_param($stmt_check, "i", $job_data['job_id']);
+                                    mysqli_stmt_execute($stmt_check);
+                                    $result_check = mysqli_stmt_get_result($stmt_check);
+                                    $applicant_count = mysqli_fetch_assoc($result_check)['applicant_count'];
+                                    mysqli_stmt_close($stmt_check);
+
+                                    if($applicant_count == 0): // Only show deactivate button if no applicants
+                                    ?>
                                     <a href="#" class="action-btn delete-btn" onclick="showDeleteConfirmation(<?php echo $job_data['job_id']; ?>); return false;">
                                         <i class="fas fa-trash-alt"></i> Deactivate
                                     </a>
                                 <?php else: ?>
-                                    <a href="#" onclick="showRestoreConfirmation(<?php echo $job_data['job_id']; ?>); return false;" 
-                                       class="action-btn reactivate-btn">
-                                        <i class="fas fa-redo"></i> Restore
+                                        <span class="action-btn disabled-btn" title="Cannot deactivate: Job has active applicants">
+                                            <i class="fas fa-lock"></i> Cannot Deactivate
+                                        </span>
+                                    <?php endif; ?>
+                                <?php else: // For deactivated jobs ?>
+                                    <a href="#" class="action-btn restore-btn" onclick="showRestoreConfirmation(<?php echo $job_data['job_id']; ?>); return false;">
+                                        <i class="fas fa-undo"></i> Restore Job
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -598,8 +642,52 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
                         endwhile; 
                     else: 
                     ?>
-                        <div style="text-align: center; padding: 20px;">
-                            <p>No <?php echo $status === 'deactivated' ? 'deactivated' : 'active'; ?> jobs found.</p>
+                        <div class="no-jobs-message">
+                            <?php
+                            $messageData = [
+                                'all' => [
+                                    'icon' => 'fa-briefcase',
+                                    'title' => 'No Active Jobs',
+                                    'message' => 'You haven\'t posted any jobs yet. Click "Post a Job" to get started.'
+                                ],
+                                'pending' => [
+                                    'icon' => 'fa-clock',
+                                    'title' => 'No Pending Jobs',
+                                    'message' => 'There are no jobs waiting for approval at the moment.'
+                                ],
+                                'approved' => [
+                                    'icon' => 'fa-check-circle',
+                                    'title' => 'No Approved Jobs',
+                                    'message' => 'None of your jobs have been approved yet. Check back later.'
+                                ],
+                                'rejected' => [
+                                    'icon' => 'fa-times-circle',
+                                    'title' => 'No Rejected Jobs',
+                                    'message' => 'None of your jobs have been rejected. Keep up the good work!'
+                                ],
+                                'deactivated' => [
+                                    'icon' => 'fa-archive',
+                                    'title' => 'No Deactivated Jobs',
+                                    'message' => 'You don\'t have any deactivated job listings.'
+                                ]
+                            ];
+
+                            $currentFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+                            $data = $messageData[$currentFilter] ?? $messageData['all'];
+                            ?>
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas <?php echo $data['icon']; ?>"></i>
+                                </div>
+                                <h3><?php echo $data['title']; ?></h3>
+                                <p><?php echo $data['message']; ?></p>
+                                <?php if($currentFilter === 'all'): ?>
+                                    <a href="postjob.php" class="post-job-link">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Post Your First Job
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php 
                     endif; 
@@ -678,16 +766,16 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
     <div id="confirmationOverlay" class="overlay"></div>
     <div class="confirmation-panel" id="deletePanel">
         <div class="confirmation-content">
-            <div class="confirmation-icon danger">
-                <i class="fas fa-trash-alt"></i>
+            <div class="confirmation-icon">
+                <i class="fas fa-exclamation-circle"></i>
             </div>
             <div class="confirmation-text">
-                <h3>Deactivate Job</h3>
-                <p>Are you sure you want to deactivate this job? It will no longer be visible to users.</p>
+                <h3>Are you sure?</h3>
+                <p>Do you really want to deactivate this job? This process cannot be undone.</p>
             </div>
             <div class="confirmation-actions">
-                <button class="cancel-btn" onclick="hideDeleteConfirmation()">Cancel</button>
-                <a href="#" id="confirmDelete" class="confirm-btn danger">Deactivate</a>
+                <button class="cancel-btn" onclick="hideDeleteConfirmation()">No, Cancel</button>
+                <a href="#" id="confirmDelete" class="confirm-btn">Yes, Deactivate</a>
             </div>
         </div>
     </div>
@@ -770,13 +858,21 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
             // Delete Confirmation Functions
             function showDeleteConfirmation(jobId) {
                 document.getElementById('confirmationOverlay').style.display = 'block';
-                document.getElementById('deletePanel').style.display = 'block';
+                const panel = document.getElementById('deletePanel');
+                panel.style.display = 'block';
+                panel.classList.add('show');
                 document.getElementById('confirmDelete').href = `deletejob.php?id=${jobId}`;
+                // Prevent body scrolling
+                document.body.style.overflow = 'hidden';
             }
 
             function hideDeleteConfirmation() {
                 document.getElementById('confirmationOverlay').style.display = 'none';
-                document.getElementById('deletePanel').style.display = 'none';
+                const panel = document.getElementById('deletePanel');
+                panel.classList.remove('show');
+                panel.style.display = 'none';
+                // Restore body scrolling
+                document.body.style.overflow = '';
             }
 
             // Restore Confirmation Functions
@@ -815,6 +911,163 @@ $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
         function showSearchBar() {
             // Add search functionality if needed
         }
+
+        // Replace the existing icon color script with this updated version
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to force icon colors
+            const lockIconColors = () => {
+                // Target both the icon containers and their SVG paths
+                document.querySelectorAll('.sidebar .nav-item .svg-inline--fa').forEach(icon => {
+                    const isLogoutIcon = icon.classList.contains('fa-sign-out-alt');
+                    if (!isLogoutIcon) {
+                        // Set color on the SVG container
+                        icon.style.cssText += 'color: #4a90e6 !important; fill: #4a90e6 !important;';
+                        
+                        // Force fill on all paths
+                        icon.querySelectorAll('path').forEach(path => {
+                            path.setAttribute('fill', 'currentColor');
+                            path.style.fill = '#4a90e6';
+                        });
+                        
+                        // Mark as color-locked
+                        icon.dataset.colorLocked = 'true';
+                    }
+                });
+            };
+
+            // Initial application
+            lockIconColors();
+            
+            // Reapply multiple times to catch any late modifications
+            [100, 500, 1000, 2000].forEach(delay => {
+                setTimeout(lockIconColors, delay);
+            });
+
+            // Set up mutation observer for both the icon and its paths
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    if (mutation.target.closest('.svg-inline--fa') && 
+                        !mutation.target.closest('.fa-sign-out-alt')) {
+                        requestAnimationFrame(lockIconColors);
+                    }
+                });
+            });
+
+            // Observe all SVG icons and their paths
+            document.querySelectorAll('.sidebar .nav-item .svg-inline--fa').forEach(icon => {
+                observer.observe(icon, {
+                    attributes: true,
+                    attributeFilter: ['style', 'fill', 'color'],
+                    childList: true,
+                    subtree: true
+                });
+            });
+        });
+
+        // Force Font Awesome to maintain SVG rendering mode
+        window.FontAwesomeConfig = {
+            autoReplaceSvg: 'nest',
+            observeMutations: true
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBar = document.querySelector('.search-bar');
+            const searchInput = document.querySelector('.search-input');
+            const searchClose = document.querySelector('.search-close');
+            const jobCards = document.querySelectorAll('.job-card');
+            const noResultsContainer = document.querySelector('.no-results-container');
+            const jobCardContainer = document.querySelector('.job-card-container');
+
+            // Function to check input content and update classes
+            function updateSearchBar() {
+                if (searchInput.value.length > 0) {
+                    searchBar.classList.add('has-content');
+                } else {
+                    searchBar.classList.remove('has-content');
+                }
+            }
+
+            // Function to filter jobs
+            function filterJobs(searchTerm) {
+                searchTerm = searchTerm.toLowerCase();
+                let hasVisibleCards = false;
+                
+                jobCards.forEach(card => {
+                    const jobTitle = card.querySelector('h3').textContent.toLowerCase();
+                    const jobDescription = card.querySelector('.job-description').textContent.toLowerCase();
+                    const jobLocation = card.querySelector('.job-meta-item').textContent.toLowerCase();
+                    
+                    if (jobTitle.includes(searchTerm) || 
+                        jobDescription.includes(searchTerm) || 
+                        jobLocation.includes(searchTerm)) {
+                        card.style.display = '';
+                        hasVisibleCards = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show/hide no results message
+                if (hasVisibleCards) {
+                    noResultsContainer.style.display = 'none';
+                    jobCardContainer.style.display = 'grid';
+                } else {
+                    noResultsContainer.style.display = 'block';
+                    jobCardContainer.style.display = 'none';
+                }
+            }
+
+            // Listen for input changes
+            searchInput.addEventListener('input', function() {
+                updateSearchBar();
+                filterJobs(this.value);
+            });
+
+            // Clear search when close icon is clicked
+            searchClose.addEventListener('click', () => {
+                searchInput.value = '';
+                updateSearchBar();
+                filterJobs('');
+                searchInput.focus();
+            });
+
+            // Initial check
+            updateSearchBar();
+        });
+
+        // Add this at the start of your script section
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for message parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const successMessage = document.getElementById('successMessage');
+            const messageText = document.getElementById('successMessageText');
+            
+            if (urlParams.get('restored') === 'true') {
+                messageText.textContent = 'Job has been successfully restored!';
+                showMessage();
+            } else if (urlParams.get('deactivated') === 'true') {
+                messageText.textContent = 'Job has been successfully deactivated!';
+                showMessage();
+            }
+
+            function showMessage() {
+                // Show the message
+                successMessage.style.display = 'block';
+                
+                // Clean up the URL
+                const newUrl = window.location.pathname + window.location.search.replace(/[?&](restored|deactivated)=true/, '');
+                window.history.replaceState({}, '', newUrl);
+                
+                // Hide the message after 3 seconds
+                setTimeout(() => {
+                    successMessage.classList.add('hide');
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                        successMessage.classList.remove('hide');
+                    }, 300);
+                }, 3000);
+            }
+        });
     </script>
 </body>
 </html>

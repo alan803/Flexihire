@@ -1,9 +1,7 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-dark: #1d4ed8;
+    --primary-color: #4a90e2;
+    --primary-dark: #357abd;
     --primary-light: #dbeafe;
-    --secondary-color: #64748b;
-    --accent-color: #f59e0b;
     --text-color: #1e293b;
     --light-text: #64748b;
     --border-color: #e2e8f0;
@@ -11,135 +9,255 @@
     --card-bg: #ffffff;
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+/* Main Container */
+.main-container {
+    padding: 32px 40px;
+    margin-left: 250px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    min-height: 100vh;
+    position: relative;
+    max-width: 1600px;
 }
 
-.back-btn {
+/* Header Container */
+.header-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-    border-radius: 6px;
-    text-decoration: none;
+    padding: 0 0 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Back Button */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
     font-weight: 500;
+    font-size: 14px;
     transition: all 0.3s ease;
-}
-
-.back-btn:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.applicant-info-card {
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.back-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-light), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.back-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.back-button:hover::before {
+    opacity: 0.1;
+}
+
+.back-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.1);
+}
+
+.back-button i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.back-button:hover i {
+    transform: translateX(-4px);
+    color: var(--primary-color);
+}
+
+.back-button span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Applicant Info Card */
+.applicant-info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .applicant-header {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 20px;
 }
 
-.applicant-header h2 {
-    margin: 0;
+.applicant-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.applicant-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.applicant-details {
+    flex: 1;
+}
+
+.applicant-name {
+    font-size: 24px;
+    font-weight: 600;
     color: var(--text-color);
-    font-size: 1.5rem;
+    margin-bottom: 8px;
 }
 
 .job-title {
-    color: var(--light-text);
-    font-size: 1rem;
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 500;
 }
 
+/* Certificates Grid */
 .certificates-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 24px;
-    margin-top: 24px;
+    margin: 24px 0;
 }
 
+/* Update Certificate Card Styles */
 .certificate-card {
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .certificate-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
 }
 
 .certificate-header {
-    padding: 16px;
     display: flex;
     align-items: center;
     gap: 12px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .certificate-header i {
     color: var(--primary-color);
-    font-size: 1.25rem;
+    font-size: 24px;
+    background: rgba(74, 144, 226, 0.1);
+    padding: 12px;
+    border-radius: 12px;
 }
 
 .certificate-header h3 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-color);
 }
 
-.certificate-content {
-    padding: 16px;
-}
-
-.certificate-content img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
-
-.certificate-content img:hover {
-    opacity: 0.9;
-}
-
-.certificate-actions {
-    padding: 16px;
-    border-top: 1px solid var(--border-color);
-}
-
-.view-btn {
-    width: 100%;
-    padding: 8px;
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-    border: none;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
+.view-certificate-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 13px;
     transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    width: auto;
+    margin: 0 auto;
+    min-width: 140px;
 }
 
-.view-btn:hover {
-    background-color: var(--primary-color);
+.view-certificate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    background: linear-gradient(135deg, #357abd, #2563eb);
+}
+
+.view-certificate-btn i {
+    font-size: 14px;
+}
+
+/* Action Buttons */
+.action-buttons-container {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 12px 32px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.accept-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
     color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.accept-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.reject-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.reject-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Modal Styles */
@@ -150,17 +268,18 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
 }
 
 .modal img {
     max-width: 90%;
     max-height: 90vh;
-    object-fit: contain;
-    border-radius: 8px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .close-modal {
@@ -169,74 +288,36 @@
     right: 30px;
     color: white;
     font-size: 30px;
-    font-weight: bold;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .close-modal:hover {
     color: var(--primary-light);
+    transform: scale(1.1);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .main-container {
+        padding: 20px;
+        margin-left: 0;
+    }
+
     .certificates-grid {
         grid-template-columns: 1fr;
     }
 
-    .header {
+    .action-buttons-container {
         flex-direction: column;
-        gap: 16px;
-        align-items: flex-start;
     }
 
-    .certificate-content img {
-        height: 150px;
+    .action-btn {
+        width: 100%;
     }
-}
 
-/* Action Buttons Container */
-.action-buttons-container {
-    display: flex;
-    gap: 16px;
-    margin-top: 24px;
-    justify-content: center;
-}
-
-.action-btn {
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: 500;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.accept-btn {
-    background-color: #dcfce7;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-}
-
-.accept-btn:hover {
-    background-color: #16a34a;
-    color: white;
-}
-
-.reject-btn {
-    background-color: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-
-.reject-btn:hover {
-    background-color: #dc2626;
-    color: white;
-}
-
-/* Ensure icons align properly */
-.action-btn i {
-    font-size: 16px;
+    .applicant-header {
+        flex-direction: column;
+        text-align: center;
+    }
 }

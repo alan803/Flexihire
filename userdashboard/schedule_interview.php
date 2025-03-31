@@ -155,9 +155,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $verify_result = mysqli_stmt_get_result($verify_stmt);
             $updated_data = mysqli_fetch_assoc($verify_result);
             
-            echo "Debug: Final application data: <pre>" . print_r($updated_data, true) . "</pre><br>";
-
-            echo "<script>alert('Interview scheduled successfully!'); window.location.href='applicants.php?job_id=" . $job_id . "';</script>";
+            // Redirect with success message
+            header("Location: applicants.php?job_id=" . $job_id . "&success=interview_scheduled");
             exit();
         } catch (Exception $e) {
             // Rollback on error

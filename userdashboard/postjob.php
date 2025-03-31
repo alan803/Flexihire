@@ -80,16 +80,15 @@
             $status
         );
         
-        if ($stmt->execute()) 
-        {
-            $_SESSION['success'] = "Job posted successfully and is pending admin approval.";
-            header("Location: myjoblist.php");
+        if ($stmt->execute()) {
+            $_SESSION['message'] = "Job posted successfully and is pending admin approval.";
+            $_SESSION['message_type'] = "success";
+            header("Location: postjob.php");
             exit();
-        } 
-        else 
-        {
-            $_SESSION['error'] = "Error posting job: " . $conn->error;
-            header("Location: postjob.php?message=Error posting job: " . $conn->error);
+        } else {
+            $_SESSION['message'] = "Error posting job: " . $conn->error;
+            $_SESSION['message_type'] = "error";
+            header("Location: postjob.php");
             exit();
         }
 
@@ -110,6 +109,7 @@
     <link rel="stylesheet" href="employerdashboard.css">
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -638,6 +638,70 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Add this to your existing style section */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            max-width: 400px;
+            animation: slideIn 0.3s ease forwards;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .toast.error {
+            border-left: 4px solid #dc2626;
+        }
+
+        .toast i {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+
+        .toast.error i {
+            color: #dc2626;
+        }
+
+        .toast-message {
+            color: #1e293b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
     </style>
 
     <!-- Keep your existing scripts -->
@@ -656,6 +720,46 @@
             }, 3000);
         }
     });
+
+    function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // Add icon based on type
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span class="toast-message">${message}</span>
+        `;
+        
+        // Add toast to container
+        toastContainer.appendChild(toast);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Show notification if there's a message in session
+    <?php if(isset($_SESSION['message'])): ?>
+        showToast(
+            '<?php echo addslashes($_SESSION['message']); ?>', 
+            '<?php echo $_SESSION['message_type'] ?? "success"; ?>'
+        );
+        <?php 
+        // Clear the message after displaying
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+        ?>
+    <?php endif; ?>
     </script>
 </body>
 </html>

@@ -31,7 +31,8 @@
             c.*, 
             a.user_id, 
             u.first_name, 
-            u.last_name, 
+            u.last_name,
+            u.profile_image, 
             j.job_title,
             c.file_path,
             c.certificate_type
@@ -75,21 +76,71 @@
                 <span style="font-size: 13px; color: var(--light-text);"><?php echo htmlspecialchars($email); ?></span>
             </div>
             <!-- Add your existing sidebar navigation here -->
+            <nav class="nav-menu">
+            <div class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <a href="employerdashboard.php">Dashboard</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-plus-circle"></i>
+                <a href="postjob.php">Post a Job</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-briefcase"></i>
+                <a href="myjoblist.php">My Jobs</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-users"></i>
+                <a href="applicants.php">Applicants</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calendar-check"></i>
+                <a href="interviews.php">Interviews</a>
+            </div>
+        </nav>
+        <div class="settings-section">
+            <div class="nav-item">
+                <i class="fas fa-user"></i>
+                <a href="employer_profile.php">My Profile</a>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <a href="../login/logout.php">Logout</a>
+            </div>
+        </div>
         </div>
 
         <!-- Main Content -->
         <div class="main-container">
-            <div class="header">
-                <h1>Applicant Certificates</h1>
-                <a href="applicants.php" class="back-btn">
-                    <i class="fas fa-arrow-left"></i> Back to Applicants
+            <div class="header-container">
+                <a href="applicants.php?job_id=<?php echo $applicant_data['job_id']; ?>" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Applicants</span>
                 </a>
             </div>
 
             <div class="applicant-info-card">
                 <div class="applicant-header">
-                    <h2><?php echo htmlspecialchars($applicant_data['first_name'] . ' ' . $applicant_data['last_name']); ?></h2>
-                    <span class="job-title"><?php echo htmlspecialchars($applicant_data['job_title']); ?></span>
+                    <div class="applicant-photo">
+                        <img src="<?php 
+                            if (!empty($applicant_data['profile_image'])) {
+                                echo '../database/profile_picture/' . htmlspecialchars($applicant_data['profile_image']);
+                            } else {
+                                echo '../assets/images/default-user.png';
+                            }
+                        ?>" 
+                            alt="<?php echo htmlspecialchars($applicant_data['first_name']); ?>"
+                            onerror="this.src='../assets/images/default-user.png';">
+                    </div>
+                    <div class="applicant-details">
+                        <div class="applicant-name">
+                            <?php echo htmlspecialchars($applicant_data['first_name'] . ' ' . $applicant_data['last_name']); ?>
+                        </div>
+                        <div class="job-title">
+                            <i class="fas fa-briefcase"></i>
+                            <?php echo htmlspecialchars($applicant_data['job_title']); ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -97,43 +148,38 @@
                 <?php 
                 mysqli_data_seek($certificates, 0);
                 while($cert = mysqli_fetch_assoc($certificates)): 
-                    // Update path to point to uploads directory with correct column name
                     $certificate_path = "../uploads/" . $cert['file_path'];
                 ?>
-                <div class="certificate-card">
-                    <div class="certificate-header">
-                        <i class="fas fa-certificate"></i>
-                        <h3><?php echo htmlspecialchars($cert['certificate_type']); ?></h3>
-                    </div>
-                    <div class="certificate-content">
-                        <i class="fas fa-file-image"></i>
-                    </div>
-                    <div class="certificate-actions">
-                        <button class="view-btn" onclick="openImageModal('<?php echo htmlspecialchars($certificate_path); ?>')">
-                            <i class="fas fa-eye"></i> View Full Image
+                    <div class="certificate-card">
+                        <div class="certificate-header">
+                            <i class="fas fa-certificate"></i>
+                            <h3><?php echo htmlspecialchars($cert['certificate_type']); ?></h3>
+                        </div>
+                        <button class="view-certificate-btn" 
+                                onclick="openImageModal('<?php echo htmlspecialchars($certificate_path); ?>')">
+                            <i class="fas fa-eye"></i>
+                            View Certificate
                         </button>
                     </div>
-                </div>
                 <?php endwhile; ?>
             </div>
 
-            <!-- Add the accept/reject buttons below certificates grid -->
             <div class="action-buttons-container">
                 <a href="accept.php?application_id=<?php echo $application_id; ?>&status=accepted" 
-                    class="action-btn accept-btn">
+                   class="action-btn accept-btn">
                     <i class="fas fa-check"></i>
-                    Accept
+                    Accept Application
                 </a>
                 <a href="accept.php?application_id=<?php echo $application_id; ?>&status=rejected" 
-                    class="action-btn reject-btn">
+                   class="action-btn reject-btn">
                     <i class="fas fa-times"></i>
-                    Reject
+                    Reject Application
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Image Modal -->
+    <!-- Modal -->
     <div id="imageModal" class="modal">
         <span class="close-modal">&times;</span>
         <img id="modalImage" src="" alt="Certificate">

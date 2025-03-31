@@ -85,7 +85,7 @@
                 CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path
             FROM tbl_applications a 
             JOIN tbl_user u ON a.user_id = u.user_id 
-            JOIN tbl_login l ON u.user_id = l.login_id 
+            JOIN tbl_login l ON u.user_id = l.user_id
             JOIN tbl_jobs j ON a.job_id = j.job_id
             WHERE a.job_id = ?";
     
@@ -204,7 +204,8 @@
         }
 
         .action-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 0.75rem;
             margin-top: 1.25rem;
         }
@@ -385,6 +386,12 @@
     </div>
 
     <div class="main-container">
+        <?php if(isset($_GET['success']) && $_GET['success'] == 'interview_scheduled'): ?>
+            <div class="success-message" id="success-message">
+                <i class="fas fa-check-circle"></i>
+                Interview scheduled successfully!
+            </div>
+        <?php endif; ?>
         <?php 
             // Display error or success messages before the header
             if (isset($error_message)) {
@@ -394,11 +401,20 @@
                 echo $success_message;
             }
         ?>
-        <div class="header">
-            <h1>Job Applicants</h1>
-            <div class="job-title">
-                <i class="fas fa-briefcase"></i>
-                <?php echo htmlspecialchars($job_details['job_title'] ?? 'Unknown Job'); ?>
+        <div class="header-container">
+            <div class="header-top">
+                <a href="myjoblist.php" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Job List
+                </a>
+            </div>
+            
+            <div class="header">
+                <h1>Job Applicants</h1>
+                <div class="job-title">
+                    <i class="fas fa-briefcase"></i>
+                    <?php echo htmlspecialchars($job_details['job_title'] ?? 'Unknown Job'); ?>
+                </div>
             </div>
         </div>
 
@@ -406,85 +422,94 @@
             <div class="applicants-grid">
                 <?php while ($applicant = mysqli_fetch_assoc($result)): ?>
                     <div class="applicant-card">
-                        <div class="applicant-header">
+                        <?php
+                            $status = strtolower($applicant['status'] ?? 'pending');
+                            $statusIcons = [
+                                'pending' => 'clock',
+                                'accepted' => 'check-circle',
+                                'rejected' => 'times-circle',
+                                'interview' => 'calendar-check'
+                            ];
+                        ?>
+                        <!-- Status Badge -->
+                        <!-- <div class="status-pill <?php echo htmlspecialchars($status); ?>">
+                            <i class="fas fa-<?php echo $statusIcons[$status] ?? 'clock'; ?>"></i>
+                            <?php echo ucfirst(htmlspecialchars($status)); ?>
+                        </div> -->
+
+                        <!-- Main Applicant Info -->
+                        <div class="applicant-main">
                             <div class="applicant-photo">
                                 <img src="<?php echo !empty($applicant['profile_image']) ? 
-                                              htmlspecialchars($applicant['profile_image_path']) : 
-                                              '../assets/images/default-user.png'; ?>" 
-                                     alt="<?php echo htmlspecialchars($applicant['first_name']); ?>"
-                                     onerror="this.src='../assets/images/default-user.png';">
+                                    htmlspecialchars($applicant['profile_image_path']) : 
+                                    '../assets/images/default-user.png'; ?>" 
+                                    alt="<?php echo htmlspecialchars($applicant['first_name']); ?>"
+                                    onerror="this.src='../assets/images/default-user.png';">
                             </div>
-                            <div>
+                            
+                            <div class="applicant-details">
                                 <div class="applicant-name">
                                     <?php echo htmlspecialchars($applicant['first_name'] . ' ' . $applicant['last_name']); ?>
+                                </div>
+                                
+                                <div class="contact-info">
+                                    <div class="info-item">
+                                        <i class="fas fa-envelope"></i>
+                                        <span><?php echo htmlspecialchars($applicant['email']); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-phone"></i>
+                                        <span><?php echo htmlspecialchars($applicant['phone_number']); ?></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="applicant-info">
-                            <div class="info-item">
-                                <i class="fas fa-envelope"></i>
-                                <?php echo htmlspecialchars($applicant['email']); ?>
-                            </div>
-                            <div class="info-item">
-                                <i class="fas fa-phone"></i>
-                                <?php echo htmlspecialchars($applicant['phone_number']); ?>
-                            </div>
-                            <div class="info-item">
-                                <i class="fas fa-clock"></i>
-                                Status: <?php echo ucfirst(htmlspecialchars($applicant['status'] ?? 'Pending')); ?>
-                            </div>
-                        </div>
-
-                        <div class="action-buttons">
-                            <?php 
-                                $status = strtolower($applicant['status'] ?? '');
-                                if ($status === 'pending' || empty($status)):
-                                    if ($applicant['license_required'] == 'two_wheeler' || 
-                                        $applicant['license_required'] == 'four_wheeler' || 
-                                        $applicant['badge_required'] == 'yes'): 
-                            ?>
+                        <!-- Action Buttons -->
+                        <?php if ($status === 'pending' || empty($status)): ?>
+                            <div class="action-buttons">
+                                <?php if ($applicant['license_required'] == 'two_wheeler' || 
+                                          $applicant['license_required'] == 'four_wheeler' || 
+                                          $applicant['badge_required'] == 'yes'): ?>
                                     <a href="view_certificates.php?application_id=<?php echo $applicant['id']; ?>" 
-                                        class="action-btn" 
-                                        style="background-color: #3b82f6; color: white;">
+                                       class="action-btn view-certificates-btn">
                                         <i class="fas fa-certificate"></i>
                                         View Certificates
                                     </a>
-                            <?php 
-                                    // Check if interview is required for this job
-                                    elseif ($applicant['interview'] == 'yes'): 
-                            ?>
+                                <?php endif; ?>
+
+                                <?php if ($applicant['interview'] == 'yes'): ?>
                                     <a href="schedule_interview.php?job_id=<?php echo $applicant['job_id']; ?>&application_id=<?php echo $applicant['id']; ?>" 
-                                        class="action-btn interview-btn">
+                                       class="action-btn schedule-interview-btn">
                                         <i class="fas fa-calendar-check"></i>
                                         Schedule Interview
                                     </a>
-                            <?php 
-                                    else: 
-                            ?>
+                                <?php else: ?>
                                     <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=accepted" 
-                                        class="action-btn accept-btn">
+                                       class="action-btn accept-btn">
                                         <i class="fas fa-check"></i>
                                         Accept
                                     </a>
                                     <a href="accept.php?application_id=<?php echo $applicant['id']; ?>&status=rejected" 
-                                        class="action-btn reject-btn">
+                                       class="action-btn reject-btn">
                                         <i class="fas fa-times"></i>
                                         Reject
                                     </a>
-                            <?php 
-                                    endif; 
-                                else: 
-                            ?>
-                                    <div class="status-badge <?php echo htmlspecialchars($applicant['status']); ?>">
-                                        <?php echo ucfirst(htmlspecialchars($applicant['status'])); ?>
-                                    </div>
-                            <?php 
-                                endif; 
-                            ?>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Status Display -->
+                        <div class="status-display">
+                            <i class="fas fa-info-circle"></i>
+                            Current Status: <span class="status-text <?php echo $status; ?>">
+                                <?php echo ucfirst(htmlspecialchars($status)); ?>
+                            </span>
                         </div>
 
+                        <!-- Application Date -->
                         <div class="application-date">
+                            <i class="far fa-clock"></i>
                             Applied on <?php echo date('M d, Y', strtotime($applicant['applied_at'])); ?>
                         </div>
                     </div>
@@ -500,29 +525,35 @@
     </div>
 
     <script>
-        // Function to remove messages after 4 seconds
+        // Function to remove messages and URL parameters after 4 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const errorMessage = document.getElementById('error-message');
             const successMessage = document.getElementById('success-message');
 
-            if (errorMessage) {
+            if (errorMessage || successMessage) {
                 setTimeout(() => {
-                    errorMessage.style.transition = 'opacity 0.5s ease';
-                    errorMessage.style.opacity = '0';
-                    setTimeout(() => {
-                        errorMessage.remove();
-                    }, 500); // Remove after fade out
-                }, 4000); // 4 seconds
-            }
+                    // Remove messages with fade effect
+                    if (errorMessage) {
+                        errorMessage.style.transition = 'opacity 0.5s ease';
+                        errorMessage.style.opacity = '0';
+                        setTimeout(() => {
+                            errorMessage.remove();
+                        }, 500);
+                    }
+                    if (successMessage) {
+                        successMessage.style.transition = 'opacity 0.5s ease';
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => {
+                            successMessage.remove();
+                        }, 500);
+                    }
 
-            if (successMessage) {
-                setTimeout(() => {
-                    successMessage.style.transition = 'opacity 0.5s ease';
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => {
-                        successMessage.remove();
-                    }, 500); // Remove after fade out
-                }, 4000); // 4 seconds
+                    // Remove URL parameters
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('error');
+                    url.searchParams.delete('success');
+                    window.history.replaceState({}, '', url);
+                }, 4000);
             }
         });
 

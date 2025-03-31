@@ -31,136 +31,110 @@
 
     // collecting data from the user throught the form
     if($_SERVER['REQUEST_METHOD']=='POST') {
-        $company_name=$_POST['company_name'];
-        $company_type=$_POST['company_type'];
-        $registration_number=$_POST['registration_number'];
-        $location=$_POST['location'];
-        $establishment_year=$_POST['establishment_year'];
-        $company_description=$_POST['company_description'];
-        $contact_person=$_POST['contact_person'];
-        $phone_number=$_POST['phone'];
-        $email=$_POST['email'];
-        $address=$_POST['address'];
+        $company_name = $_POST['company_name'];
+        $company_type = $_POST['company_type'];
+        $location = $_POST['location'];
+        $establishment_year = $_POST['establishment_year'];
+        $company_description = $_POST['company_description'];
+        $contact_person = $_POST['contact_person'];
+        $phone_number = $_POST['phone'];
+        $address = $_POST['address'];
 
-        // Handle file upload first
-        $upload_success = false;
+        // Start building the SQL query dynamically
+        $updates = array();
+        $params = array();
+        $types = "";
+
+        // Only add fields that have changed
+        if($company_name != $row['company_name']) {
+            $updates[] = "company_name=?";
+            $params[] = $company_name;
+            $types .= "s";
+        }
+        
+        if($company_type != $row['type']) {
+            $updates[] = "type=?";
+            $params[] = $company_type;
+            $types .= "s";
+        }
+        
+        if($location != $row['location']) {
+            $updates[] = "location=?";
+            $params[] = $location;
+            $types .= "s";
+        }
+        
+        if($establishment_year != $row['establishment_year']) {
+            $updates[] = "establishment_year=?";
+            $params[] = $establishment_year;
+            $types .= "i";
+        }
+        
+        if($company_description != $row['shop_description']) {
+            $updates[] = "shop_description=?";
+            $params[] = $company_description;
+            $types .= "s";
+        }
+        
+        if($contact_person != $row['contact_person']) {
+            $updates[] = "contact_person=?";
+            $params[] = $contact_person;
+            $types .= "s";
+        }
+        
+        if($phone_number != $row['phone_number']) {
+            $updates[] = "phone_number=?";
+            $params[] = $phone_number;
+            $types .= "s";
+        }
+        
+        if($address != $row['address']) {
+            $updates[] = "address=?";
+            $params[] = $address;
+            $types .= "s";
+        }
+
+        // Handle file upload if a new image is provided
         if(isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == 0) {
             $allowed = ['jpg', 'jpeg', 'png'];
             $filename = $_FILES['company_logo']['name'];
             $filetype = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             
-            // Verify file extension
             if(in_array($filetype, $allowed)) {
-                // Check file size - 5MB maximum
-                $maxsize = 5 * 1024 * 1024;
-                if($_FILES['company_logo']['size'] < $maxsize) {
-                    // Create employer_pf directory if it doesn't exist
+                if($_FILES['company_logo']['size'] < 5 * 1024 * 1024) {
                     if(!file_exists('employer_pf')) {
                         mkdir('employer_pf', 0777, true);
                     }
                     
-                    // Create unique filename
                     $new_filename = "company_logo_" . $employer_id . "." . $filetype;
                     $destination = "employer_pf/" . $new_filename;
                     
-                    // Move file to destination
                     if(move_uploaded_file($_FILES['company_logo']['tmp_name'], $destination)) {
-                        $upload_success = true;
+                        $updates[] = "profile_image=?";
+                        $params[] = $destination;
+                        $types .= "s";
                     }
                 }
             }
         }
 
-        // Update profile information
-        if($upload_success) {
-            // If we have a new photo
-            $sql_push = "UPDATE tbl_employer SET 
-                company_name=?, 
-                type=?, 
-                registration_number=?, 
-                location=?, 
-                establishment_year=?, 
-                shop_description=?, 
-                contact_person=?, 
-                phone_number=?, 
-                address=?,
-                profile_image=?
-                WHERE employer_id=?";
-            
+        // Only proceed with update if there are changes
+        if(!empty($updates)) {
+            // Add employer_id to params array
+            $params[] = $employer_id;
+            $types .= "i";
+
+            $sql_push = "UPDATE tbl_employer SET " . implode(", ", $updates) . " WHERE employer_id=?";
             $stmt = mysqli_prepare($conn, $sql_push);
-            mysqli_stmt_bind_param($stmt, "ssssisssssi", 
-                $company_name, 
-                $company_type, 
-                $registration_number, 
-                $location, 
-                $establishment_year, 
-                $company_description, 
-                $contact_person, 
-                $phone_number, 
-                $address,
-                $destination,
-                $employer_id
-            );
-        } else {
-            // If no new photo
-            $sql_push = "UPDATE tbl_employer SET 
-                company_name=?, 
-                type=?, 
-                registration_number=?, 
-                location=?, 
-                establishment_year=?, 
-                shop_description=?, 
-                contact_person=?, 
-                phone_number=?, 
-                address=?
-                WHERE employer_id=?";
-            
-            $stmt = mysqli_prepare($conn, $sql_push);
-            mysqli_stmt_bind_param($stmt, "ssssissssi", 
-                $company_name, 
-                $company_type, 
-                $registration_number, 
-                $location, 
-                $establishment_year, 
-                $company_description, 
-                $contact_person, 
-                $phone_number, 
-                $address,
-                $employer_id
-            );
-        }
+
+            // Dynamically bind parameters
+            $bind_params = array($types);
+            foreach($params as $key => $value) {
+                $bind_params[] = &$params[$key];
+            }
+            call_user_func_array(array($stmt, 'bind_param'), $bind_params);
 
         $result_push = mysqli_stmt_execute($stmt);
-
-        // Update email only if it has changed
-        $sql_check_email = "SELECT email FROM tbl_login WHERE employer_id = ?";
-        $stmt_check = mysqli_prepare($conn, $sql_check_email);
-        mysqli_stmt_bind_param($stmt_check, "i", $employer_id);
-        mysqli_stmt_execute($stmt_check);
-        $result_check = mysqli_stmt_get_result($stmt_check);
-        $current_email = mysqli_fetch_assoc($result_check)['email'];
-
-        // Only update email if it's different from current email
-        if ($email !== $current_email) {
-            // Check if new email already exists for another user
-            $sql_check_duplicate = "SELECT email FROM tbl_login WHERE email = ? AND employer_id != ?";
-            $stmt_check_duplicate = mysqli_prepare($conn, $sql_check_duplicate);
-            mysqli_stmt_bind_param($stmt_check_duplicate, "si", $email, $employer_id);
-            mysqli_stmt_execute($stmt_check_duplicate);
-            $result_duplicate = mysqli_stmt_get_result($stmt_check_duplicate);
-            
-            if (mysqli_num_rows($result_duplicate) > 0) {
-                $_SESSION['update_error'] = "Email already exists";
-                header("Location: edit_employer_profile.php");
-                exit();
-            }
-            
-            // Update email if no duplicate found
-            $sql_email_push = "UPDATE tbl_login SET email=? WHERE employer_id=?";
-            $stmt_email = mysqli_prepare($conn, $sql_email_push);
-            mysqli_stmt_bind_param($stmt_email, "si", $email, $employer_id);
-            $result_push_email = mysqli_stmt_execute($stmt_email);
-        }
 
         if ($result_push) {
             $_SESSION['update_success'] = true;
@@ -169,6 +143,12 @@
         } else {
             $_SESSION['update_error'] = "Failed to update profile";
             header("Location: edit_employer_profile.php");
+                exit();
+            }
+        } else {
+            // No changes were made
+            $_SESSION['update_info'] = "No changes were made to the profile";
+            header("Location: employer_profile.php");
             exit();
         }
     }
@@ -390,10 +370,9 @@
     </style>
 </head>
 <body>
-    <div id="notification" class="notification" style="display: none;">
+    <div class="notification" id="notification" style="display: none;">
         <div class="notification-content">
-            <i class="fas fa-check-circle"></i>
-            <span id="notification-message"></span>
+            <span class="notification-message"></span>
         </div>
     </div>
     <div class="sidebar">
@@ -433,7 +412,7 @@
         </nav>
         <div class="settings-section">
             <div class="nav-item">
-                <i class="fas fa-user"></i>
+                <i class="fas fa-user-cog"></i>
                 <a href="employer_profile.php">My Profile</a>
             </div>
             <div class="nav-item">
@@ -501,8 +480,9 @@
                             <label>Registration Number</label>
                             <input type="text" name="registration_number" id="registration_number" 
                                    value="<?php echo htmlspecialchars($row['registration_number']); ?>" 
-                                   onkeyup="checkregistrationnumber()">
-                            <span id="registration_number_error" class="error"></span>
+                                   readonly
+                                   class="form-input-readonly">
+                            <small class="form-text" style="color: red;">Registration number cannot be changed</small>
                         </div>
                     </div>
                 </div>
@@ -532,8 +512,9 @@
                             <label>Email Address</label>
                             <input type="email" name="email" id="email" 
                                    value="<?php echo htmlspecialchars($email); ?>" 
-                                   onkeyup="checkemail()">
-                            <span id="email_error" class="error"></span>
+                                   readonly
+                                   class="form-input-readonly">
+                            <small class="form-text" style="color: red;">Email address cannot be changed</small>
                         </div>
                     </div>
                 </div>
@@ -863,6 +844,56 @@
                 reader.readAsDataURL(file);
             }
         });
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationContent = notification.querySelector('.notification-content');
+            const messageSpan = notification.querySelector('.notification-message');
+            
+            // Reset classes
+            notificationContent.className = 'notification-content';
+            
+            // Add appropriate class based on type
+            switch(type) {
+                case 'error':
+                    notificationContent.classList.add('error');
+                    break;
+                case 'info':
+                    notificationContent.classList.add('info');
+                    break;
+            }
+            
+            // Update message
+            messageSpan.textContent = message;
+            
+            // Show notification
+            notification.style.display = 'block';
+            notification.classList.add('show');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 500);
+            }, 3000);
+        }
+
+        // Show notification if there's a message in session
+        <?php if(isset($_SESSION['update_success'])): ?>
+            showNotification('Profile updated successfully!', 'success');
+            <?php unset($_SESSION['update_success']); ?>
+        <?php endif; ?>
+
+        <?php if(isset($_SESSION['update_error'])): ?>
+            showNotification('<?php echo $_SESSION['update_error']; ?>', 'error');
+            <?php unset($_SESSION['update_error']); ?>
+        <?php endif; ?>
+
+        <?php if(isset($_SESSION['update_info'])): ?>
+            showNotification('<?php echo $_SESSION['update_info']; ?>', 'info');
+            <?php unset($_SESSION['update_info']); ?>
+        <?php endif; ?>
     </script>
 </body>
 </html>

@@ -25,10 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add event listener to the dropdown
+    // Initialize fields on page load
     if(interviewType) {
         interviewType.addEventListener('change', showFields);
-        // Show initial fields based on selected value
-        showFields();
+        showFields(); // Show initial fields based on selected type
     }
 }); 

@@ -43,6 +43,20 @@
     // Safely get company name with null coalescing operator
     $company_name = $row['company_name'] ?? 'Company Name Not Set';
 
+    // Get average rating for employer's jobs
+    $sql_rating = "SELECT AVG(r.rating) as avg_rating, COUNT(r.rating) as total_ratings 
+                   FROM tbl_job_ratings r 
+                   INNER JOIN tbl_jobs j ON r.job_id = j.job_id 
+                   WHERE j.employer_id = ?";
+    $stmt_rating = mysqli_prepare($conn, $sql_rating);
+    mysqli_stmt_bind_param($stmt_rating, "i", $employer_id);
+    mysqli_stmt_execute($stmt_rating);
+    $result_rating = mysqli_stmt_get_result($stmt_rating);
+    $rating_data = mysqli_fetch_assoc($result_rating);
+
+    $avg_rating = number_format($rating_data['avg_rating'] ?? 0, 1);
+    $total_ratings = $rating_data['total_ratings'] ?? 0;
+
     // Check if row data exists
     if ($row) {
         echo "<!-- Debug: Location value = " . htmlspecialchars($row['location']) . " -->";
@@ -100,7 +114,7 @@
             </nav>
             <div class="settings-section">
                 <div class="nav-item active">
-                    <i class="fas fa-user"></i>
+                    <i class="fas fa-user-cog"></i>
                     <a href="employer_profile.php">My Profile</a>
                 </div>
                 <div class="nav-item">
@@ -140,7 +154,33 @@
                         </div>
                         <div class="profile-details">
                             <h2><?php echo htmlspecialchars($company_name); ?></h2>
-                            <p class="company-type">Company</p>
+                            <!-- <p class="company-type">Company</p> -->
+                            
+                            <!-- Add this new rating section -->
+                            <div class="rating-container">
+                                <div class="stars">
+                                    <?php
+                                    $full_stars = floor($avg_rating);
+                                    $half_star = $avg_rating - $full_stars >= 0.5;
+                                    
+                                    // Output full stars
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        if ($i <= $full_stars) {
+                                            echo '<i class="fas fa-star"></i>';
+                                        } elseif ($i == $full_stars + 1 && $half_star) {
+                                            echo '<i class="fas fa-star-half-alt"></i>';
+                                        } else {
+                                            echo '<i class="far fa-star"></i>';
+                                        }
+                                    }
+                                    ?>
+                                </div>
+                                <div class="rating-text">
+                                    <strong><?php echo $avg_rating; ?></strong> out of 5
+                                    <span class="rating-count">(<?php echo number_format($total_ratings); ?> reviews)</span>
+                                </div>
+                            </div>
+                            
                             <div class="company-meta">
                                 <span><i class="fas fa-building"></i> Reg: <?php echo htmlspecialchars($row['registration_number'] ?? 'Not Set'); ?></span>
                                 <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['location'] ?? 'Location Not Set'); ?></span>

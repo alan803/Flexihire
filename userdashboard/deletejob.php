@@ -12,22 +12,21 @@ if (isset($_GET['id'])) {
     $employer_id = $_SESSION['employer_id'];
 
     // Soft delete: Update the is_deleted column instead of deleting
-    $sql = "UPDATE tbl_jobs SET is_deleted = 1 WHERE job_id = ? AND employer_id = ?";//making the that particular job as inative
+    $sql = "UPDATE tbl_jobs SET is_deleted = 1 WHERE job_id = ? AND employer_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $job_id, $employer_id);
 
     if ($stmt->execute()) {
-        // Redirect back with a success message
-        header("Location: myjoblist.php?message=Job marked as deleted.");
+        // Change this line to include the deactivated parameter
+        header("Location: myjoblist.php?deactivated=true");
     } else {
-        // Redirect back with an error message
-        header("Location: myjoblist.php?message=Error marking job as deleted.");
+        header("Location: myjoblist.php?error=true");
     }
 
     $stmt->close();
     exit();
 } else {
-    header("Location: myjoblist.php?message=Invalid job selection.");
+    header("Location: myjoblist.php?error=true");
     exit();
 }
 ?>

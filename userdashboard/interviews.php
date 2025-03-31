@@ -22,15 +22,22 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $row = mysqli_fetch_assoc($result);
 
-// Get all interviews for this employer
+// Get all interviews for this employer with correct field names
 $sql = "SELECT 
-            a.*, 
+            a.appointment_id,
+            a.user_id,
+            a.job_id,
+            a.appointment_date,
+            a.appointment_time,
+            a.status,
+            a.location,
+            a.notes,
+            a.interview_type,
             j.job_title,
             u.first_name,
             u.last_name,
             u.profile_image,
-            CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path,
-            a.status as status
+            CONCAT('../database/profile_picture/', u.profile_image) as profile_image_path
         FROM tbl_appointments a
         JOIN tbl_jobs j ON a.job_id = j.job_id
         JOIN tbl_user u ON a.user_id = u.user_id
@@ -57,7 +64,7 @@ $interviews = mysqli_stmt_get_result($stmt);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="toast-container"></div>
+    <div class="toast-container" id="toastContainer"></div>
     <div class="dashboard-container">
         <!-- Sidebar (Copied from employerdashboard.php) -->
         <div class="sidebar">
@@ -110,11 +117,72 @@ $interviews = mysqli_stmt_get_result($stmt);
 
         <!-- Main Content (Unchanged) -->
         <div class="main-container">
+            <?php if(isset($_GET['success'])): ?>
+                <div class="message success-message">
+                    <div class="message-content">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="message-text">
+                            <?php 
+                                switch($_GET['success']) {
+                                    case 'interview_updated':
+                                        echo "<h3>Success!</h3>";
+                                        echo "<p>Interview details updated successfully!</p>";
+                                        break;
+                                    case 'interview_rejected':
+                                        echo "<h3>Success!</h3>";
+                                        echo "<p>Interview has been rejected successfully!</p>";
+                                        break;
+                                    case 'interview_completed':
+                                        echo "<h3>Interview Completed!</h3>";
+                                        echo "<p>The interview has been marked as completed and the applicant has been accepted for the position.</p>";
+                                        break;
+                                    default:
+                                        echo "<h3>Success!</h3>";
+                                        echo "<p>Operation completed successfully!</p>";
+                                }
+                            ?>
+                        </div>
+                    </div>
+                    <button class="close-btn" onclick="this.parentElement.style.display='none';">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <?php endif; ?>
+
+            <?php if(isset($_GET['error'])): ?>
+                <div class="message error-message">
+                    <div class="message-content">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div class="message-text">
+                            <?php 
+                                switch($_GET['error']) {
+                                    case 'reject_failed':
+                                        echo "<h3>Error!</h3>";
+                                        echo "<p>Failed to reject the interview. Please try again.</p>";
+                                        break;
+                                    case 'complete_failed':
+                                        echo "<h3>Error!</h3>";
+                                        echo "<p>Failed to complete the interview process. Please try again.</p>";
+                                        break;
+                                    default:
+                                        echo "<h3>Error!</h3>";
+                                        echo "<p>An error occurred. Please try again.</p>";
+                                }
+                            ?>
+                        </div>
+                    </div>
+                    <button class="close-btn" onclick="this.parentElement.style.display='none';">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <?php endif; ?>
+
             <div class="interview-container">
                 <h2>Scheduled Interviews</h2>
 
                 <?php if(mysqli_num_rows($interviews) > 0): ?>
                     <?php while($interview = mysqli_fetch_assoc($interviews)): ?>
+                        <?php if($interview === null) continue; ?>
                         <div class="interview-card">
                             <div class="interview-header">
                                 <div class="interview-title">
@@ -122,8 +190,8 @@ $interviews = mysqli_stmt_get_result($stmt);
                                 </div>
                                 <div class="interview-date">
                                     <?php 
-                                        $date = new DateTime($interview['appointment_date']);
-                                        $time = new DateTime($interview['appointment_time']);
+                                        $date = new DateTime($interview['appointment_date'] ?? '');
+                                        $time = new DateTime($interview['appointment_time'] ?? '');
                                         echo $date->format('F j, Y') . ' at ' . $time->format('g:i A');
                                     ?>
                                 </div>
@@ -158,8 +226,9 @@ $interviews = mysqli_stmt_get_result($stmt);
 
                                 <div class="detail-group">
                                     <span class="detail-label">Status</span>
-                                    <span class="status-badge status-<?php echo strtolower($interview['status']); ?>">
-                                        <?php echo ucfirst(htmlspecialchars($interview['status'])); ?>
+                                    <?php $status = $interview['status'] ?? 'Pending'; ?>
+                                    <span class="status-badge status-<?php echo strtolower($status); ?>">
+                                        <?php echo ucfirst(htmlspecialchars($status)); ?>
                                     </span>
                                 </div>
                             </div>
@@ -172,31 +241,31 @@ $interviews = mysqli_stmt_get_result($stmt);
                             <?php endif; ?>
 
                             <div class="completion-section">
-                                <?php if(strtolower($interview['status']) == 'accepted'): ?>
+                                <?php if(isset($interview['status']) && strtolower($interview['status']) === 'accepted'): ?>
                                     <button class="complete-interview-btn completed" disabled>
-                                        <i class="fas fa-check-circle"></i> Marked as Completed
+                                        <i class="fas fa-check-circle"></i> Interview Completed
                                     </button>
                                 <?php else: ?>
-                                    <button onclick="redirectToAcceptAfterInterview(<?php echo $interview['appointment_id']; ?>)" 
+                                    <button onclick="redirectToAcceptAfterInterview(<?php echo $interview['appointment_id'] ?? 0; ?>)" 
                                             class="complete-interview-btn">
-                                        <i class="fas fa-check-circle"></i> Mark Interview as Completed
+                                        <i class="fas fa-check-circle"></i> Mark as Completed
                                     </button>
                                 <?php endif; ?>
                             </div>
 
                             <div class="interview-actions">
-                                <?php if($interview['status'] === 'pending'): ?>
-                                    <a href="reschedule_interview.php?appointment_id=<?php echo $interview['appointment_id']; ?>" 
+                                <?php if(isset($interview['status']) && $interview['status'] === 'Pending'): ?>
+                                    <!-- <a href="reschedule_interview.php?appointment_id=<?php echo $interview['appointment_id']; ?>" 
                                        class="action-btn btn-reschedule">
                                         <i class="fas fa-calendar-alt"></i> Reschedule
-                                    </a>
+                                    </a> -->
                                     <a href="cancel_interview.php?appointment_id=<?php echo $interview['appointment_id']; ?>" 
                                        class="action-btn btn-cancel"
                                        onclick="return confirm('Are you sure you want to cancel this interview?')">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
-                                    <?php if($interview['interview_type'] === 'Online'): ?>
-                                        <a href="<?php echo htmlspecialchars($interview['location']); ?>" 
+                                    <?php if(($interview['interview_type'] ?? '') === 'Online'): ?>
+                                        <a href="<?php echo htmlspecialchars($interview['location'] ?? '#'); ?>" 
                                            target="_blank" 
                                            class="action-btn btn-join">
                                             <i class="fas fa-video"></i> Join Meeting
@@ -227,35 +296,101 @@ $interviews = mysqli_stmt_get_result($stmt);
     .complete-interview-btn {
         background: var(--primary-color);
         color: white;
-        padding: 0.8rem 2rem;
+        padding: 0.8rem 1.5rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
+        font-size: 0.95rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        box-shadow: 0 2px 4px rgba(138, 108, 224, 0.15);
     }
 
     .complete-interview-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(138, 108, 224, 0.2);
+        background: #7857d8;
     }
 
-    .completion-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.8rem 2rem;
+    .complete-interview-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(138, 108, 224, 0.15);
+    }
+
+    .complete-interview-btn i {
+        font-size: 1.1rem;
+    }
+
+    .complete-interview-btn.completed {
         background: #E8F5E9;
         color: #2E7D32;
-        border-radius: 8px;
-        font-weight: 500;
+        cursor: not-allowed;
+        border: 1px solid #A5D6A7;
+        box-shadow: none;
+        opacity: 0.9;
     }
 
-    .completion-badge i {
+    .complete-interview-btn.completed:hover {
+        transform: none;
+        box-shadow: none;
+        background: #E8F5E9;
+    }
+
+    .complete-interview-btn.completed i {
         color: #2E7D32;
+    }
+
+    /* Add loading state styles */
+    .complete-interview-btn.loading {
+        background: #e0e0e0;
+        cursor: wait;
+        pointer-events: none;
+    }
+
+    .complete-interview-btn.loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Add confirmation dialog styles */
+    .swal2-popup {
+        font-family: 'Poppins', sans-serif !important;
+        border-radius: 12px !important;
+        padding: 2rem !important;
+    }
+
+    .swal2-title {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #333 !important;
+    }
+
+    .swal2-html-container {
+        font-size: 1rem !important;
+        color: #666 !important;
+    }
+
+    .swal2-confirm {
+        background: var(--primary-color) !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        padding: 0.8rem 1.5rem !important;
+        box-shadow: 0 2px 4px rgba(138, 108, 224, 0.15) !important;
+    }
+
+    .swal2-cancel {
+        background: #f5f5f5 !important;
+        color: #666 !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        padding: 0.8rem 1.5rem !important;
     }
 
     .swal-custom-container {
@@ -366,26 +501,93 @@ $interviews = mysqli_stmt_get_result($stmt);
         to { width: 0%; }
     }
 
-    .complete-interview-btn.completed {
-        background: #E8F5E9;
-        color: #2E7D32;
-        cursor: not-allowed;
-        opacity: 0.8;
-        border: 1px solid #A5D6A7;
+    .message {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        animation: slideIn 0.5s ease-out;
     }
 
-    .complete-interview-btn.completed:hover {
-        transform: none;
-        box-shadow: none;
+    .success-message {
+        background-color: #e8f5e9;
+        border-left: 4px solid #4caf50;
     }
 
-    .complete-interview-btn.completed i {
-        color: #2E7D32;
+    .error-message {
+        background-color: #fdecea;
+        border-left: 4px solid #f44336;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .message-content i {
+        font-size: 24px;
+        padding-top: 3px;
+    }
+
+    .success-message i {
+        color: #4caf50;
+    }
+
+    .error-message i {
+        color: #f44336;
+    }
+
+    .message-text {
+        flex-grow: 1;
+    }
+
+    .message-text h3 {
+        margin: 0 0 5px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .message-text p {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+        line-height: 1.4;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        padding: 5px;
+        font-size: 16px;
+        transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+        color: #666;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
     </style>
 
     <script>
     function redirectToAcceptAfterInterview(appointmentId) {
+        const button = event.target.closest('.complete-interview-btn');
+        
         Swal.fire({
             title: 'Complete Interview?',
             text: 'Are you sure you want to mark this interview as completed?',
@@ -397,57 +599,57 @@ $interviews = mysqli_stmt_get_result($stmt);
             cancelButtonText: 'Cancel',
             allowOutsideClick: false,
             showCloseButton: true,
-            backdrop: true,
-            background: '#fff',
             customClass: {
-                container: 'swal-custom-container',
                 popup: 'swal-custom-popup',
-                backdrop: 'swal-custom-backdrop',
-                content: 'swal-custom-content'
-            },
-            didOpen: () => {
-                // Add blur to main content when modal opens
-                document.querySelector('.dashboard-container').style.filter = 'blur(5px)';
-            },
-            willClose: () => {
-                // Remove blur when modal closes
-                document.querySelector('.dashboard-container').style.filter = 'none';
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-confirm',
+                cancelButton: 'swal-custom-cancel'
             }
         }).then((result) => {
             if (result.isConfirmed) {
+                // Show loading state
+                button.classList.add('loading');
+                button.innerHTML = '<i class="fas fa-spinner"></i> Processing...';
+                
+                // Redirect to accept page
                 window.location.href = `accept_after_interview.php?appointment_id=${appointmentId}`;
             }
         });
     }
 
-    // Toast notification function
     function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Create toast element
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
+        
+        // Add icon based on type
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        
         toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                <div class="toast-message">${message}</div>
-            </div>
-            <div class="toast-progress"></div>
+            <i class="fas fa-${icon}"></i>
+            <span class="toast-message">${message}</span>
         `;
         
-        document.querySelector('.toast-container').appendChild(toast);
+        // Add toast to container
+        toastContainer.appendChild(toast);
         
+        // Remove toast after 3 seconds
         setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
     }
 
-    // Check for session message
+    // Show notification if there's a message in session
     <?php if(isset($_SESSION['message'])): ?>
-        showToast('<?php echo $_SESSION['message']; ?>', '<?php echo $_SESSION['message_type']; ?>');
+        showToast('<?php echo $_SESSION['message']; ?>', '<?php echo $_SESSION['message_type'] ?? "success"; ?>');
         <?php 
+        // Clear the message after displaying
         unset($_SESSION['message']);
         unset($_SESSION['message_type']);
         ?>
@@ -471,11 +673,5 @@ $interviews = mysqli_stmt_get_result($stmt);
         unset($_SESSION['message_type']);
         ?>
     <?php endif; ?>
-
-    <!-- Add this for debugging -->
-    <?php
-    // Debug output
-    error_log("Interview status: " . $interview['status']);
-    ?>
 </body>
 </html>

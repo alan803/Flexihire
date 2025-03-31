@@ -30,8 +30,8 @@
                   JOIN tbl_login l ON e.employer_id = l.employer_id
                   WHERE j.job_id = ?";
         
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, "i", $job_id);
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $job_id);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $job_details = mysqli_fetch_assoc($result);

@@ -9,10 +9,8 @@ include '../database/connectdatabase.php';
 $dbname = "project";
 mysqli_select_db($conn, $dbname);
 
-$username = '';
-$email = '';
+// Your existing code to fetch employer data...
 $employer_id = $_SESSION['employer_id'];
-
 $sql = "SELECT u.company_name, l.email, u.profile_image 
         FROM tbl_login AS l
         JOIN tbl_employer AS u ON l.employer_id = u.employer_id
@@ -33,7 +31,6 @@ if ($result && mysqli_num_rows($result) > 0) {
     header("Location: ../login/logout.php");
     exit();
 }
-
 $sql_fetch = "SELECT j.*, 
               COUNT(CASE WHEN a.status = 'applied' THEN 1 END) AS applied_count,
               COUNT(CASE WHEN a.status = 'accepted' THEN 1 END) AS accepted_count,
@@ -157,7 +154,7 @@ mysqli_stmt_close($stmt_recent_applicants);
     <link rel="stylesheet" href="employerdashboard.css">
 </head>
 <body>
-    <div class="dashboard-container">
+    <!-- <div class="dashboard-container">
         <div class="sidebar">
             <div class="logo-container">
                 <?php if(!empty($profile_image)): ?>
@@ -183,7 +180,8 @@ mysqli_stmt_close($stmt_recent_applicants);
                 <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
                 <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
             </div>
-        </div>
+        </div> -->
+        <?php include 'sidebar.php'; ?>
 
         <div class="main-container">
             <div class="main-content">
