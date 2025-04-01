@@ -2,9 +2,10 @@
 
 // Define required statuses
 const ALL_STATUSES = [
-    'Pending',
-    'Cancelled',
-    'Finished'
+    'pending',
+    'accepted',
+    'rejected',
+    'interview scheduled'
 ];
 
 // Filter appointments by status
@@ -22,7 +23,7 @@ function filterAppointments() {
     appointmentCards.forEach(card => {
         // Get the status text and normalize it for comparison
         const statusBadge = card.querySelector('.status-badge');
-        const status = statusBadge ? statusBadge.textContent.trim() : '';
+        const status = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
         
         // Debug
         console.log('Card status:', status);
@@ -33,7 +34,7 @@ function filterAppointments() {
             matchFound = true;
         } else {
             // Case insensitive comparison
-            if (status.toLowerCase() === statusFilter.toLowerCase()) {
+            if (status === statusFilter) {
                 card.style.display = 'block';
                 matchFound = true;
             } else {
@@ -46,7 +47,7 @@ function filterAppointments() {
     if (!matchFound) {
         const message = statusFilter === 'all' 
             ? 'No appointments found' 
-            : `No ${statusFilter.toLowerCase()} appointments found`;
+            : `No ${statusFilter} appointments found`;
         showNoAppointmentsMessage(message);
     }
 }
@@ -98,7 +99,7 @@ function createStatusFilter() {
     // Add the three required statuses
     ALL_STATUSES.forEach(status => {
         const option = document.createElement('option');
-        option.value = status.toLowerCase();
+        option.value = status;
         option.textContent = status;
         
         // Style the option

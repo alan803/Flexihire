@@ -117,7 +117,7 @@
         // If any value was updated, refresh the page
         if ($isUpdated) 
         {
-            header("Location: userprofile.php");
+            header("Location: userprofile.php?success=true");
             exit();
         }
     }

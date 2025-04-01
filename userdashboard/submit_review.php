@@ -21,7 +21,8 @@
         // Validate rating
         if (!is_numeric($rating) || $rating < 1 || $rating > 5) 
         {
-            $_SESSION['error'] = "Invalid rating value";
+            $_SESSION['message'] = "Invalid rating value";
+            $_SESSION['message_type'] = 'error';
             header("Location: reviews.php");
             exit();
         }
@@ -35,7 +36,8 @@
 
         if (mysqli_num_rows($result) > 0) 
         {
-            $_SESSION['error'] = "You have already reviewed this job";
+            $_SESSION['message'] = "You have already reviewed this job";
+            $_SESSION['message_type'] = 'error';
             header("Location: reviews.php");
             exit();
         }
@@ -69,9 +71,11 @@
             mysqli_stmt_bind_param($update_stmt, "dii", $verify_data['avg_rating'], $verify_data['total_reviews'], $employer_id);
             
             if (mysqli_stmt_execute($update_stmt)) {
-                $_SESSION['success'] = "Review submitted successfully";
+                $_SESSION['message'] = "Review submitted successfully";
+                $_SESSION['message_type'] = 'success';
             } else {
-                $_SESSION['error'] = "Review submitted but failed to update employer rating: " . mysqli_error($conn);
+                $_SESSION['message'] = "Review submitted but failed to update employer rating";
+                $_SESSION['message_type'] = 'error';
             }
             
             mysqli_stmt_close($verify_stmt);
@@ -79,7 +83,8 @@
         } 
         else 
         {
-            $_SESSION['error'] = "Error submitting review: " . mysqli_error($conn);
+            $_SESSION['message'] = "Error submitting review";
+            $_SESSION['message_type'] = 'error';
         }
 
         mysqli_stmt_close($stmt);

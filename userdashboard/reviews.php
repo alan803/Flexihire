@@ -4,6 +4,14 @@
     $dbname = "project";
     mysqli_select_db($conn, $dbname);
 
+    // Message handling
+    if (isset($_SESSION['message'])) {
+        $message = $_SESSION['message'];
+        $message_type = $_SESSION['message_type'] ?? 'info';
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+    }
+
     if (!isset($_SESSION['user_id'])) 
     {
         header("Location: ../login/loginvalidation.php");
@@ -95,6 +103,19 @@
         </div>
     </nav>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <div class="toast-icon">
+                <i class="fas"></i>
+            </div>
+            <div class="toast-message-container">
+                <div class="toast-title"></div>
+                <span id="toast-message"></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -139,7 +160,7 @@
                                 <a href="jobdetails.php?job_id=<?php echo $job['job_id']; ?>" class="view-details-btn">
                                     <i class="fas fa-info-circle"></i> View Job Details
                                 </a>
-                                <a href="employer_profile.php?employer_id=<?php echo $job['employer_id']; ?>" class="view-details-btn">
+                                <a href="fetch_employer_rating.php?employer_id=<?php echo $job['employer_id']; ?>" class="view-details-btn">
                                     <i class="fas fa-user-tie"></i> Employer Details
                                 </a>
                                 <?php if ($job['has_rated'] > 0): ?>
@@ -226,7 +247,54 @@
                     $('body').css('overflow', 'auto');
                 }
             });
+
+            // Show toast message if exists
+            <?php if (isset($message)): ?>
+                showToast('<?php echo addslashes($message); ?>', '<?php echo $message_type; ?>');
+            <?php endif; ?>
         });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastTitle = toast.querySelector('.toast-title');
+            const icon = toast.querySelector('i');
+            
+            // Reset classes
+            toast.className = 'toast';
+            icon.className = 'fas';
+            
+            // Set type-specific properties
+            switch(type) {
+                case 'success':
+                    toastTitle.textContent = 'Success';
+                    icon.classList.add('fa-check-circle');
+                    toast.classList.add('success');
+                    break;
+                case 'error':
+                    toastTitle.textContent = 'Error';
+                    icon.classList.add('fa-exclamation-circle');
+                    toast.classList.add('error');
+                    break;
+                default:
+                    toastTitle.textContent = 'Information';
+                    icon.classList.add('fa-info-circle');
+                    toast.classList.add('info');
+            }
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            // Hide toast after 4 seconds with fade out
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.style.opacity = '1'; // Reset opacity for next use
+                }, 500); // Wait for fade out to complete
+            }, 4000); // Show for 4 seconds
+        }
     </script>
 </body>
 </html>

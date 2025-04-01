@@ -47,6 +47,9 @@ if ($result && mysqli_num_rows($result) > 0) {
             --text-color: #333;
             --light-text: #666;
             --danger-color: #e74c3c;
+            --sidebar-width: 280px;
+            --sidebar-mobile-width: 250px;
+            --transition-speed: 0.3s ease;
         }
 
         * {
@@ -243,33 +246,118 @@ if ($result && mysqli_num_rows($result) > 0) {
             background: rgba(231, 76, 60, 0.1);
         }
 
-        @media (max-width: 768px) {
+        @media screen and (max-width: 1200px) {
             .sidebar {
-                width: 250px;
-                transform: translateX(-250px);
-                transition: transform 0.3s ease;
+                width: 240px;
             }
 
-            .sidebar.open {
+            .logo-container img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .company-info span:first-child {
+                font-size: 16px;
+            }
+
+            .company-info span:last-child {
+                font-size: 12px;
+            }
+
+            .nav-item {
+                padding: 10px 12px;
+            }
+
+            .nav-item i {
+                font-size: 16px;
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            .sidebar {
+                width: 220px;
+            }
+
+            .nav-item {
+                padding: 8px 10px;
+                margin: 6px 0;
+            }
+
+            .settings-section {
+                bottom: 15px;
+                width: calc(100% - 30px);
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-mobile-width);
+                transition: transform var(--transition-speed);
+            }
+
+            .sidebar.active {
                 transform: translateX(0);
             }
 
-            .sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 999;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
+            .logo-container {
+                padding: 15px 0;
             }
 
-            .sidebar-overlay.active {
-                opacity: 1;
-                visibility: visible;
+            .logo-container img {
+                width: 70px;
+                height: 70px;
+            }
+
+            .nav-menu {
+                margin: 20px 0;
+            }
+
+            .nav-item {
+                padding: 10px;
+                margin: 5px 0;
+            }
+
+            .nav-item i {
+                margin-right: 10px;
+            }
+
+            .company-info {
+                margin: 15px 0;
+            }
+
+            .settings-section {
+                position: relative;
+                bottom: auto;
+                margin-top: 30px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .sidebar {
+                width: 85%;
+                max-width: var(--sidebar-mobile-width);
+            }
+
+            .logo-container img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .company-info span:first-child {
+                font-size: 15px;
+            }
+
+            .company-info span:last-child {
+                font-size: 11px;
+            }
+
+            .nav-item {
+                padding: 8px;
+            }
+
+            .nav-item i {
+                font-size: 15px;
             }
         }
     </style>

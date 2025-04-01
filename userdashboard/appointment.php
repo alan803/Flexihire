@@ -138,11 +138,12 @@
         <main class="main-content">
             <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h2 style="font-size: 1.5rem; color: 'black';">Your Appointments</h2>
-                <select id="status-filter" style="padding: 0.75rem; border: 1px solid rgba(186, 166, 227, 0.3); border-radius: 6px; background: var(--white);">
+                <select id="status-filter" style="padding: 0.75rem; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 6px; background: var(--white);">
                     <option value="all">All Statuses</option>
                     <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="interview scheduled">Interview Scheduled</option>
                 </select>
             </div>
 
@@ -301,6 +302,24 @@
             }, 500); // Wait for fade out to complete
         }, 4000); // Show for 4 seconds
     }
+
+    document.getElementById('status-filter').addEventListener('change', function() {
+        const selectedStatus = this.value.toLowerCase();
+        const appointmentCards = document.querySelectorAll('.appointment-card');
+
+        appointmentCards.forEach(card => {
+            const statusBadge = card.querySelector('.status-badge');
+            if (!statusBadge) return;
+            
+            const cardStatus = statusBadge.textContent.trim().toLowerCase();
+            
+            if (selectedStatus === 'all' || cardStatus === selectedStatus) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
     </script>
 </body>
 </html>

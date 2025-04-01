@@ -93,9 +93,87 @@
             border: none;
             outline: none;
         }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(186, 166, 227, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(186, 166, 227, 0.2);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-icon i {
+            font-size: 1.25rem;
+        }
+
+        .toast.success .toast-icon i {
+            color: #10B981;
+        }
+
+        .toast.error .toast-icon i {
+            color: #EF4444;
+        }
+
+        .toast-message-container {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #2D1F54;
+        }
+
+        #toast-message {
+            color: #2D1F54;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <div class="toast-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="toast-message-container">
+                <div class="toast-title">Success</div>
+                <div id="toast-message">Profile updated successfully!</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-brand">
@@ -232,7 +310,26 @@
                     dropdownMenu.classList.remove('show');
                 }
             });
+
+            // Check for URL parameters to show success message
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                showToast('Profile updated successfully!');
+            }
         });
+
+        // Toast notification function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
