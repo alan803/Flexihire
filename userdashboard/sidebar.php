@@ -365,12 +365,12 @@ if ($result && mysqli_num_rows($result) > 0) {
 <body>
 <div class="sidebar">
     <div class="logo-container">
-        <?php if(!empty($profile_image)): ?>
+        <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
             <img src="<?php echo htmlspecialchars($profile_image); ?>" 
-                 alt="<?php echo htmlspecialchars($username); ?>"
-                 onerror="this.src='../assets/images/company-logo.png';">
+                 alt="<?php echo htmlspecialchars($username); ?>">
         <?php else: ?>
-            <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
+            <img src="../userdashboard/employer_pf/deafult.webp" 
+                 alt="Default Profile Picture">
         <?php endif; ?>
     </div>
     <div class="company-info">

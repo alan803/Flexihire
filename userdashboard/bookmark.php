@@ -56,6 +56,30 @@ if ($result && mysqli_num_rows($result) > 0) {
     <link rel="stylesheet" href="userdashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        function initializeDropdown() {
+            const profileContainer = document.getElementById('profileContainer');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            if (profileContainer && dropdownMenu) {
+                profileContainer.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                };
+
+                // Close dropdown when clicking outside
+                document.onclick = function(e) {
+                    if (!profileContainer.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                };
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeDropdown);
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -68,15 +92,19 @@ if ($result && mysqli_num_rows($result) > 0) {
         <div class="nav-right">
             <div class="profile-info">
                 <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
-                <div class="profile-container">
+                <div class="profile-container" id="profileContainer">
                     <?php if (!empty($profile_image)): ?>
                         <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
                     <?php else: ?>
                         <img src="profile.png" class="profile-pic" alt="Profile">
                     <?php endif; ?>
-                    <div class="dropdown-menu">
-                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="javascript:void(0)" onclick="window.location.href='profiles/user/userprofile.php'">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="javascript:void(0)" onclick="window.location.href='../login/logout.php'">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
                     </div>
                 </div>
             </div>
@@ -218,10 +246,9 @@ if ($result && mysqli_num_rows($result) > 0) {
     }
 
     .profile-container {
-        display: flex;
-        align-items: center;
         position: relative;
         cursor: pointer;
+        z-index: 1000;
     }
 
     .profile-pic {
@@ -239,25 +266,32 @@ if ($result && mysqli_num_rows($result) > 0) {
         top: 100%;
         right: 0;
         background: white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        border-radius: 4px;
+        width: 150px;
+        margin-top: 5px;
         padding: 8px 0;
-        min-width: 180px;
         z-index: 1000;
     }
 
-    .profile-container:hover .dropdown-menu {
-        display: block;
+    .dropdown-menu.show {
+        display: block !important;
     }
 
     .dropdown-menu a {
         display: flex;
         align-items: center;
-        gap: 8px;
         padding: 8px 16px;
         color: #333;
         text-decoration: none;
+        font-size: 14px;
         transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a i {
+        margin-right: 8px;
+        width: 16px;
+        color: #666;
     }
 
     .dropdown-menu a:hover {
@@ -402,6 +436,15 @@ if ($result && mysqli_num_rows($result) > 0) {
                 if (dropdownMenu.classList.contains('show')) {
                     dropdownMenu.classList.remove('show');
                 }
+            });
+
+            // Add click handlers for navigation
+            dropdownMenu.querySelector('a:first-child').addEventListener('click', function() {
+                window.location.href = 'userprofile.php';
+            });
+
+            dropdownMenu.querySelector('a:last-child').addEventListener('click', function() {
+                window.location.href = '../login/logout.php';
             });
 
             // Remove bookmark functionality

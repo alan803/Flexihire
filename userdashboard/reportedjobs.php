@@ -108,12 +108,12 @@
                     <img src="profile.png" class="profile-pic" alt="Profile">
                 <?php endif; ?>
                 <div class="dropdown-menu">
-                    <div class="user-info">
-                        <span class="username"><?php echo htmlspecialchars($display_name); ?></span>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a href="#" onclick="window.location.href='profiles/user/userprofile.php';">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <a href="#" onclick="handleLogout();">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -661,5 +661,91 @@
             box-shadow: 0 4px 12px rgba(138, 108, 224, 0.2);
         }
     </style>
+
+    <style>
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            width: 150px;
+            margin-top: 5px;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-menu a i {
+            margin-right: 8px;
+            width: 16px;
+            color: #666;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+
+    <script>
+        function handleLogout() {
+            // Clear history and redirect
+            window.location.replace('/mini project/login/loginvalidation.php');
+            
+            // Clear session storage and local storage
+            sessionStorage.clear();
+            localStorage.clear();
+            
+            // Prevent back navigation
+            window.history.forward();
+            window.onunload = function() { null };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileContainer = document.querySelector('.profile-container');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            
+            // Toggle dropdown
+            profileContainer.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!profileContainer.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

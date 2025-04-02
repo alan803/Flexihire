@@ -243,7 +243,7 @@ mysqli_stmt_close($stmt_recent_applicants);
                                 <i class="fas fa-briefcase"></i>
                                 <h3>No jobs posted yet</h3>
                                 <p>Start by posting your first job opening</p>
-                                <button class="post-job-btn"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></button>
+                                <!-- <button class="post-job-btn"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></button> -->
                             </div>
                         <?php endif; ?>
                     </div>

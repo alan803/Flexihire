@@ -202,10 +202,10 @@
                     <?php else: ?>
                         <img src="../../userdashboard/profile.png" class="profile-pic" alt="Profile">
                     <?php endif; ?>
-                    <div class="dropdown-menu">
+                    <!-- <div class="dropdown-menu">
                         <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
                         <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

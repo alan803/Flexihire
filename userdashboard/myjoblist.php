@@ -196,9 +196,9 @@
                     <i class="fas fa-briefcase"></i>
                     <h3>No Jobs Found</h3>
                     <p>You haven't posted any jobs yet. Start by posting your first job!</p>
-                    <a href="postjob.php" class="post-job-btn">
+                    <!-- <a href="postjob.php" class="post-job-btn">
                         <i class="fas fa-plus"></i> Post a New Job
-                    </a>
+                    </a> -->
                 </div>
             <?php endif; ?>
         </div>
@@ -421,6 +421,35 @@
         white-space: nowrap;
         margin-bottom: 5px;
         z-index: 1000;
+    }
+
+    .company-info {
+        width: 240px;
+        height: 59.4px;
+        padding: 0px 10px;
+        margin: 20px 0px;
+        text-align: center;
+        color: #333333;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .company-info span:first-child {
+        display: block;
+        font-family: 'Poppins', sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.2;
+        margin-bottom: 4px;
+    }
+
+    .company-info span:last-child {
+        display: block;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        color: #666;
+        line-height: 1.2;
     }
     </style>
 </body>

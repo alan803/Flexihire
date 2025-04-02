@@ -696,8 +696,6 @@
     }
 
     .profile-container {
-        display: flex;
-        align-items: center;
         position: relative;
         cursor: pointer;
     }
@@ -721,17 +719,12 @@
         border-radius: 8px;
         padding: 8px 0;
         min-width: 180px;
-        z-index: 1000;
-    }
-
-    .profile-container:hover .dropdown-menu {
-        display: block;
+        z-index: 1050;
     }
 
     .dropdown-menu a {
         display: flex;
         align-items: center;
-        gap: 8px;
         padding: 8px 16px;
         color: #333;
         text-decoration: none;
@@ -740,6 +733,11 @@
 
     .dropdown-menu a:hover {
         background-color: #f5f5f5;
+    }
+
+    /* Show dropdown on click instead of hover */
+    .dropdown-menu.show {
+        display: block;
     }
     </style>
 
@@ -1004,6 +1002,24 @@
         if (event.key === 'Escape') {
             closeReportModal();
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileContainer = document.querySelector('.profile-container');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+
+        // Toggle dropdown on click
+        profileContainer.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!profileContainer.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
     });
     </script>
 

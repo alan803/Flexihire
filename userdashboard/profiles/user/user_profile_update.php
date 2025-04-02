@@ -14,7 +14,7 @@
 
     $sql = "SELECT u.*, l.email 
             FROM tbl_user u 
-            LEFT JOIN tbl_login l ON l.login_id = u.user_id 
+            LEFT JOIN tbl_login l ON l.user_id = u.user_id 
             WHERE u.user_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -37,6 +37,20 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST') 
     {
         $isUpdated = false;
+
+        // Add username update logic if current username is null
+        if (empty($username)) {
+            $new_username = trim($_POST['name']);
+            if (!empty($new_username)) {
+                $update_sql = "UPDATE tbl_user SET username = ? WHERE user_id = ?";
+                $stmt = mysqli_prepare($conn, $update_sql);
+                mysqli_stmt_bind_param($stmt, "si", $new_username, $actual_user_id);
+                if(mysqli_stmt_execute($stmt)) {
+                    $isUpdated = true;
+                }
+                mysqli_stmt_close($stmt);
+            }
+        }
 
         // Handle profile picture upload if a file was selected
         if (isset($_FILES["profile_image"]) && $_FILES["profile_image"]["error"] === 0) {
@@ -151,10 +165,10 @@
                     <?php else: ?>
                         <img src="../../profile.png" class="profile-pic" alt="Profile">
                     <?php endif; ?>
-                    <div class="dropdown-menu">
+                    <!-- <div class="dropdown-menu">
                         <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
                         <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -286,8 +300,7 @@
                             <div class="detail-label">Username</div>
                             <input type="text" id="username" name="name" class="detail-value" 
                                    value="<?php echo htmlspecialchars($username); ?>" 
-                                   readonly
-                                   style="background-color: #f5f5f5; cursor: not-allowed;">
+                                   <?php echo $username ? 'readonly style="background-color: #f5f5f5; cursor: not-allowed;"' : ''; ?>>
                             <p class="error" id="usernameError"></p>
                         </div>
 

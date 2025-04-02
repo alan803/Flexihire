@@ -88,15 +88,19 @@
         <div class="nav-right">
             <div class="profile-info">
                 <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
-                <div class="profile-container">
+                <div class="profile-container" id="profileContainer">
                     <?php if (!empty($profile_image)): ?>
                         <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
                     <?php else: ?>
                         <img src="profile.png" class="profile-pic" alt="Profile">
                     <?php endif; ?>
-                    <div class="dropdown-menu">
-                        <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
-                        <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="#" onclick="window.location.href='profiles/user/userprofile.php';">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="#" onclick="handleLogout();">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
                     </div>
                 </div>
             </div>
@@ -294,6 +298,40 @@
                     toast.style.opacity = '1'; // Reset opacity for next use
                 }, 500); // Wait for fade out to complete
             }, 4000); // Show for 4 seconds
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const profilePic = document.querySelector('.profile-pic');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            if (profilePic && dropdownMenu) {
+                profilePic.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!e.target.matches('.profile-pic')) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+            }
+        });
+
+        function handleLogout() {
+            fetch('../login/logout.php')
+                .then(() => {
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    window.location.replace('/mini project/login/loginvalidation.php');
+                    window.history.forward();
+                    window.onunload = function() { null };
+                })
+                .catch(() => {
+                    window.location.replace('/mini project/login/loginvalidation.php');
+                });
+            return false;
         }
     </script>
 </body>
