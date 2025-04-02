@@ -324,6 +324,41 @@
     </div>
 
     <style>
+        /* Main container adjustments */
+        .main-container {
+            margin-left: 280px; /* Sidebar width */
+            margin-top: 60px;  /* Navbar height */
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+            background: #f8f9fa;
+        }
+
+        /* Content card adjustments */
+        .content-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        /* Header adjustments */
+        .header {
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Form container adjustments */
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         /* Professional Form Styling */
         .content-card {
             background: #f8fafc;

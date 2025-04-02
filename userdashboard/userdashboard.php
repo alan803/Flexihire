@@ -64,7 +64,7 @@
         exit();
     }
 
-    // Fetch active jobs based on selected date
+    // Fetch active jobs based on selected date and deadline
     $date_filter = isset($_POST['date']) ? $_POST['date'] : null;
     $is_reset = isset($_POST['reset']) && $_POST['reset'] == 1;
 
@@ -73,7 +73,9 @@
                   (SELECT status FROM tbl_applications WHERE job_id = j.job_id AND user_id = ? LIMIT 1) AS application_status
               FROM tbl_jobs j 
               JOIN tbl_employer e ON j.employer_id = e.employer_id
-              WHERE j.status = 'approved' AND j.is_deleted = 0
+              WHERE j.status = 'approved' 
+              AND j.is_deleted = 0
+              AND j.vacancy_date >= CURDATE()  /* Only show jobs where deadline hasn't passed */
               ORDER BY j.created_at DESC";
 
     $stmt = mysqli_prepare($conn, $sql_fetch);

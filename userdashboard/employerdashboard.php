@@ -152,6 +152,89 @@ mysqli_stmt_close($stmt_recent_applicants);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="employerdashboard.css">
+    <style>
+        /* Main container adjustments */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Main content area */
+        .main-container {
+            flex: 1;
+            margin-left: 280px; /* Sidebar width */
+            margin-top: 60px;  /* Navbar height */
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        /* Content sections */
+        .main-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Jobs section */
+        .jobs-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Applicants sidebar adjustments */
+        .applicants-sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;  /* Changed to full height */
+            height: 100vh;
+            width: 300px;
+            background: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .applicants-sidebar.active {
+            transform: translateX(0);
+        }
+
+        /* Overlay for blur effect */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
 </head>
 <body>
     <!-- <div class="dashboard-container">
@@ -251,6 +334,9 @@ mysqli_stmt_close($stmt_recent_applicants);
             </div>
         </div>
 
+        <!-- Add overlay div before the sidebar -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <div class="applicants-sidebar" id="applicantsSidebar">
             <button id="closeSidebar"><i class="fas fa-times"></i></button>
             <h2>Recent Applicants <span class="applicant-count"><?php echo $total_applications; ?></span></h2>
@@ -289,5 +375,45 @@ mysqli_stmt_close($stmt_recent_applicants);
         </div>
     </div>
     <script src="employerdashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const applicantsToggle = document.getElementById('applicantsToggle');
+            const applicantsSidebar = document.getElementById('applicantsSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const closeSidebar = document.getElementById('closeSidebar');
+
+            function openSidebar() {
+                applicantsSidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            }
+
+            function closeSidebarFunc() {
+                applicantsSidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+
+            if (applicantsToggle) {
+                applicantsToggle.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Close on overlay click
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSidebarFunc();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

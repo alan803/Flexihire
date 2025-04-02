@@ -164,10 +164,11 @@
     <link rel="stylesheet" href="employerdashboard.css">
     <style>
         .main-container {
-            padding: 2rem;
-            margin-left: 250px;
+            margin-left: 280px;
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+            padding: 20px;
             background-color: #f1f5f9;
-            min-height: 100vh;
         }
 
         .header {
@@ -184,6 +185,7 @@
             background: #f8fafc;
             padding: 30px;
             border-radius: 16px;
+            margin-top: 20px;
         }
 
         .form-section {
@@ -425,9 +427,9 @@
     <?php include 'sidebar.php'; ?>
     
     <div class="main-container">
-        <div class="header">
+        <!-- <div class="header">
             <h1>Edit Company Profile</h1>
-        </div>
+        </div> -->
 
         <div class="content-card">
             <form method="POST" enctype="multipart/form-data" onsubmit="return check()">

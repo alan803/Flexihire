@@ -76,9 +76,11 @@ if ($result && mysqli_num_rows($result) > 0) {
             padding: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             position: fixed;
-            height: 100%;
+            height: calc(100% - 60px);
+            top: 60px;
+            left: 0;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 999;
         }
 
         .logo-container {
@@ -103,26 +105,33 @@ if ($result && mysqli_num_rows($result) > 0) {
         }
 
         .company-info {
+            padding: 15px;
             text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
             margin: 20px 0;
+            height: 59.4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #000000;
+            line-height: 1.3;
+            letter-spacing: 0.3px;
+            text-transform: capitalize;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin: 0;
             padding: 0 10px;
         }
 
-        .company-info span:first-child {
-            display: block;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-color);
-            margin-bottom: 5px;
-        }
-
-        .company-info span:last-child {
-            font-size: 13px;
-            color: var(--light-text);
-        }
-
         .nav-menu {
-            margin: 30px 0;
+            margin-top: 10px;
         }
 
         .nav-item {
@@ -360,23 +369,143 @@ if ($result && mysqli_num_rows($result) > 0) {
                 font-size: 15px;
             }
         }
+
+        .navbar {
+            background: white;
+            padding: 10px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-content {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .brand-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #4a90e2;
+            margin-left: 5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+        }
+
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            width: 150px;
+            margin-top: 5px;
+            padding: 8px 0;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-menu a i {
+            margin-right: 8px;
+            width: 16px;
+            color: #666;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Adjust main content padding to account for navbar */
+        .dashboard-container {
+            padding-top: 80px;
+        }
     </style>
 </head>
 <body>
+<div class="navbar">
+    <div class="nav-content">
+        <div class="nav-left">
+            <img src="logowithoutbcakground.png" alt="Logo" class="navbar-logo">
+            <span class="brand-name">FlexiHire</span>
+        </div>
+        <div class="nav-right">
+            <span class="company-name"><?php echo htmlspecialchars($username); ?></span>
+            <div class="profile-container" id="profileContainer">
+                <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
+                    <img src="<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                <?php else: ?>
+                    <img src="../userdashboard/employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
+                <?php endif; ?>
+                <!-- <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="employer_profile.php"><i class="fas fa-user"></i> Profile</a>
+                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="sidebar">
-    <div class="logo-container">
-        <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
-            <img src="<?php echo htmlspecialchars($profile_image); ?>" 
-                 alt="<?php echo htmlspecialchars($username); ?>">
-        <?php else: ?>
-            <img src="../userdashboard/employer_pf/deafult.webp" 
-                 alt="Default Profile Picture">
-        <?php endif; ?>
-    </div>
-    <div class="company-info">
-        <span><?php echo htmlspecialchars($username); ?></span>
-        <span><?php echo htmlspecialchars($email); ?></span>
-    </div>
     <nav class="nav-menu">
         <div class="nav-item active"><i class="fas fa-th-large"></i><a href="employerdashboard.php">Dashboard</a></div>
         <div class="nav-item"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></div>
@@ -387,9 +516,29 @@ if ($result && mysqli_num_rows($result) > 0) {
     <div class="settings-section">
         <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
         <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
-    </div>
+    </div>      
 </div>
 
     <script src="sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileContainer = document.getElementById('profileContainer');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            if (profileContainer && dropdownMenu) {
+                profileContainer.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!profileContainer.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

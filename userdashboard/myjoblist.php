@@ -301,6 +301,116 @@
     </script>
 
     <style>
+    /* Main container adjustments */
+    .main-container {
+        margin-left: 280px; /* Sidebar width */
+        margin-top: 60px;  /* Navbar height */
+        padding: 20px;
+        min-height: calc(100vh - 60px);
+        background: #f8f9fa;
+    }
+
+    /* Jobs container adjustments */
+    .jobs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 0;
+    }
+
+    /* Page header adjustments */
+    .page-header {
+        margin-bottom: 25px;
+        padding: 0 15px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+        margin-bottom: 15px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+    }
+
+    /* Stats section refinements */
+    .stats {
+        display: flex;
+        gap: 20px;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stat-item i {
+        font-size: 16px;
+        color: #4a90e2;
+    }
+
+    .stat-item span {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* Post job button refinements */
+    .post-job-btn {
+        padding: 8px 15px;
+        font-size: 14px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        height: 35px;  /* Fixed height */
+    }
+
+    .post-job-btn i {
+        font-size: 12px;
+    }
+
+    .post-job-btn:hover {
+        background-color: #357abd;
+    }
+
+    /* Alert message positioning */
+    .alert-message {
+        position: fixed;
+        top: 80px; /* Adjusted to appear below navbar */
+        right: 20px;
+        z-index: 1000;
+    }
+
+    /* Modal positioning */
+    .modal {
+        z-index: 1100; /* Higher than navbar */
+    }
+
+    /* Job card adjustments */
+    .job-card {
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+    }
+
+    /* Alert message styling */
     .alert-message {
         position: fixed;
         top: 20px;

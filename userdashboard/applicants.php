@@ -156,11 +156,64 @@
     <link rel="stylesheet" href="employerdashboard.css">
     <link rel="stylesheet" href="applicants.css">
     <style>
+        /* Main container adjustments */
         .main-container {
-            padding: 2rem;
-            margin-left: 250px;
-            background-color: #f1f5f9;
-            min-height: 100vh;
+            margin-left: 280px; /* Sidebar width */
+            margin-top: 60px;  /* Navbar height */
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+            background: #f8f9fa;
+        }
+
+        /* Header container adjustments */
+        .header-container {
+            margin-bottom: 25px;
+        }
+
+        .header-top {
+            margin-bottom: 15px;
+        }
+
+        /* Back button styling */
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        /* Success/Error message positioning */
+        .success-message, 
+        #error-message, 
+        #success-message {
+            margin-bottom: 20px;
+        }
+
+        /* Applicants grid adjustments */
+        .applicants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        /* Applicant card adjustments */
+        .applicant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* No applicants message */
+        .no-applicants {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
         }
 
         .header {
@@ -177,26 +230,6 @@
             color: #3b82f6;
             font-size: 1.1rem;
             margin-top: 0.5rem;
-        }
-
-        .applicants-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .applicant-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .applicant-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .applicant-header {
@@ -307,15 +340,6 @@
             font-size: 0.875rem;
             margin-top: 1rem;
             text-align: right;
-        }
-
-        .no-applicants {
-            text-align: center;
-            padding: 3rem;
-            color: #64748b;
-            background: white;
-            border-radius: 12px;
-            margin-top: 2rem;
         }
 
         .no-applicants i {

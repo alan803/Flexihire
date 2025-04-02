@@ -220,6 +220,72 @@ $applicant = mysqli_fetch_assoc($applicant_result);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="employerdashboard.css">
     <link rel="stylesheet" href="schedule_interview.css">
+    <style>
+        /* Main container adjustments */
+        .main-container {
+            margin-left: 280px; /* Sidebar width */
+            margin-top: 60px;  /* Navbar height */
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+            background: #f8f9fa;
+        }
+
+        /* Form container adjustments */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Form header adjustments */
+        .form-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-header h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .form-header p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        /* Error message positioning */
+        .error-message {
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            background-color: #fee;
+            color: #e33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form fields adjustments */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        /* Interview fields adjustments */
+        .interview-fields {
+            margin-top: 15px;
+        }
+
+        /* Form actions */
+        .form-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
 </head>
 <body>
     <!-- <div class="dashboard-container">

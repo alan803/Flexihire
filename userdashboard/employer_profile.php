@@ -127,9 +127,9 @@
 
         <!-- Main Content -->
         <div class="main-container">
-            <div class="header">
+            <!-- <div class="header">
                 <h1>Company Profile</h1>
-            </div>
+            </div> -->
 
             <!-- Profile Content -->
             <div class="content-card">
@@ -176,10 +176,10 @@
                                     }
                                     ?>
                                 </div>
-                                <div class="rating-text">
+                                <!-- <div class="rating-text">
                                     <strong><?php echo $avg_rating; ?></strong> out of 5
                                     <span class="rating-count">(<?php echo number_format($total_ratings); ?> reviews)</span>
-                                </div>
+                                </div> -->
                             </div>
                             
                             <div class="company-meta">
@@ -463,6 +463,33 @@
             .profile-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Only adjusting main container position */
+        .main-container {
+            margin-left: 280px; /* Sidebar width */
+            margin-top: 60px;  /* Navbar height */
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Star rating colors */
+        .stars i.fas.fa-star {
+            color: #FFD700;  /* Gold color for filled stars */
+        }
+
+        .stars i.fas.fa-star-half-alt {
+            color: #FFD700;  /* Gold color for half stars */
+        }
+
+        .stars i.far.fa-star {
+            color: #FFD700;  /* Gold color for empty stars */
+            opacity: 0.5;    /* Make empty stars slightly transparent */
+        }
+
+        /* Hover effect for better interactivity */
+        .stars i:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
         }
     </style>
 
