@@ -18,7 +18,6 @@ $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, "i", $employer_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
-
 if ($result && mysqli_num_rows($result) > 0) {
     $employer_data = mysqli_fetch_array($result);
     $email = $employer_data['email'];
@@ -512,10 +511,11 @@ if ($result && mysqli_num_rows($result) > 0) {
         <div class="nav-item"><i class="fas fa-briefcase"></i><a href="myjoblist.php">My Jobs</a></div>
         <div class="nav-item"><i class="fas fa-users"></i><a href="applicants.php">Applicants</a></div>
         <div class="nav-item"><i class="fas fa-calendar-check"></i><a href="interviews.php">Interviews</a></div>
-    </nav>
-    <div class="settings-section">
         <div class="nav-item"><i class="fas fa-user-cog"></i><a href="employer_profile.php">My Profile</a></div>
         <div class="nav-item"><i class="fas fa-sign-out-alt"></i><a href="../login/logout.php">Logout</a></div>
+    </nav>
+    <div class="settings-section">
+        
     </div>      
 </div>
 

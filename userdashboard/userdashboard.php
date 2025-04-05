@@ -195,10 +195,10 @@
             <div class="profile-info">
                 <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
                 <div class="profile-container">
-                    <?php if (!empty($profile_image)): ?>
+                    <?php if (!empty($profile_image) && file_exists("/mini project/database/profile_picture/" . $profile_image)): ?>
                         <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
                     <?php else: ?>
-                        <img src="profile.png" class="profile-pic" alt="Profile">
+                        <img src="employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
                     <?php endif; ?>
                     <div class="dropdown-menu">
                         <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>

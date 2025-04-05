@@ -357,7 +357,6 @@ li
 .show {
   display: block;
 }
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .navbar {

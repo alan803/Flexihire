@@ -100,20 +100,18 @@
         </div>
         
         <div class="nav-right">
-            <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
             <div class="profile-container">
-                <?php if (!empty($profile_image)): ?>
-                    <img src="/mini project/database/profile_picture/<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                <span class="nav-username"><?php echo htmlspecialchars($display_name); ?></span>
+                <?php 
+                $profile_path = "/mini project/database/profile_picture/" . $profile_image;
+                if (!empty($profile_image) && file_exists($_SERVER['DOCUMENT_ROOT'] . $profile_path)): ?>
+                    <img src="<?php echo $profile_path; ?>" class="profile-pic" alt="Profile">
                 <?php else: ?>
-                    <img src="profile.png" class="profile-pic" alt="Profile">
+                    <img src="employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
                 <?php endif; ?>
                 <div class="dropdown-menu">
-                    <a href="#" onclick="window.location.href='profiles/user/userprofile.php';">
-                        <i class="fas fa-user"></i> Profile
-                    </a>
-                    <a href="#" onclick="handleLogout();">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
+                    <a href="profiles/user/userprofile.php"><i class="fas fa-user"></i> Profile</a>
+                    <a href="../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>

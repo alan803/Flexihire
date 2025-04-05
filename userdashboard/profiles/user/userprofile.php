@@ -196,16 +196,18 @@
                         }
                     ?>
                 </span>
-                <div class="profile-container">
-                    <?php if (!empty($user_data['profile_image'])): ?>
-                        <img src="<?php echo $profile_image_path; ?>" class="profile-pic" alt="Profile">
+                <div class="profile-container" id="profileContainer">
+                    <?php 
+                    $profile_path = "/mini project/database/profile_picture/" . $user_data['profile_image'];
+                    if (!empty($user_data['profile_image']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $profile_path)): ?>
+                        <img src="<?php echo $profile_path; ?>" class="profile-pic" alt="Profile">
                     <?php else: ?>
-                        <img src="../../userdashboard/profile.png" class="profile-pic" alt="Profile">
+                        <img src="../../employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
                     <?php endif; ?>
-                    <!-- <div class="dropdown-menu">
+                    <div class="dropdown-menu" id="dropdownMenu">
                         <a href="userprofile.php"><i class="fas fa-user"></i> Profile</a>
                         <a href="../../../login/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div> -->
+                    </div>
                 </div>
             </div>
         </div>
