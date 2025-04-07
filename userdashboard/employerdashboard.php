@@ -272,7 +272,7 @@ mysqli_stmt_close($stmt_recent_applicants);
                     <h1>Welcome, <?php echo htmlspecialchars($username); ?></h1>
                     <div class="header-actions">
                         <button id="applicantsToggle" class="toggle-sidebar-btn"><i class="fas fa-users"></i> Applicants</button>
-                        <button class="post-job-btn"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></button>
+                        <!-- <button class="post-job-btn"><i class="fas fa-plus-circle"></i><a href="postjob.php">Post a Job</a></button> -->
                     </div>
                 </div>
 

@@ -145,13 +145,11 @@
                     <div class="profile-banner"></div>
                     <div class="profile-info">
                         <div class="profile-photo">
-                            <?php if(!empty($row['profile_image'])): ?>
-                                <img src="<?php echo htmlspecialchars($row['profile_image']); ?>" 
-                                     alt="Company Logo"
-                                     onerror="this.src='../assets/images/company-logo.png';">
-                            <?php else: ?>
-                                <img src="../assets/images/company-logo.png" alt="Default Company Logo">
-                            <?php endif; ?>
+                        <?php if(!empty($row['profile_image']) && file_exists($row['profile_image'])): ?>
+                            <img src="<?php echo htmlspecialchars($row['profile_image']); ?>" class="profile-pic" alt="Profile">
+                        <?php else: ?>
+                            <img src="../userdashboard/employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
+                        <?php endif; ?>
                         </div>
                         <div class="profile-details">
                             <h2><?php echo htmlspecialchars($company_name); ?></h2>

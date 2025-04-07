@@ -250,7 +250,7 @@ mysqli_close($conn);
             <h2>Create an account</h2>
             <button id="user1"><a href="../Signup/signup.php" id="user">User</a></button>
             <button id="employer1"><a href="../Signup/employersignup.php" id="employer">Employer</a></button>
-            <p>Already have an account? <a href="../Login/login.php" style="color: #665efc; text-decoration: none;">Log in</a></p>
+            <p>Already have an account? <a href="../Login/loginvalidation.php" style="color: #665efc; text-decoration: none;">Log in</a></p>
             <form method="post" onsubmit="return validateForm()">
                 <div>
                     <input type="text" id="companyname" name="companyname" placeholder="Company Name"  onkeyup="validateCompanyName()">

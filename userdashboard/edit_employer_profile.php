@@ -29,7 +29,7 @@
         $profile_image = $row['profile_image'];
     }
 
-    // collecting data from the user throught the form
+    // collecting data from the user through the form
     if($_SERVER['REQUEST_METHOD']=='POST') {
         $company_name = $_POST['company_name'];
         $company_type = $_POST['company_type'];
@@ -39,6 +39,7 @@
         $contact_person = $_POST['contact_person'];
         $phone_number = $_POST['phone'];
         $address = $_POST['address'];
+        $registration_number = $_POST['registration_number'];
 
         // Start building the SQL query dynamically
         $updates = array();
@@ -94,6 +95,13 @@
             $types .= "s";
         }
 
+        // Handle registration number - allow update if it was null or empty
+        if((empty($row['registration_number']) || is_null($row['registration_number'])) && !empty($registration_number)) {
+            $updates[] = "registration_number=?";
+            $params[] = $registration_number;
+            $types .= "s";
+        }
+
         // Handle file upload if a new image is provided
         if(isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == 0) {
             $allowed = ['jpg', 'jpeg', 'png'];
@@ -134,15 +142,15 @@
             }
             call_user_func_array(array($stmt, 'bind_param'), $bind_params);
 
-        $result_push = mysqli_stmt_execute($stmt);
+            $result_push = mysqli_stmt_execute($stmt);
 
-        if ($result_push) {
-            $_SESSION['update_success'] = true;
-            header("Location: employer_profile.php");
-            exit();
-        } else {
-            $_SESSION['update_error'] = "Failed to update profile";
-            header("Location: edit_employer_profile.php");
+            if ($result_push) {
+                $_SESSION['update_success'] = true;
+                header("Location: employer_profile.php");
+                exit();
+            } else {
+                $_SESSION['update_error'] = "Failed to update profile";
+                header("Location: edit_employer_profile.php");
                 exit();
             }
         } else {
@@ -377,60 +385,10 @@
             <span class="notification-message"></span>
         </div>
     </div>
-    <!-- <div class="sidebar">
-        <div class="logo-container">
-            <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
-                <img src="<?php echo htmlspecialchars($profile_image); ?>" 
-                     alt="<?php echo htmlspecialchars($company_name); ?>"
-                     onerror="this.src='../assets/images/company-logo.png';">
-            <?php else: ?>
-                <img src="../assets/images/company-logo.png" alt="AutoRecruits.in">
-            <?php endif; ?>
-        </div>
-        <div class="company-info">
-            <span><?php echo htmlspecialchars($company_name); ?></span>
-        </div>
-        <nav class="nav-menu">
-            <div class="nav-item active">
-                <i class="fas fa-th-large"></i>
-                <a href="employerdashboard.php">Home</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-plus-circle"></i>
-                <a href="postjob.php">Post a Job</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-briefcase"></i>
-                <a href="myjoblist.php">My Jobs</a>
-            </div>
-            <div class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <a href="applicants.php">Applicants</a>
-                </div>
-            <div class="nav-item">
-                <i class="fas fa-calendar-check"></i>
-                <a>Interviews</a>
-            </div>
-        </nav>
-        <div class="settings-section">
-            <div class="nav-item">
-                <i class="fas fa-user-cog"></i>
-                <a href="employer_profile.php">My Profile</a>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <a href="../login/logout.php">Logout</a>
-            </div>
-        </div>
-    </div> -->
-
+    
     <?php include 'sidebar.php'; ?>
     
     <div class="main-container">
-        <!-- <div class="header">
-            <h1>Edit Company Profile</h1>
-        </div> -->
-
         <div class="content-card">
             <form method="POST" enctype="multipart/form-data" onsubmit="return check()">
                 <!-- Company Logo Section -->
@@ -441,16 +399,11 @@
                     </h3>
                     <div class="profile-photo-section">
                         <div class="profile-photo-container">
-                            <img src="<?php 
-                                if (!empty($profile_image) && file_exists($profile_image)) {
-                                    echo htmlspecialchars($profile_image);
-                                } else {
-                                    echo '../assets/images/company-logo.png';
-                                }
-                            ?>" 
-                                 alt="Company Logo" 
-                                 id="preview-photo"
-                                 onerror="this.src='../assets/images/company-logo.png';">
+                            <?php if(!empty($profile_image) && file_exists($profile_image)): ?>
+                            <img src="<?php echo htmlspecialchars($profile_image); ?>" class="profile-pic" alt="Profile">
+                            <?php else: ?>
+                            <img src="../userdashboard/employer_pf/deafult.webp" class="profile-pic" alt="Default Profile">
+                            <?php endif; ?>
                             <label for="company-logo" class="photo-upload-label">
                                 <i class="fas fa-camera"></i> Change Photo
                             </label>
@@ -484,9 +437,12 @@
                             <label>Registration Number</label>
                             <input type="text" name="registration_number" id="registration_number" 
                                    value="<?php echo htmlspecialchars($row['registration_number']); ?>" 
-                                   readonly
+                                   <?php echo (empty($row['registration_number']) || is_null($row['registration_number'])) ? '' : 'readonly'; ?>
                                    class="form-input-readonly">
-                            <small class="form-text" style="color: red;">Registration number cannot be changed</small>
+                            <small class="form-text" style="color: red;">
+                                <?php echo (empty($row['registration_number']) || is_null($row['registration_number'])) ? 
+                                    'Enter registration number' : 'Registration number cannot be changed'; ?>
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -575,22 +531,25 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Animate Play Button
             const playButton = document.querySelector('.play-button');
-            setInterval(() => {
-                playButton.style.transform = 'translate(-50%, -50%) scale(1.1)';
-                setTimeout(() => {
-                    playButton.style.transform = 'translate(-50%, -50%) scale(1)';
-                }, 500);
-            }, 2000);
+            if(playButton) {
+                setInterval(() => {
+                    playButton.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                    setTimeout(() => {
+                        playButton.style.transform = 'translate(-50%, -50%) scale(1)';
+                    }, 500);
+                }, 2000);
+            }
             
             // Animate Calculator Dots
             const dots = document.querySelectorAll('.dot');
-            let currentActive = 0;
-            
-            setInterval(() => {
-                dots.forEach(dot => dot.classList.remove('active'));
-                currentActive = (currentActive + 1) % dots.length;
-                dots[currentActive].classList.add('active');
-            }, 1500);
+            if(dots.length > 0) {
+                let currentActive = 0;
+                setInterval(() => {
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    currentActive = (currentActive + 1) % dots.length;
+                    dots[currentActive].classList.add('active');
+                }, 1500);
+            }
         });
 
         // validation for the form
@@ -739,7 +698,6 @@
             }
 
             // Check if email has valid format and domain
-            // const emailRegex = ;
             if (!/^[a-zA-Z0-9][^\s@]*@(gmail\.com|yahoo\.com|hotmail\.com|amaljyothi\.ac\.in|mca\.ajce\.in)$/.test(email)) 
             {
                 // Check if it's the domain that's invalid
